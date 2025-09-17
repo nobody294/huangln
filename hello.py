@@ -14,8 +14,6 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map="auto"
 )
 
-# model.to("cuda:1").eval()
-
 print("prepare to input...")
 # prepare the model input
 prompt = "Give me a short introduction to large language model."
