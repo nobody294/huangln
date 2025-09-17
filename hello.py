@@ -1,54 +1,42 @@
-# from transformers import pipeline
 # import torch
+# print(torch.cuda.is_available())
 
-# pipe = pipeline(
-#     "text-generation",
-#     model="google/gemma-3-4b-it",
-#     device="cuda",
-#     torch_dtype=torch.bfloat16
-# )
-
-# messages = [
-#     {"role": "system", "content": "You are a helpful assistant."},
-#     {"role": "user", "content": "Who are you?"},
-# ]
-
-# output = pipe(text=messages, max_new_tokens=200)
-# print(output[0]["generated_text"][-1]["content"])
-
-
-
-# import transformers
-# import torch
-
-# model_id = "/mount/resources9/models/huggingface/hub/models--meta-llama--Meta-Llama-3-8B-Instruct"
-
-# pipeline = transformers.pipeline(
-#     "text-generation",
-#     model=model_id,
-#     model_kwargs={"torch_dtype": torch.bfloat16},
-#     device_map="auto",
-# )
-
-# messages = [
-#     {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
-#     {"role": "user", "content": "Who are you?"},
-# ]
-
-# terminators = [
-#     pipeline.tokenizer.eos_token_id,
-#     pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
-# ]
-
-# outputs = pipeline(
-#     messages,
-#     max_new_tokens=256,
-#     eos_token_id=terminators,
-#     do_sample=True,
-#     temperature=0.6,
-#     top_p=0.9,
-# )
-# print(outputs[0]["generated_text"][-1])
-
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-print(torch.cuda.is_available())
+
+model_name = "Qwen/Qwen3-4B-Instruct-2507"
+
+# load the tokenizer and the model
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+
+# model.to("cuda:1").eval()
+
+print("prepare to input...")
+# prepare the model input
+prompt = "Give me a short introduction to large language model."
+messages = [
+    {"role": "user", "content": prompt}
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+print("start to generate...")
+# conduct text completion
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=16384
+)
+output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() 
+
+content = tokenizer.decode(output_ids, skip_special_tokens=True)
+
+print("content:", content)
