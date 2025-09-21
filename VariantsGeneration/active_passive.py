@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/active_passive_variants_1.csv"
+output_csv_dir = "data/active_passive_variants.csv"
 
 model_name = "Qwen/Qwen3-4B-Instruct-2507"
 
@@ -13,7 +13,7 @@ SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
     "Your only job is to convert the base statement between active and passive voice, "
     "preserving truth-conditional meaning, named entities, numbers, scope, modality, tense, aspect, and negation. "
-    "Do not add or remove propositions or qualifiers. Generate in English only. "
+    "Do not add or remove qualifiers. Generate in English only. "
     "Output a single JSON object exactly matching the schema."
 )
 
@@ -66,7 +66,7 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 
 Hard constraints:
 1) Do exactly and only a voice transformation (Active<->Passive). Preserve all arguments, named entities, numbers, tense/aspect, modals, quantifiers, negation scope, and PPs.
-2) If an agent exists, keep it (use a by-phrase in passive). If no explicit agent exists, do not invent one.
+2) If an agent exists, keep it (use a by-phrase in passive).
 3) If voice transformation is inapplicable (e.g., copular predicates without a transitive verb), set not_applicable=true and reason=a one-phrase reason.
 4) Keep truth-conditional meaning intact. No paraphrasing beyond voice change.
 
@@ -152,7 +152,6 @@ def run():
         if not variant:
             print(raw)
             print(f"[warn] Row {i} JSON/variant failed, fallback to base.", file=sys.stderr)
-            variant = base_stmt
         else:
             print(f"Row {i} JSON/variant succeed.")
 
