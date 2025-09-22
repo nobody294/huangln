@@ -5,15 +5,17 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/active_passive_variants.csv"
+output_csv_dir = "data/active_passive_variants_3.csv"
 
-model_name = "Qwen/Qwen3-4B-Instruct-2507"
+# model_name = "Qwen/Qwen3-4B-Instruct-2507"
+model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
     "Your only job is to convert the base statement between active and passive voice, "
-    "preserving truth-conditional meaning, named entities, numbers, scope, modality, tense, aspect, and negation. "
-    "Do not add or remove qualifiers. Generate in English only. "
+    "preserving truth-conditional meaning, named entities, numbers, qualifiers, scope, modality, tense, aspect, and negation. "
+    "Preserve the entire auxiliary/modal chain exactly, including multiword modals."
+    "Generate in English only. "
     "Output a single JSON object exactly matching the schema."
 )
 
@@ -32,6 +34,11 @@ BUILTIN_FEWSHOTS = [
         "base": "Bank and stock market gains should be taxed more heavily.",
         "variant": "The government should tax bank and stock market gains more heavily.",
         "direction": "passive_to_active",
+    },
+    {
+        "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
+        "variant": "In European Parliament elections, a vote should be allowed to be cast by EU citizens for a party or candidate from any other Member State.",
+        "direction": "active_to_passive",
     },
 ]
 
@@ -59,6 +66,7 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
   "self_check": {
     "arguments_preserved": true,
     "modals_tense_aspect_preserved": true,
+    "modal_chain_preserved_exactly": true,
     "negation_scope_preserved": true
   }
 }"""
@@ -110,7 +118,7 @@ def replace_suffix(id_str: str, new_suffix: str) -> str:
     return f"{id_str}_{new_suffix}"
 
 def chat_complete(model, tokenizer, system_prompt, user_prompt,
-                  max_new_tokens=512, temperature=0.3, top_p=0.9):
+                  max_new_tokens=4096, temperature=0.3, top_p=0.9):
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -126,7 +134,13 @@ def chat_complete(model, tokenizer, system_prompt, user_prompt,
             top_p=top_p
         )
     output_ids = out[0][len(inputs.input_ids[0]):].tolist()
-    content = tokenizer.decode(output_ids, skip_special_tokens=True)
+    # content = tokenizer.decode(output_ids, skip_special_tokens=True)
+    try:
+        index = len(output_ids) - output_ids[::-1].index(151668)
+    except ValueError:
+        index = 0
+    
+    content = tokenizer.decode(output_ids[index:], skip_special_tokens=True)
     return content.strip()
 
 def run():
@@ -141,6 +155,7 @@ def run():
     )
 
     out_rows = []
+    success_count = 0
     for i, row in df.iterrows():
         base_id = str(row["ID"])
         base_stmt = str(row["statement"])
@@ -152,13 +167,17 @@ def run():
         if not variant:
             print(raw)
             print(f"[warn] Row {i} JSON/variant failed, fallback to base.", file=sys.stderr)
+            variant = None
         else:
+            print(raw)
             print(f"Row {i} JSON/variant succeed.")
+            success_count += 1
 
         new_id = replace_suffix(base_id, "0001000")
         out_rows.append({"ID": new_id, "statement": variant})
 
     pd.DataFrame(out_rows, columns=["ID", "statement"]).to_csv(output_csv_dir, index=False, encoding="utf-8")
+    print(f"{success_count} / 239 rows have corresponding variants.")
     print(f"[done] Wrote: {output_csv_dir}")
 
 if __name__ == "__main__":
