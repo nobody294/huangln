@@ -7,22 +7,10 @@ from nltk.wsd import lesk
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.tokenize.treebank import TreebankWordDetokenizer
-
-def ensure_nltk():
-    try: nltk.data.find("tokenizers/punkt")
-    except LookupError: nltk.download("punkt")
-    try: nltk.data.find("tokenizers/punkt_tab")
-    except LookupError: nltk.download("punkt_tab")
-    try: nltk.data.find("taggers/averaged_perceptron_tagger_eng")
-    except LookupError: nltk.download("averaged_perceptron_tagger_eng")
-    try: nltk.data.find("corpora/wordnet")
-    except LookupError: nltk.download("wordnet")
-    try: nltk.data.find("corpora/stopwords")
-    except LookupError: nltk.download("stopwords")
-ensure_nltk()
+from nltk.corpus import stopwords
 
 INPUT_CSV   = "data/original_statements.csv"
-OUTPUT_CSV  = "data/synonyms_variants_1.csv"
+OUTPUT_CSV  = "data/synonyms_variants_2.csv"
 SWN_PATH    = "SentiWordNet_3.0.0.txt"
 WN_DICT_DIR = None
 
@@ -32,7 +20,8 @@ TOPK_SENSES  = 3                     # WSD 失败时的后备义项最多看前�
 RANDOM_SEED  = 42
 
 SEMANTIC_FILTER_ON = True
-GLOSS_JACCARD_MIN = 0.12
+GLOSS_JACCARD_MIN = 0.10
+STOPWORDS = set(stopwords.words("english"))
 
 lemmatizer = WordNetLemmatizer()
 detok = TreebankWordDetokenizer()
@@ -95,6 +84,14 @@ def swn_net(pos:str, offset:int)->float:
     ps, ns = SWN_DB.get((pos, int(offset)), (0.0, 0.0))
     return float(ps - ns)
 
+def swn_tags(pos:str, offset:int)->List[Any]:
+    ans = []
+    if pos == "s": pos = "a"
+    ps, ns = SWN_DB.get((pos, int(offset)), (0.0, 0.0))
+    ans.append(float(ps))
+    ans.append(float(ns))
+    return ans
+
 def neighbor_synsets(s:Any)->List[Any]:
     rel = []
     pos = s.pos()
@@ -122,6 +119,48 @@ def neighbor_synsets(s:Any)->List[Any]:
         if key not in seen:
             kept.append(t); seen.add(key)
     return kept
+
+COST_MARKERS = [
+    "free of charge", "without charge", "without payment", "at no cost",
+    "no charge", "gratis", "complimentary", "for nothing", "without cost",
+    "costless"
+]
+
+def _content_tokens(text: str) -> List[str]:
+    toks = re.findall(r"[A-Za-z']+", text.lower())
+    return [t for t in toks if t not in STOPWORDS and len(t) > 1]
+
+def _gloss_text(syn) -> str:
+    # 释义 + 例句 做为“定义文本”
+    return syn.definition() + " " + " ".join(syn.examples())
+
+def _jaccard(a: set, b: set) -> float:
+    if not a or not b: return 0.0
+    return len(a & b) / len(a | b)
+
+def _has_cost_markers(syn) -> bool:
+    text = _gloss_text(syn).lower()
+    return any(m in text for m in COST_MARKERS)
+
+def semantically_compatible(src_syn, tgt_syn) -> bool:
+    """
+    语义兼容过滤：
+    1) 释义文本的 Jaccard 相似度需 ≥ 阈值；
+    2) 若源义项含“价格/收费”域标记，则目标也必须含该域标记(避免 free→liberated)。
+    """
+    if not SEMANTIC_FILTER_ON:
+        return True
+
+    s_tokens = set(_content_tokens(_gloss_text(src_syn)))
+    t_tokens = set(_content_tokens(_gloss_text(tgt_syn)))
+    sim = _jaccard(s_tokens, t_tokens)
+
+    # 域守卫：有“免费/收费”域就必须对齐
+    src_is_cost = _has_cost_markers(src_syn)
+    if src_is_cost and not _has_cost_markers(tgt_syn):
+        return False
+
+    return sim >= GLOSS_JACCARD_MIN
 
 def disambiguate_synset(tokens:List[str], idx:int, wn_pos:str)->Optional[Any]:
     word = tokens[idx]
@@ -154,14 +193,20 @@ def best_replacement_for_token(tokens:List[str], tags:List[str], idx:int)->Optio
     if not syn: return None
 
     src_net = swn_net(syn.pos(), syn.offset())
+    src_tags = swn_tags(syn.pos(), syn.offset())
     neighbors = neighbor_synsets(syn)
 
     best = None
     for t in neighbors:
+        if not semantically_compatible(syn, t):
+            print(f"    [skip by semantic filter] {t.name()} -> gloss: {t.definition()}")
+            continue
         t_net = swn_net(t.pos(), t.offset())
+        t_tags = swn_tags(t.pos(), t.offset())
         delta = abs(t_net - src_net)
+
         # 阈值规则：|Δnet|≥阈值 或 极性翻转
-        if not (delta >= DELTA_THRESH or (src_net * t_net) < 0):
+        if not (delta >= DELTA_THRESH or (src_net * t_net) < 0 or abs(src_tags[0] - t_tags[0]) >= DELTA_THRESH or abs(src_tags[1] - t_tags[1]) >= DELTA_THRESH):
             continue
 
         # 候选词仅取单词（不含空格/下划线）
