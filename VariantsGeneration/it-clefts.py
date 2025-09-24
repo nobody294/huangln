@@ -66,14 +66,15 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 }"""
     return f"""Task: Convert the base statement into an It-cleft variant.
 
-Hard constraints:
+Hard constraints (follow strictly):
 1) Use canonical It-cleft form: It is/was [FOCUS] that [CLAUSE]. Match the copula tense to the base.
-2) [FOCUS] must be a contiguous verbatim span from the base. Allowed: NP (subject/object), PP (time/place), or adverbial. Not allowed: paraphrase, insertion of new words.
-3) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
-4) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
-5) Keep original prepositions (in/on/at/etc.) and word order inside the cleft clause whenever possible.
-6) Preserve truth conditions.
-7) If the sentence is not suitable for an It-cleft, set not_applicable=true with a one-phrase reason.
+2) [FOCUS] must be a contiguous verbatim span from the base. Allowed: NP (subject/object) focus, PP (time/place) focus, or adverbial. Not allowed: VP focus, paraphrase, removing content, insertion of new words.
+3) Try to put object NP into [FOCUS] first, then PP(time/place), subject NP in the end.
+4) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
+5) Keep original PPs and word order inside the [CLAUSE] whenever possible.
+7) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+8) Preserve truth conditions.
+9) If the sentence is not suitable for an It-cleft, set not_applicable=true with a one-phrase reason.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}
