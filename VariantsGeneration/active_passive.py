@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/active_passive_variants_3.csv"
+output_csv_dir = "data/active_passive_variants_4.csv"
 
 # model_name = "Qwen/Qwen3-4B-Instruct-2507"
 model_name = "Qwen/Qwen3-8B"
@@ -55,19 +55,11 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
     schema = """{
   "base": "<copy the base exactly>",
   "direction": "active_to_passive" | "passive_to_active" | "unknown",
-  "variants": [
-    {
+  "variants": {
       "text": "...",
       "edit_ops": ["voice: active->passive" | "voice: passive->active"],
       "not_applicable": false,
       "reason": none
-    }
-  ],
-  "self_check": {
-    "arguments_preserved": true,
-    "modals_tense_aspect_preserved": true,
-    "modal_chain_preserved_exactly": true,
-    "negation_scope_preserved": true
   }
 }"""
     return f"""Task: Convert the base statement between active and passive voice.
@@ -100,10 +92,10 @@ def extract_first_json(s: str):
 def pick_variant_text(obj):
     if not isinstance(obj, dict):
         return None
-    variants = obj.get("variants") or []
-    for v in variants:
-        if isinstance(v, dict) and not v.get("not_applicable", False) and "text" in v:
-            return str(v["text"]).strip()
+    variants = obj.get("variants")
+    
+    if isinstance(variants, dict) and not variants.get("not_applicable", False) and "text" in variants:
+        return str(variants["text"]).strip()
     return None
 
 def replace_suffix(id_str: str, new_suffix: str) -> str:

@@ -50,18 +50,10 @@ def render_fewshots_block(shots):
 def build_user_prompt(base: str, fewshots_text: str) -> str:
     schema = """{
   "base": "<copy the base exactly>",
-  "variants": [
-    {
+  "variants": {
       "text": "...",
       "not_applicable": false,
       "reason": none
-    }
-  ],
-  "self_check": {
-    "truth_conditions_preserved": true,
-    "modals_tense_aspect_preserved": true,
-    "negation_scope_preserved": true,
-    "determiner_and_genericity_preserved": true
   }
 }"""
     return f"""Task: Convert the base statement into an It-cleft variant.
@@ -98,10 +90,10 @@ def extract_first_json(s: str):
 def pick_variant_text(obj):
     if not isinstance(obj, dict):
         return None
-    variants = obj.get("variants") or []
-    for v in variants:
-        if isinstance(v, dict) and not v.get("not_applicable", False) and "text" in v:
-            return str(v["text"]).strip()
+    variants = obj.get("variants")
+    
+    if isinstance(variants, dict) and not variants.get("not_applicable", False) and "text" in variants:
+        return str(variants["text"]).strip()
     return None
 
 def replace_suffix(id_str: str, new_suffix: str) -> str:
