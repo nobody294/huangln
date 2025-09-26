@@ -67,7 +67,7 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 Hard constraints:
 1) Do exactly and only a voice transformation (Active<->Passive). Preserve all arguments, named entities, numbers, tense/aspect, modals, quantifiers, negation scope, and PPs.
 2) If an agent exists, keep it (use a by-phrase in passive).
-3) If voice transformation is inapplicable (e.g., copular predicates without a transitive verb), set not_applicable=true and reason=a one-phrase reason.
+3) If voice transformation is inapplicable, set "not_applicable"=true and "reason"=a one-phrase reason.
 4) Keep truth-conditional meaning intact. No paraphrasing beyond voice change.
 
 Output format (SINGLE JSON only, no extra text):
@@ -110,7 +110,7 @@ def replace_suffix(id_str: str, new_suffix: str) -> str:
     return f"{id_str}_{new_suffix}"
 
 def chat_complete(model, tokenizer, system_prompt, user_prompt,
-                  max_new_tokens=4096, temperature=0.3, top_p=0.9):
+                  max_new_tokens=4096):
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -121,12 +121,11 @@ def chat_complete(model, tokenizer, system_prompt, user_prompt,
         out = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=temperature,
-            top_p=top_p
+            do_sample=False,
+            num_beams=5
         )
     output_ids = out[0][len(inputs.input_ids[0]):].tolist()
-    # content = tokenizer.decode(output_ids, skip_special_tokens=True)
+    
     try:
         index = len(output_ids) - output_ids[::-1].index(151668)
     except ValueError:
