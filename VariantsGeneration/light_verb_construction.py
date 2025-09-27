@@ -5,15 +5,16 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/active_passive_variants_1.csv"
+output_csv_dir = "data/LVC_variants.csv"
 
 model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
-    "Your only job is to convert the base statement between active and passive voice, "
-    "preserving truth-conditional meaning, named entities, numbers, qualifiers, scope, modality, tense, aspect, and negation. "
-    "Preserve the entire auxiliary/modal chain exactly, including multiword modals."
+    "Your only job is to transform the base statement into a Light-Verb Construction (LVC): "
+    "[LIGHT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). "
+    "Truth conditions must be preserved. Do not remove content. Do not paraphrase. "
+    "Preserve scope of negation, modals, quantifiers, tense/aspect, numbers, named entities, and PPs (time/place). "
     "Generate in English only. "
     "Output a single JSON object exactly matching the schema."
 )
@@ -21,23 +22,19 @@ SYSTEM_PROMPT = (
 BUILTIN_FEWSHOTS = [
     {
         "base": "The state should provide stronger financial support to unemployed workers.",
-        "variant": "Stronger financial support should be provided to unemployed workers by the state.",
-        "direction": "active_to_passive",
+        "variant": "null",
     },
     {
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
-        "variant": "Member States that violate the EU deficit rules should be rigorously punished by the EU.",
-        "direction": "active_to_passive",
+        "variant": "The EU should rigorously impose punishment on Member States that violate the EU deficit rules.",
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
-        "variant": "The government should tax bank and stock market gains more heavily.",
-        "direction": "passive_to_active",
+        "variant": "Heavier taxation should be imposed on bank and stock market gains.",
     },
     {
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
-        "variant": "In European Parliament elections, a vote should be allowed to be cast by EU citizens for a party or candidate from any other Member State.",
-        "direction": "active_to_passive",
+        "variant": "In European Parliament elections, EU citizens should be given permission to cast a vote for a party or candidate from any other Member State.",
     },
     {
         "base": "The legalisation of same sex marriages is a good thing.",
@@ -45,37 +42,33 @@ BUILTIN_FEWSHOTS = [
     },
     {
         "base": "The legalisation of the personal use of soft drugs is to be welcomed.",
-        "variant": "The government is to welcome the legalisation of the personal use of soft drugs.",
+        "variant": "null",
     },
 ]
 
 def render_fewshots_block(shots):
     lines = ["Few-shot exemplars (follow style strictly):"]
     for s in shots:
-        dir_tag = s.get("direction", "unknown")
-        tag = "active->passive" if dir_tag == "active_to_passive" else (
-              "passive->active" if dir_tag == "passive_to_active" else "voice conversion")
-        lines.append(f"- Base: {s['base']}\n  - {tag}: {s['variant']}")
+        lines.append(f"- Base: {s['base']}\n  - LVC variant: {s['variant']}")
     return "\n".join(lines)
 
 def build_user_prompt(base: str, fewshots_text: str) -> str:
     schema = """{
   "base": "<copy the base exactly>",
-  "direction": "active_to_passive" | "passive_to_active" | "unknown",
   "variants": {
       "text": "...",
-      "edit_ops": ["voice: active->passive" | "voice: passive->active"],
       "not_applicable": false,
-      "reason": none
+      "reason": null
   }
 }"""
-    return f"""Task: Convert the base statement between active and passive voice.
+    return f"""Task: Convert the base statement into an Light-Verb Construction (LVC).
 
-Hard constraints:
-1) Do exactly and only a voice transformation (Active<->Passive). Preserve all arguments, named entities, numbers, tense/aspect, modals, quantifiers, negation scope, and PPs.
-2) If an agent exists, keep it (use a by-phrase in passive).
-3) If voice transformation is inapplicable, set "not_applicable"=true and "reason"=a one-phrase reason.
-4) Keep truth-conditional meaning intact. No paraphrasing beyond voice change.
+Hard constraints (follow strictly):
+1) Make only the LVC substitution: [VERB] -> [LIGHT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). Do not remove content. Do not make other paraphrasing.
+2) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+3) Preserve complements by mapping them to the nominal head in a natural way; do not drop or invent content.
+4) If no LVC exists for the predicate, if the base is already an LVC, or if the base is non-eventive/copular, set not_applicable=true and give a brief reason (one phrase).
+5) Aside from the LVC span and any required preposition, keep the rest of the wording identical.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}

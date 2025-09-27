@@ -38,6 +38,14 @@ BUILTIN_FEWSHOTS = [
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
         "variant": "What EU citizens should be allowed to cast in European Parliament elections is a vote for a party or candidate from any other Member State.",
     },
+    {
+        "base": "The legalisation of same sex marriages is a good thing.",
+        "variant": "What is a good thing is the legalisation of same sex marriages.",
+    },
+    {
+        "base": "The legalisation of the personal use of soft drugs is to be welcomed.",
+        "variant": "What is to be welcomed is the legalisation of the personal use of soft drugs.",
+    },
 ]
 
 def render_fewshots_block(shots):
