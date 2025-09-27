@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/it-clefts_variants.csv"
+output_csv_dir = "data/it-clefts_variants_1.csv"
 
 model_name = "Qwen/Qwen3-8B"
 
@@ -61,7 +61,7 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 Hard constraints (follow strictly):
 1) Use canonical It-cleft form: It is/was [FOCUS] that [CLAUSE]. Match the copula tense to the base.
 2) [FOCUS] must be a contiguous verbatim span from the base. Allowed: NP (subject/object) focus, PP (time/place) focus, or adverbial. Not allowed: VP focus, paraphrase, removing content, insertion of new words.
-3) Try to put object NP into [FOCUS] first, then PP(time/place), subject NP in the end.
+3) [FOCUS] priority: object NP > PP > subject NP.
 4) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
 5) Keep original PPs and word order inside the [CLAUSE] whenever possible.
 7) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.

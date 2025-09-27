@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
-INPUT_CSV = "data/active_passive_variants_3.csv"
+INPUT_CSV = "data/active_passive_variants.csv"
 OUTPUT_CSV = "data/active_passive_responses_4B.csv"
 
 model_name = "google/gemma-3-4b-it"

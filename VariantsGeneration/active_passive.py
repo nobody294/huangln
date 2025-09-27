@@ -5,9 +5,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/active_passive_variants_4.csv"
+output_csv_dir = "data/active_passive_variants_1.csv"
 
-# model_name = "Qwen/Qwen3-4B-Instruct-2507"
 model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
