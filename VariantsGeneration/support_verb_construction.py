@@ -22,7 +22,7 @@ SYSTEM_PROMPT = (
 BUILTIN_FEWSHOTS = [
     {
         "base": "The state should provide stronger financial support to unemployed workers.",
-        "variant": "null",
+        "variant": "The state should make provision for the stronger financial support of unemployed workers.",
     },
     {
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
