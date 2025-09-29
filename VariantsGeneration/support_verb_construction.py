@@ -5,14 +5,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/LVC_variants.csv"
+output_csv_dir = "data/SVC_variants_1.csv"
 
 model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
-    "Your only job is to transform the base statement into a Light-Verb Construction (LVC): "
-    "[LIGHT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). "
+    "Your only job is to transform the base statement into a Support Verb Construction (SVC): "
+    "[SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). "
     "Truth conditions must be preserved. Do not remove content. Do not paraphrase. "
     "Preserve scope of negation, modals, quantifiers, tense/aspect, numbers, named entities, and PPs (time/place). "
     "Generate in English only. "
@@ -30,7 +30,7 @@ BUILTIN_FEWSHOTS = [
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
-        "variant": "Heavier taxation should be imposed on bank and stock market gains.",
+        "variant": "Bank and stock market gains should be imposed taxation more heavily.",
     },
     {
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
@@ -49,7 +49,7 @@ BUILTIN_FEWSHOTS = [
 def render_fewshots_block(shots):
     lines = ["Few-shot exemplars (follow style strictly):"]
     for s in shots:
-        lines.append(f"- Base: {s['base']}\n  - LVC variant: {s['variant']}")
+        lines.append(f"- Base: {s['base']}\n  - SVC variant: {s['variant']}")
     return "\n".join(lines)
 
 def build_user_prompt(base: str, fewshots_text: str) -> str:
@@ -61,14 +61,14 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
       "reason": null
   }
 }"""
-    return f"""Task: Convert the base statement into an Light-Verb Construction (LVC).
+    return f"""Task: Convert the base statement into an Support Verb Construction (SVC).
 
 Hard constraints (follow strictly):
-1) Make only the LVC substitution: [VERB] -> [LIGHT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). Do not remove content. Do not make other paraphrasing.
+1) Make only the SVC substitution: [VERB] -> [SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). Do not remove content. Do not make other paraphrasing.
 2) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
 3) Preserve complements by mapping them to the nominal head in a natural way; do not drop or invent content.
-4) If no LVC exists for the predicate, if the base is already an LVC, or if the base is non-eventive/copular, set not_applicable=true and give a brief reason (one phrase).
-5) Aside from the LVC span and any required preposition, keep the rest of the wording identical.
+4) If no SVC exists for the predicate, or if the base is already an SVC, set not_applicable=true and give a brief reason (one phrase).
+5) Aside from the SVC span and any required preposition, keep the rest of the wording identical.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}
