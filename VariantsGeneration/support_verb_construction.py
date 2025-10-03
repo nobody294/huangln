@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # CSV file paths
 input_csv_dir  = "data/original_statements.csv"
-output_csv_dir = "data/SVC_variants_1.csv"
+output_csv_dir = "data/SVC_variants_2.csv"
 
 model_name = "Qwen/Qwen3-8B"
 
@@ -22,7 +22,7 @@ SYSTEM_PROMPT = (
 BUILTIN_FEWSHOTS = [
     {
         "base": "The state should provide stronger financial support to unemployed workers.",
-        "variant": "The state should make provision for the stronger financial support of unemployed workers.",
+        "variant": "The state should make provision for stronger financial support to unemployed workers.",
     },
     {
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
@@ -30,7 +30,7 @@ BUILTIN_FEWSHOTS = [
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
-        "variant": "Bank and stock market gains should be imposed taxation more heavily.",
+        "variant": "Bank and stock market gains should be given heavier taxation.",
     },
     {
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
@@ -65,10 +65,11 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 
 Hard constraints (follow strictly):
 1) Make only the SVC substitution: [VERB] -> [SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). Do not remove content. Do not make other paraphrasing.
-2) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
-3) Preserve complements by mapping them to the nominal head in a natural way; do not drop or invent content.
-4) If no SVC exists for the predicate, or if the base is already an SVC, set not_applicable=true and give a brief reason (one phrase).
-5) Aside from the SVC span and any required preposition, keep the rest of the wording identical.
+2) If the verb in the base statement is modified by an adverb, project it as an adjective inside the SVC span if possible.
+3) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+4) Preserve complements by mapping them to the nominal head in a natural way; do not drop or invent content.
+5) If no SVC exists for the predicate, or if the base is already an SVC, set not_applicable=true and give a brief reason (one phrase).
+6) Aside from the SVC span and any required preposition, keep the rest of the wording identical.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}
@@ -138,7 +139,7 @@ def run():
     fewshots_text = render_fewshots_block(BUILTIN_FEWSHOTS)
 
     df = pd.read_csv(input_csv_dir)
-    assert list(df.columns[:2]) == ["ID", "statement"], "CSV 前两列必须是 ID, statement"
+    assert list(df.columns[:2]) == ["ID", "statement"], "First two columns of CSV have to be ID and statement"
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(

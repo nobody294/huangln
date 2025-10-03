@@ -86,7 +86,7 @@ def generate_30_json_responses(model, processor, system_prompt, user_prompt,
 
 def run():
     df = pd.read_csv(INPUT_CSV)
-    assert list(df.columns[:2]) == ["ID", "statement"], "CSV 前两列必须是 ID, statement"
+    assert list(df.columns[:2]) == ["ID", "statement"], "First two columns of CSV have to be ID and statement"
 
     processor = AutoProcessor.from_pretrained(model_name)
     model = Gemma3ForConditionalGeneration.from_pretrained(

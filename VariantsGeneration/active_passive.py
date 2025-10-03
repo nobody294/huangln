@@ -145,7 +145,7 @@ def run():
     fewshots_text = render_fewshots_block(BUILTIN_FEWSHOTS)
 
     df = pd.read_csv(input_csv_dir)
-    assert list(df.columns[:2]) == ["ID", "statement"], "CSV 前两列必须是 ID, statement"
+    assert list(df.columns[:2]) == ["ID", "statement"], "First two columns of CSV have to be ID and statement"
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
