@@ -3,7 +3,6 @@ import pandas as pd
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# CSV file paths
 input_csv_dir  = "data/original_statements.csv"
 output_csv_dir = "data/wh-clefts_variants.csv"
 
@@ -105,7 +104,6 @@ def pick_variant_text(obj):
     return None
 
 def replace_suffix(id_str: str, new_suffix: str) -> str:
-    # replace the 7 digits with the new suffix
     m = re.match(r"^([^_]+_[^_]+)_[0-9]{7}$", id_str)
     if m:
         return f"{m.group(1)}_{new_suffix}"

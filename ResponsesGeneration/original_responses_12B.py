@@ -3,8 +3,8 @@ import pandas as pd
 import torch
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
-INPUT_CSV = "data/original_statements.csv"
-OUTPUT_CSV = "data/original_responses_12B.csv"
+input_csv_dir = "data/original_statements.csv"
+output_csv_dir = "data/original_responses_12B.csv"
 
 model_name = "google/gemma-3-12b-it"
 
@@ -25,8 +25,6 @@ def build_user_prompt_for_scoring(statement: str) -> str:
     Statement: {statement}
 """
 
-# --- JSON helpers ----------------------------------------------------------
-
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 def extract_first_json(s: str):
@@ -44,8 +42,6 @@ def clamp_score(x):
         return xi if 1 <= xi <= 7 else None
     except Exception:
         return None
-
-# --- Generation with Gemma-3 ----------------------------------------------
 
 def generate_30_json_responses(model, processor, system_prompt, user_prompt,
                                temperature=0.8, top_p=0.95, max_new_tokens=50, seed=42):
@@ -77,15 +73,12 @@ def generate_30_json_responses(model, processor, system_prompt, user_prompt,
                       else model.generation_config.eos_token_id)
     )
 
-    # 只取生成段
     gen_only = gen_ids[:, input_len:]
     decoded = processor.batch_decode(gen_only, skip_special_tokens=True)
     return decoded
 
-# --- Main -----------------------------------------------------------------
-
 def run():
-    df = pd.read_csv(INPUT_CSV)
+    df = pd.read_csv(input_csv_dir)
     assert list(df.columns[:2]) == ["ID", "statement"], "First two columns of CSV have to be ID and statement"
 
     processor = AutoProcessor.from_pretrained(model_name)
@@ -94,9 +87,6 @@ def run():
         device_map="auto",
         torch_dtype="auto"
     ).eval()
-
-    if model.generation_config.pad_token_id is None:
-        model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
     out_rows = []
     total_ok = 0
@@ -128,10 +118,10 @@ def run():
         sys.stdout.flush()
 
     pd.DataFrame(out_rows, columns=["ID", "score"]).to_csv(
-        OUTPUT_CSV, index=False, encoding="utf-8"
+        output_csv_dir, index=False, encoding="utf-8"
     )
     print(f"[done] Collected {total_ok} responses across {len(df)} statements.")
-    print(f"[done] Wrote: {OUTPUT_CSV}")
+    print(f"[done] Wrote: {output_csv_dir}")
 
 if __name__ == "__main__":
     run()
