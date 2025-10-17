@@ -156,3 +156,79 @@ def attribution_scores_first_order(
     return scores_sorted
 
 
+class CleanCache:
+    def __init__(self):
+        self.block_out: Dict[int, torch.Tensor] = {}
+        self.attn_out: Dict[int, torch.Tensor] = {}
+        self.mlp_out: Dict[int, torch.Tensor] = {}
+
+    def to_device_like(self, ref: torch.Tensor):
+        for d in (self.block_out, self.attn_out, self.mlp_out):
+            for k, v in d.items():
+                if v.device != ref.device:
+                    d[k] = v.to(ref.device)
+
+
+def collect_clean_cache(
+        model: Gemma3ForConditionalGeneration,
+        enc_clean: EncodedChat
+) -> CleanCache:
+    cache = CleanCache()
+    hooks = []
+
+    def layer_hook(layer_idx):
+        def _hook(module, input, out):
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = hidden[:, enc_clean.answer_pos, :].detach().squeeze(0).to(hidden.dtype)
+            cache.block_out[layer_idx] = vec.cpu()
+            return out
+        return _hook
+    
+    def attn_hook(layer_idx):
+        def _hook(module, input, out):
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = hidden[:, enc_clean.answer_pos, :].detach().squeeze(0).to(hidden.dtype)
+            cache.attn_out[layer_idx] = vec.cpu()
+            return out
+        return _hook
+    
+    def mlp_hook(layer_idx):
+        def _hook(module, input, out):
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = hidden[:, enc_clean.answer_pos, :].detach().squeeze(0).to(hidden.dtype)
+            cache.mlp_out[layer_idx] = vec.cpu()
+            return out
+        return _hook
+    
+    for i, m in enumerate(model.model.layers):
+        assert isinstance(m, Gemma3DecoderLayer)
+        hooks.append(m.register_forward_hook(layer_hook(i)))
+
+        for name, sub in m.named_modules():
+            if isinstance(sub, Gemma3Attention):
+                hooks.append(sub.register_forward_hook(attn_hook(i)))
+            elif isinstance(sub, Gemma3MLP):
+                hooks.append(sub.register_forward_hook(mlp_hook(i)))
+    
+    with torch.no_grad():
+        _ = model(
+            input_ids = enc_clean.input_ids,
+            attention_mask = enc_clean.attention_mask,
+            output_hidden_states = False,
+            return_dict = True
+        )
+    
+    for h in hooks:
+        h.remove()
+    return cache
+
+@contextlib.contextmanager
+def patch_context(
+    model: Gemma3ForConditionalGeneration,
+    enc_corrupt: EncodedChat,
+    cache: CleanCache,
+    patch_spec: Dict[str, List[int]]
+):
+    hooks = []
+    cache.to_device_like(enc_corrupt.input_ids)
+    
