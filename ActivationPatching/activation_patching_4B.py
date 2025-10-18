@@ -24,6 +24,18 @@ VARIANT_TEXT = "An additional flight tax for short-distance flights should be in
 topk_attr = 6
 print_top_layers = 8
 
+def get_decoder_layers(model: Gemma3ForConditionalGeneration):
+    layers = []
+    for name, mod in model.named_modules():
+        if isinstance(mod, Gemma3DecoderLayer):
+            layers.append((len(layers), name, mod))
+    if not layers:
+        raise RuntimeError(
+            "No Gemma3DecoderLayer found via named_modules(). "
+            "Check transformers version or model class."
+        )
+    return layers
+
 @dataclass
 class EncodedChat:
     input_ids: torch.Tensor
@@ -116,7 +128,7 @@ def forward_with_hidden_states(
     out = model(
         input_ids = enc.input_ids,
         attention_mask = enc.attention_mask,
-        output_hidden_states = False,
+        output_hidden_states = True,
         return_dict = True
     )
     logits = out.logits[:, enc.answer_pos, :].squeeze(0)
@@ -137,22 +149,57 @@ def attribution_scores_first_order(
         enc_corrupt: EncodedChat,
         target_digit_id: int
 ):
-    with torch.no_grad():
-        _, hs_clean = forward_with_hidden_states(model, enc_clean, need_grads=False)
-    logits_corrupt, hs_corrupt = forward_with_hidden_states(model, enc_corrupt, need_grads=True)
+    clean_cache = collect_clean_cache(model, enc_clean)
 
+    h_corrupt_pos: Dict[int, torch.Tensor] = {}
+    grad_pos: Dict[int, torch.Tensor] = {}
+    fwd_hooks, bwd_hooks = [], []
+
+    def make_fwd_hook(layer_idx):
+        def _fwd(module, inp, out):
+            hidden = out[0] if isinstance(out, tuple) else out
+            v = hidden[:, enc_corrupt.answer_pos, :].detach().squeeze(0)
+            h_corrupt_pos[layer_idx] = v
+            return out
+        return _fwd
+
+    def make_bwd_hook(layer_idx):
+        def _bwd(module, grad_input, grad_output):
+            g = grad_output[0][:, enc_corrupt.answer_pos, :].detach().squeeze(0)
+            grad_pos[layer_idx] = g
+        return _bwd
+
+    for i, name, layer in get_decoder_layers(model):
+        fwd_hooks.append(layer.register_forward_hook(make_fwd_hook(i)))
+        bwd_hooks.append(layer.register_full_backward_hook(make_bwd_hook(i)))
+
+    out = model(
+        input_ids=enc_corrupt.input_ids,
+        attention_mask=enc_corrupt.attention_mask,
+        output_hidden_states=False,
+        return_dict=True,
+    )
+    logits_corrupt = out.logits[:, enc_corrupt.answer_pos, :].squeeze(0)
     obj = logits_corrupt[target_digit_id]
+
     model.zero_grad(set_to_none=True)
     obj.backward(retain_graph=False)
 
-    scores = []
-    for l, (hc, hr) in enumerate(zip(hs_clean, hs_corrupt)):
-        grad = hr.grad
-        delta = hc - hr
-        s = torch.dot(delta, grad)
-        scores.append((l, s.item()))
-    scores_sorted = sorted(scores, key=lambda x: abs(x[1]), reverse=True)
+    for h in fwd_hooks + bwd_hooks:
+        h.remove()
 
+    scores = []
+    device = logits_corrupt.device
+    layer_ids = sorted(set(clean_cache.block_out.keys()) &
+                    set(h_corrupt_pos.keys()) &
+                    set(grad_pos.keys()))
+    for l in layer_ids:
+        hc = clean_cache.block_out[l].to(device)
+        hr = h_corrupt_pos[l].to(device)
+        g  = grad_pos[l].to(device)
+        s = torch.dot((hc - hr).float(), g.float()).item()
+        scores.append((l, s))
+    scores_sorted = sorted(scores, key=lambda x: abs(x[1]), reverse=True)
     return scores_sorted
 
 
@@ -200,11 +247,9 @@ def collect_clean_cache(
             return out
         return _hook
     
-    for i, m in enumerate(model.model.layers):
-        assert isinstance(m, Gemma3DecoderLayer)
-        hooks.append(m.register_forward_hook(layer_hook(i)))
-
-        for name, sub in m.named_modules():
+    for i, name, layer in get_decoder_layers(model):
+        hooks.append(layer.register_forward_hook(layer_hook(i)))
+        for subname, sub in layer.named_modules():
             if isinstance(sub, Gemma3Attention):
                 hooks.append(sub.register_forward_hook(attn_hook(i)))
             elif isinstance(sub, Gemma3MLP):
@@ -232,3 +277,104 @@ def patch_context(
     hooks = []
     cache.to_device_like(enc_corrupt.input_ids)
     
+    def replace_slice(hidden: torch.Tensor, vec: torch.Tensor):
+        new_hidden = hidden.clone()
+        new_hidden[:, enc_corrupt.answer_pos, :] = vec.to(hidden.dtype).to(hidden.device)
+        return new_hidden
+    
+    def layer_patch_hook(layer_idx):
+        def _hook(module, input, out):
+            if layer_idx not in patch_spec.get("block", []):
+                return out
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = cache.block_out[layer_idx].to(hidden.device)
+            new_hidden = replace_slice(hidden, vec)
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+        return _hook
+    
+    def attn_patch_hook(layer_idx):
+        def _hook(module, input, out):
+            if layer_idx not in patch_spec.get("attn", []):
+                return out
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = cache.attn_out[layer_idx].to(hidden.device)
+            new_hidden = replace_slice(hidden, vec)
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+        return _hook
+    
+    def mlp_patch_hook(layer_idx):
+        def _hook(module, input, out):
+            if layer_idx not in patch_spec.get("mlp", []):
+                return out
+            hidden = out[0] if isinstance(out, tuple) else out
+            vec = cache.mlp_out[layer_idx].to(hidden.device)
+            new_hidden = replace_slice(hidden, vec)
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+        return _hook
+    
+    for i, name, layer in get_decoder_layers(model):
+        hooks.append(layer.register_forward_hook(layer_patch_hook(i)))
+        for subname, sub in layer.named_modules():
+            if isinstance(sub, Gemma3Attention):
+                hooks.append(sub.register_forward_hook(attn_patch_hook(i)))
+            elif isinstance(sub, Gemma3MLP):
+                hooks.append(sub.register_forward_hook(mlp_patch_hook(i)))
+
+    
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
+
+def restoration_fraction(
+        logit_clean_target: float,
+        logit_corrupt_target: float,
+        logit_patched_target: float
+) -> float:
+    denom = logit_clean_target - logit_corrupt_target
+    if abs(denom) < 1e-9:
+        return float("nan")
+    
+    return (logit_patched_target - logit_corrupt_target) / denom
+
+
+def run_activation_patching(base_text: str, variant_text: str):
+    processor = AutoProcessor.from_pretrained(model_name)
+    model = Gemma3ForConditionalGeneration.from_pretrained(
+        model_name,
+        device_map = "auto",
+        torch_dtype = "auto"
+    ).eval()
+
+    enc_clean = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(base_text))
+    enc_corrupt = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(variant_text))
+
+    with torch.no_grad():
+        logits_clean = forward_logits_only(model, enc_clean)
+        logits_corrupt = forward_logits_only(model, enc_corrupt)
+        logits_clean_digits = digit_logit_slice(logits_clean, enc_clean.digit_ids)
+        logits_corrupt_digits = digit_logit_slice(logits_corrupt, enc_corrupt.digit_ids)
+    
+    target_digit_id = pick_target_digit_id(logits_clean_digits, enc_clean.digit_ids)
+    clean_target_logit = logits_clean[target_digit_id].item()
+    corrupt_target_logit = logits_corrupt[target_digit_id].item()
+
+    print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})")
+    print(f"[Clean target logit]   {clean_target_logit:.3f}")
+    print(f"[Corrupt target logit] {corrupt_target_logit:.3f}")
+    print("-" * 60)
+
+    scores_sorted = attribution_scores_first_order(model, enc_clean, enc_corrupt, target_digit_id)
+    print("[Attribution (first-order) — top layers]")
+    for i, (l, s) in enumerate(scores_sorted[:print_top_layers], 1):
+        print(f" #{i:02d} layer={l:02d} approx_gain={s:+.3e}")
+    print("-" * 60)
+
+
+
+
+
+if __name__ == "__main__":
+    torch.set_grad_enabled(True)
+    res = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
