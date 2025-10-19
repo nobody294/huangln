@@ -87,9 +87,14 @@ def run():
     total_ok = 0
     for i, row in df.iterrows():
         id = str(row["ID"])
-        stmt = str(row["statement"])
 
-        user_prompt = build_user_prompt_for_scoring(stmt)
+        stmt = row["statement"]
+        if not (isinstance(stmt, str) and stmt.strip()):
+            sys.stdout.write(f"[Row {i+1}] ID={id} -> skipped (empty statement)\n")
+            sys.stdout.flush()
+            continue
+
+        user_prompt = build_user_prompt_for_scoring(str(stmt))
         raw_list = generate_30_json_responses(
             model, processor, SYSTEM_PROMPT, user_prompt,
             temperature=0.8, top_p=0.95, max_new_tokens=4, seed=123 + i
@@ -105,7 +110,7 @@ def run():
             ok_count += 1
 
         total_ok += ok_count
-        sys.stdout.write(f"[Row {i}] ID={id} -> parsed {ok_count}/30 JSONs\n")
+        sys.stdout.write(f"[Row {i+1}] ID={id} -> parsed {ok_count}/30 JSONs\n")
         sys.stdout.flush()
 
     pd.DataFrame(out_rows, columns=["ID", "score"]).to_csv(
