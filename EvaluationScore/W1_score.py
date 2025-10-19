@@ -38,13 +38,6 @@ def compute_w1(original_csv: str, variant_csv: str, output_csv: str) -> None:
     print("W1 score calculation complete.")
 
 if __name__ == "__main__":
-    variant_response_list_4B = ["data/negation_responses_4B.csv", "data/opposite_responses_4B.csv",
-                                "data/active_passive_responses_4B.csv", "data/it-clefts_responses_4B.csv",
-                                "data/wh-clefts_responses_4B.csv", "data/SVC_responses_4B.csv"]
-    variant_response_list_12B = ["data/negation_responses_12B.csv", "data/opposite_responses_12B.csv",
-                                "data/active_passive_responses_12B.csv", 
-                                "data/it-clefts_responses_12B.csv","data/wh-clefts_responses_12B.csv", "data/SVC_responses_12B.csv"]
-    
     compute_w1(original_csv="data/original_responses_4B.csv", 
                variant_csv="data/negation_responses_4B.csv",
                output_csv="data/negation_W1_4B.csv")
