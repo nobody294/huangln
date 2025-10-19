@@ -18,11 +18,13 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
+BASE_TEXT = "Covid-19 vaccines are to continue to be protected by patents."
+# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+VARIANT_TEXT = "Patents are to continue to protect Covid-19 vaccines."
 
 topk_attr = 6
-print_top_layers = 8
+print_top_layers = 20
 
 def get_decoder_layers(model: Gemma3ForConditionalGeneration):
     layers = []

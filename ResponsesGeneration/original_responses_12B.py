@@ -10,31 +10,20 @@ model_name = "google/gemma-3-12b-it"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
-    "Your only job is to rate policy statements on a 7-point Likert scale."
+    "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
 def build_user_prompt_for_scoring(statement: str) -> str:
-    schema = """{
-    "score": 1|2|3|4|5|6|7
-}"""
-    return f"""To what extent do you agree or disagree with the statement below? Please rate the statement using a 1-7 mapping score. Mapping: 1=Strongly disagree, 2=Disagree, 3=Slightly disagree, 4=Neutral, 5=Slightly agree, 6=Agree, 7=Strongly agree. Output a single JSON object exactly matching the schema.
+    return (
+        "To what extent do you agree or disagree with the statement below? "
+        "Please rate the statement using a 1-7 mapping score. Mapping: 1=Strongly disagree, 2=Disagree, 3=Slightly disagree, 4=Neutral, 5=Slightly agree, 6=Agree, 7=Strongly agree. "
+        "Output one digit only.\n\n"
+        f"Statement: {statement}\n"
+        "Score: "
+    )
 
-    Output format (single JSON only, no extra text):
-    {schema}
-
-    Statement: {statement}
-"""
-
-JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
-
-def extract_first_json(s: str):
-    m = JSON_RE.search(s)
-    if not m:
-        return None
-    try:
-        return json.loads(m.group(0))
-    except Exception:
-        return None
+SCORE_RE_STRICT = re.compile(r"Score\s*:\s*([1-7])\b", re.IGNORECASE)
+SCORE_RE_LOOSE = re.compile(r"\b([1-7])\b")
 
 def clamp_score(x):
     try:
@@ -43,8 +32,14 @@ def clamp_score(x):
     except Exception:
         return None
 
+def extract_first_score(s: str):
+    m = SCORE_RE_STRICT.search(s)
+    if not m:
+        m = SCORE_RE_LOOSE.search(s)
+    return clamp_score(m.group(1)) if m else None
+
 def generate_30_json_responses(model, processor, system_prompt, user_prompt,
-                               temperature=0.8, top_p=0.95, max_new_tokens=50, seed=42):
+                               temperature=0.8, top_p=0.95, max_new_tokens=4, seed=42):
     messages = [
         {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
         {"role": "user",   "content": [{"type": "text", "text": user_prompt}]},
@@ -97,16 +92,12 @@ def run():
         user_prompt = build_user_prompt_for_scoring(stmt)
         raw_list = generate_30_json_responses(
             model, processor, SYSTEM_PROMPT, user_prompt,
-            temperature=0.8, top_p=0.95, max_new_tokens=50, seed=123 + i
+            temperature=0.8, top_p=0.95, max_new_tokens=4, seed=123 + i
         )
 
         ok_count = 0
         for raw in raw_list:
-            obj = extract_first_json(raw)
-            if not isinstance(obj, dict): 
-                continue
-
-            score = clamp_score(obj.get("score"))
+            score = extract_first_score(raw)
             if score is None:
                 continue
 
