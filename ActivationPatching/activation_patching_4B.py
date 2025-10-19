@@ -360,9 +360,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     clean_target_logit = logits_clean[target_digit_id].item()
     corrupt_target_logit = logits_corrupt[target_digit_id].item()
 
+    c_id = pick_target_digit_id(logits_corrupt_digits, enc_corrupt.digit_ids)
+    test = logits_corrupt[c_id].item()
+
     print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})")
     print(f"[Clean target logit]   {clean_target_logit:.3f}")
     print(f"[Corrupt target logit] {corrupt_target_logit:.3f}")
+    print(f"[c_id] {c_id}  ({processor.tokenizer.decode([c_id])})")
     print("-" * 60)
 
     scores_sorted = attribution_scores_first_order(model, enc_clean, enc_corrupt, target_digit_id)
@@ -371,7 +375,46 @@ def run_activation_patching(base_text: str, variant_text: str):
         print(f" #{i:02d} layer={l:02d} approx_gain={s:+.3e}")
     print("-" * 60)
 
+    clean_cache = collect_clean_cache(model, enc_clean)
+    layers = get_decoder_layers(model)
+    n_layers = len(layers)
+    def sweep_patch(kind: str) -> List[Tuple[int, float]]:
+        results = []
+        for l in range(n_layers):
+            spec = {"layer": [], "attn": [], "mlp": []}
+            spec[kind] = [l]
+            with patch_context(model, enc_corrupt, clean_cache, spec):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+            r = restoration_fraction(clean_target_logit, corrupt_target_logit,
+                                     logits_patched[target_digit_id].item())
+            results.append((l, r))
+        return results
+    
+    block_results = sweep_patch("block")
+    attn_results = sweep_patch("attn")
+    mlp_results = sweep_patch("mlp")
 
+    def print_top(title, arr):
+        arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+        print(title)
+        for i, (l, r) in enumerate(arr_sorted[:print_top_layers], 1):
+            txt = "nan" if math.isnan(r) else f"{r:.3f}"
+            print(f" #{i:02d} layer={l:02d} restoration={txt}")
+        print("-" * 60)
+    
+    print_top("[Patch - BLOCK - top layers]", block_results)
+    print_top("[Patch - ATTN - top layers]", attn_results)
+    print_top("[Patch - MLP - top layers]", mlp_results)
+
+    return {
+        "target_digit_id": target_digit_id,
+        "clean_target_logit": clean_target_logit,
+        "corrupt_target_logit": corrupt_target_logit,
+        "block_results": block_results,
+        "attn_results": attn_results,
+        "mlp_results": mlp_results,
+        "attr_top_layers": scores_sorted[:topk_attr]
+    }
 
 
 
