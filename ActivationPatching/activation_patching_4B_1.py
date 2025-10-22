@@ -26,7 +26,6 @@ VARIANT_TEXT = "An additional flight tax for short-distance flights should be in
 topk_attr = 6
 print_top_layers = 20
 
-METRIC_MODE = "dist"
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
 
@@ -158,29 +157,17 @@ def digit_probs_from_logits_full(
 def objective_from_logits_full(
     logits_full: torch.Tensor,
     enc: EncodedChat,
-    mode: str,
-    target_digit_idx: Optional[int],
     clean_probs: Optional[torch.Tensor],
     temperature: float = 1.0,
 ) -> torch.Tensor:
-    if mode == "argmax":
-        digits = digit_logit_slice(logits_full, enc.digit_ids)
-        assert target_digit_idx is not None
-        return digits[target_digit_idx]
-    elif mode == "dist":
-        assert clean_probs is not None
-        p = digit_probs_from_logits_full(logits_full, enc, temperature)
-        return torch.sum(clean_probs * torch.log(p.clamp_min(EPS)))
-    else:
-        raise ValueError(f"Unknown METRIC_MODE: {mode}")
+    p = digit_probs_from_logits_full(logits_full, enc, temperature)
+    return torch.sum(clean_probs * torch.log(p.clamp_min(EPS)))
 
 def attribution_scores_first_order(
         model: Gemma3ForConditionalGeneration,
         enc_clean: EncodedChat,
         enc_corrupt: EncodedChat,
-        target_digit_idx: Optional[int],
-        clean_probs: Optional[torch.Tensor],
-        metric_mode: str = "dist"
+        clean_probs: Optional[torch.Tensor]
 ):
     clean_cache = collect_clean_cache(model, enc_clean)
 
@@ -215,8 +202,7 @@ def attribution_scores_first_order(
     logits_corrupt = out.logits[:, enc_corrupt.answer_pos, :].squeeze(0)
     
     obj = objective_from_logits_full(
-        logits_corrupt, enc_corrupt, metric_mode,
-        target_digit_idx, clean_probs, TEMP_FOR_PROBS
+        logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS
     )
 
     model.zero_grad(set_to_none=True)
@@ -396,7 +382,6 @@ def run_activation_patching(base_text: str, variant_text: str):
     target_digit_id = pick_target_digit_id(logits_clean_digits, enc_clean.digit_ids)
     clean_target_logit = logits_clean[target_digit_id].item()
     corrupt_target_logit = logits_corrupt[target_digit_id].item()
-    target_digit_idx = enc_clean.digit_ids.index(target_digit_id)
 
     c_id = pick_target_digit_id(logits_corrupt_digits, enc_corrupt.digit_ids)
     test = logits_corrupt[c_id].item()
@@ -411,19 +396,12 @@ def run_activation_patching(base_text: str, variant_text: str):
     corrupt_probs = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
 
     obj_clean = objective_from_logits_full(
-        logits_clean, enc_clean, METRIC_MODE,
-        target_digit_idx if METRIC_MODE=="argmax" else None,
-        clean_probs if METRIC_MODE=="dist" else None,
-        TEMP_FOR_PROBS
+        logits_clean, enc_clean, clean_probs, TEMP_FOR_PROBS
     ).item()
     obj_corrupt = objective_from_logits_full(
-        logits_corrupt, enc_corrupt, METRIC_MODE,
-        target_digit_idx if METRIC_MODE=="argmax" else None,
-        clean_probs if METRIC_MODE=="dist" else None,
-        TEMP_FOR_PROBS
+        logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS
     ).item()
 
-    print(f"[Metric mode] {METRIC_MODE}  (T={TEMP_FOR_PROBS})")
     print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})  (for reference)")
     print(f"[Clean target logit]   {clean_target_logit:.3f}  (ref)")
     print(f"[Corrupt target logit] {corrupt_target_logit:.3f}  (ref)")
@@ -432,10 +410,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     print("-" * 60)
 
     scores_sorted = attribution_scores_first_order(
-        model, enc_clean, enc_corrupt,
-        target_digit_idx if METRIC_MODE=="argmax" else None,
-        clean_probs if METRIC_MODE=="dist" else None,
-        metric_mode=METRIC_MODE
+        model, enc_clean, enc_corrupt, clean_probs
     )
     print("[Attribution (first-order) — top layers]")
     for i, (l, s) in enumerate(scores_sorted[:print_top_layers], 1):
@@ -453,10 +428,7 @@ def run_activation_patching(base_text: str, variant_text: str):
             with patch_context(model, enc_corrupt, clean_cache, spec):
                 logits_patched = forward_logits_only(model, enc_corrupt)
             obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, METRIC_MODE,
-                target_digit_idx if METRIC_MODE == "argmax" else None,
-                clean_probs if METRIC_MODE == "dist" else None,
-                TEMP_FOR_PROBS
+                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
             ).item()
             r = restoration_fraction(obj_clean, obj_corrupt, obj_patched)
             results.append((l, r))
