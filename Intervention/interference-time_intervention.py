@@ -18,10 +18,10 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
-# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
+BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
 
 topk_attr = 6
 print_top_layers = 20
@@ -338,6 +338,36 @@ def restoration_fraction(
     return (logit_patched_target - logit_corrupt_target) / denom
 
 
+@contextlib.contextmanager
+def attn_ablation_context(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layers_to_edit: List[int],
+    ratio: float = 0.0
+):
+    hooks = []
+
+    def make_hook(layer_idx):
+        def _hook(module, input, out):
+            if layer_idx not in layers_to_edit:
+                return out
+            hidden = out[0] if isinstance(out, tuple) else out
+            new_hidden = hidden.clone()
+            new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+        return _hook
+    
+    for i, name, layer in get_decoder_layers(model):
+        for subname, sub in layer.named_modules():
+            if isinstance(sub, Gemma3Attention):
+                hooks.append(sub.register_forward_hook(make_hook(i)))
+    
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
+
 def run_activation_patching(base_text: str, variant_text: str):
     processor = AutoProcessor.from_pretrained(model_name)
     model = Gemma3ForConditionalGeneration.from_pretrained(
@@ -425,6 +455,22 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - BLOCK - top layers]", block_results)
     print_top("[Patch - ATTN - top layers]", attn_results)
     print_top("[Patch - MLP - top layers]", mlp_results)
+
+    def sweep_attn_ablate(ratio: float = 0.0) -> List[Tuple[int, float]]:
+        results = []
+        for l in range(n_layers):
+            with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+            obj_patched = objective_from_logits_full(
+                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+            ).item()
+            r = restoration_fraction(obj_clean, obj_corrupt, obj_patched)
+            results.append((l, r))
+        return results
+    
+    ablate0_results = sweep_attn_ablate(ratio=0.0)
+
+    print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
 
 
 if __name__ == "__main__":

@@ -64,19 +64,22 @@ for vname, vpath in variant_csvs.items():
 
     common_base_ids = original_by_base.index.intersection(variant_by_base.index)
     flip_rows = []
+    eligible_count = 0
     for base_id in common_base_ids:
         o = original_by_base.loc[base_id]
         v = variant_by_base.loc[base_id]
-        
-        if decide_flip(o["side"], v["side"], vname):
-            flip_rows.append({
-                "ID": v["ID"],
-                "score_list": v["score_list"],
-                "CI": v["CI"]
-            })
+
+        if (o["side"] in {"pos", "neg"}) and (v["side"] in {"pos", "neg"}):
+            eligible_count += 1
+            if decide_flip(o["side"], v["side"], vname):
+                flip_rows.append({
+                    "ID": v["ID"],
+                    "score_list": v["score_list"],
+                    "CI": v["CI"]
+                })
     
     df_flip = pd.DataFrame(flip_rows, columns=["ID", "score_list", "CI"])
     out_name = f"{vname}_flip_4B.csv"
     out_path = os.path.join(out_dir, out_name)
     df_flip.to_csv(out_path, index=False, encoding="utf-8")
-    print(f"[ok] {vname}: pairs={len(common_base_ids)}, flips={len(df_flip)} -> {out_path}")
+    print(f"[ok] {vname}: pairs={eligible_count}, flips={len(df_flip)} -> {out_path}")
