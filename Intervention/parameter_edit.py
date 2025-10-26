@@ -1,3 +1,5 @@
+import json
+from typing import NamedTuple
 import os
 import numpy as np
 import random
@@ -15,6 +17,7 @@ from transformers.models.gemma3.modeling_gemma3 import (
     Gemma3Attention,
     Gemma3MLP
 )
+from sklearn.metrics import roc_auc_score
 
 # ---------------------------
 # Config
@@ -30,6 +33,10 @@ SYSTEM_PROMPT = (
 # Example pair for base vs variant (you can change these)
 BASE_TEXT = "The government should abolish the ban on face-covering clothing."
 VARIANT_TEXT = "It is the ban on face-covering clothing that the government should abolish."
+# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+
+# BASE_TEXT = "Houses should be built on land currently used for agriculture."
+# VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -416,7 +423,9 @@ def run_activation_patching(base_text: str, variant_text: str):
 
     print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})")
     print(f"[Clean target logit]   {clean_target_logit:.3f}")
+    print(f"[Clean logits] {logits_clean_digits}")
     print(f"[Corrupt target logit] {corrupt_target_logit:.3f}")
+    print(f"[Corrupt logits] {logits_corrupt_digits}")
     print(f"[c_id] {c_id}  ({processor.tokenizer.decode([c_id])})")
     print("-" * 60)
 
@@ -618,17 +627,14 @@ def build_train_lists_from_csv(
     
     common_before_flip = base_keys & var_keys
 
-    # 读取 flip 前缀集合（两段式），用于排除
     if flip_csv_path:
         flip_prefixes, flip_stats = _load_flip_prefix_set(flip_csv_path)
     else:
         flip_prefixes, flip_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
 
-    # 从可配集合中剔除在 flip 中出现过的前缀
     common = common_before_flip - flip_prefixes
 
     if keep_order_by_base:
-        # 按 base CSV 中首次出现的顺序来产出（稳定且可复现，前提是 base_csv 不变）
         ordered = []
         with open(base_csv_path, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -638,7 +644,6 @@ def build_train_lists_from_csv(
                     ordered.append(pref)
         prefix_list = ordered
     else:
-        # 统一排序，保证可复现
         prefix_list = sorted(common)
 
     train_base    = [base_map[p][1] for p in prefix_list]
@@ -758,46 +763,49 @@ def fit_or_load_probe_ce(
     system_prompt: str,
     probe_layer_idx: int = -1,
     save_dir: str = "probe_ckpts",
-    tag: str = "vote_ce",         # 用于区分不同任务/数据
+    tag: str = "vote_ce",
     epochs: int = 20,
     lr: float = 1e-4,
     batch_size: int = 32,
     weight_decay: float = 0.0,
     seed: int = 42,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    训练或加载 2-way CE 探针：
-      - 返回 (delta_w, W_2xH, b_2)；delta_w = normalize(W[1]-W[0])。
-      - 存盘内容：{"W2","b2","mu","sigma","layer_idx","tag"}
+    训练/加载 2-way CE 探针（**仅使用传入的 texts_pos/texts_neg** 作为训练集）。
+    返回: delta_w, W2, b2, mu, sigma  (均在 CPU float32)
+    同时保存 ckpt: {"W2","b2","mu","sigma","layer_idx","tag"}
     """
     os.makedirs(save_dir, exist_ok=True)
     probe_path = os.path.join(save_dir, f"probe_{tag}_L{probe_layer_idx}.pt")
-    feats_pos_cache = os.path.join(save_dir, f"feats_pos_{tag}_L{probe_layer_idx}.npy")
-    feats_neg_cache = os.path.join(save_dir, f"feats_neg_{tag}_L{probe_layer_idx}.npy")
 
-    # 如果已有探针，直接加载返回
+    # 若已有训练好的探针，直接加载（注意：此时默认这些权重/统计就是 train 切分学到的）
     if os.path.exists(probe_path):
         ckpt = torch.load(probe_path, map_location="cpu")
         W2 = ckpt["W2"].to(torch.float32)
         b2 = ckpt["b2"].to(torch.float32)
-        delta_w = (W2[1] - W2[0])
-        delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
-        return delta_w.cpu(), W2.cpu(), b2.cpu()
+        mu = ckpt["mu"].to(torch.float32).unsqueeze(0)
+        sigma = ckpt["sigma"].to(torch.float32).unsqueeze(0)
+        delta_w = (W2[1] - W2[0]); delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
+        return delta_w.cpu(), W2.cpu(), b2.cpu(), mu.cpu(), sigma.cpu()
 
-    # 1) 抽特征（CPU，上次计算会从缓存加载）
+    # 1) 抽取 **train** 特征（按 split_name="train" 单独缓存）
     model.eval()
-    X_pos = extract_feature_matrix_cached(model, processor, system_prompt, texts_pos, probe_layer_idx, feats_pos_cache)  # [Np,H]
-    X_neg = extract_feature_matrix_cached(model, processor, system_prompt, texts_neg, probe_layer_idx, feats_neg_cache)  # [Nn,H]
+    X_pos = extract_feature_matrix_for_texts_cached(
+        model, processor, system_prompt, texts_pos, probe_layer_idx, save_dir, tag, split_name="train_pos"
+    )
+    X_neg = extract_feature_matrix_for_texts_cached(
+        model, processor, system_prompt, texts_neg, probe_layer_idx, save_dir, tag, split_name="train_neg"
+    )
     X = torch.cat([X_pos, X_neg], dim=0)  # [N,H]
     y = torch.cat([
         torch.ones(len(X_pos), dtype=torch.long),
         torch.zeros(len(X_neg), dtype=torch.long)
     ], dim=0)
 
-    # 2) 标准化（提升收敛与稳定）
+    # 2) 标准化统计 **仅来自 train**
     mu = X.mean(0, keepdim=True)
     sigma = X.std(0, keepdim=True).clamp_min(1e-6)
-    X_std = (X - mu) / sigma  # 仍在 CPU
+    X_std = (X - mu) / sigma
 
     # 3) CE + epoch 训练（可复现）
     g = torch.Generator(device="cpu"); g.manual_seed(seed)
@@ -820,17 +828,156 @@ def fit_or_load_probe_ce(
     with torch.no_grad():
         W2 = probe.fc.weight.detach().to(torch.float32)  # [2,H]
         b2 = probe.fc.bias.detach().to(torch.float32)    # [2]
-        delta_w = (W2[1] - W2[0])
-        delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
+        delta_w = (W2[1] - W2[0]); delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
 
-    # 4) 保存探针（下次直接加载）
+    # 4) 保存（便于复现）
     torch.save({
         "W2": W2.cpu(), "b2": b2.cpu(),
         "mu": mu.squeeze(0).cpu(), "sigma": sigma.squeeze(0).cpu(),
         "layer_idx": probe_layer_idx, "tag": tag
     }, probe_path)
 
-    return delta_w.cpu(), W2.cpu(), b2.cpu()
+    return delta_w.cpu(), W2.cpu(), b2.cpu(), mu.cpu(), sigma.cpu()
+
+class ProbeEvalResult(NamedTuple):
+    acc_train: float
+    acc_val: float
+    acc_test: float
+    auroc_train: Optional[float]
+    auroc_val: Optional[float]
+    auroc_test: Optional[float]
+
+def _softmax_logits_to_pred_and_prob(logits: torch.Tensor):
+    # logits: [N, 2]
+    probs = torch.softmax(logits, dim=-1)         # [N,2]
+    pred  = torch.argmax(probs, dim=-1)           # [N]
+    pos_p = probs[:, 1]                           # positive-class prob
+    return pred, pos_p
+
+def evaluate_probe_on_splits(
+    W2: torch.Tensor, b2: torch.Tensor,
+    mu: torch.Tensor, sigma: torch.Tensor,
+    X_train: torch.Tensor, y_train: torch.Tensor,
+    X_val: torch.Tensor,   y_val: torch.Tensor,
+    X_test: torch.Tensor,  y_test: torch.Tensor,
+    compute_auroc: bool = False,
+    save_json: Optional[str] = None,
+) -> ProbeEvalResult:
+    """
+    使用保存下来的 (W2,b2,mu,sigma) 在三个切分上做前向并计算 accuracy（可选 AUROC）。
+    所有输入均为 CPU float32 / long tensor。
+    """
+    # 标准化
+    Xtr = (X_train - mu) / sigma
+    Xva = (X_val   - mu) / sigma
+    Xte = (X_test  - mu) / sigma
+
+    # 前向（线性头）
+    with torch.no_grad():
+        logits_tr = Xtr @ W2.T + b2          # [Ntr,2]
+        logits_va = Xva @ W2.T + b2          # [Nva,2]
+        logits_te = Xte @ W2.T + b2          # [Nte,2]
+
+        pred_tr, pos_tr = _softmax_logits_to_pred_and_prob(logits_tr)
+        pred_va, pos_va = _softmax_logits_to_pred_and_prob(logits_va)
+        pred_te, pos_te = _softmax_logits_to_pred_and_prob(logits_te)
+
+    acc_tr = float((pred_tr == y_train).float().mean().item())
+    acc_va = float((pred_va == y_val).float().mean().item())
+    acc_te = float((pred_te == y_test).float().mean().item())
+
+    if compute_auroc:
+        try:
+            au_tr = float(roc_auc_score(y_train.numpy(), pos_tr.numpy()))
+            au_va = float(roc_auc_score(y_val.numpy(),   pos_va.numpy()))
+            au_te = float(roc_auc_score(y_test.numpy(),  pos_te.numpy()))
+        except Exception:
+            au_tr = au_va = au_te = None
+    else:
+        au_tr = au_va = au_te = None
+
+    res = ProbeEvalResult(acc_tr, acc_va, acc_te, au_tr, au_va, au_te)
+
+    if save_json is not None:
+        with open(save_json, "w", encoding="utf-8") as f:
+            json.dump({
+                "acc_train": res.acc_train, "acc_val": res.acc_val, "acc_test": res.acc_test,
+                "auroc_train": res.auroc_train, "auroc_val": res.auroc_val, "auroc_test": res.auroc_test,
+            }, f, ensure_ascii=False, indent=2)
+
+    return res
+
+def split_texts_balanced(
+    texts_pos: List[str],
+    texts_neg: List[str],
+    train_ratio: float = 0.8,
+    val_ratio: float = 0.1,
+    test_ratio: float = 0.1,
+    seed: int = 0
+) -> Tuple[List[str], List[str], List[str], List[str], List[str], List[str]]:
+    """
+    先对正类、负类各自独立随机打乱并按比例切分，再合并（保证类平衡、可复现）。
+    返回: pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te（全是文本列表）
+    """
+    assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
+    g = torch.Generator(device="cpu"); g.manual_seed(seed)
+
+    def _split_one(lst: List[str]):
+        idx = torch.randperm(len(lst), generator=g).tolist()
+        lst = [lst[i] for i in idx]
+        n_tr = int(len(lst) * train_ratio)
+        n_va = int(len(lst) * val_ratio)
+        return lst[:n_tr], lst[n_tr:n_tr+n_va], lst[n_tr+n_va:]
+
+    pos_tr, pos_va, pos_te = _split_one(texts_pos)
+    neg_tr, neg_va, neg_te = _split_one(texts_neg)
+    return pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te
+
+@torch.no_grad()
+def extract_feature_matrix_for_texts_cached(
+    model: Gemma3ForConditionalGeneration,
+    processor: AutoProcessor,
+    system_prompt: str,
+    texts: List[str],
+    layer_idx: int,
+    save_dir: str,
+    tag: str,
+    split_name: str,   # "train" / "val" / "test" / "all" 等
+) -> torch.Tensor:
+    """
+    给定一段文本列表，抽取该 layer 的 mean-pooled 特征，并按 split 名缓存。
+    缓存路径: {save_dir}/feats_{tag}_{split_name}_L{layer_idx}.npy
+    返回: [N, H] (CPU float32)
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    cache_fp = os.path.join(save_dir, f"feats_{tag}_{split_name}_L{layer_idx}.npy")
+    if os.path.exists(cache_fp):
+        arr = np.load(cache_fp)
+        return torch.from_numpy(arr)
+
+    feats = []
+    for t in texts:
+        v = extract_feature_mean_hidden_at_layer(
+            model, processor, system_prompt, build_user_prompt(t), layer_idx=layer_idx
+        )  # -> [H] CPU float32
+        feats.append(v)
+    X = torch.stack(feats, dim=0).contiguous()
+    np.save(cache_fp, X.numpy())
+    return X
+
+
+def load_or_make_feature_caches_for_probe(
+    model, processor, system_prompt,
+    texts_pos: List[str], texts_neg: List[str],
+    layer_idx: int, save_dir: str, tag: str
+):
+    os.makedirs(save_dir, exist_ok=True)
+    feats_pos_cache = os.path.join(save_dir, f"feats_pos_{tag}_L{layer_idx}.npy")
+    feats_neg_cache = os.path.join(save_dir, f"feats_neg_{tag}_L{layer_idx}.npy")
+
+    X_pos = extract_feature_matrix_cached(model, processor, system_prompt, texts_pos, layer_idx, feats_pos_cache)
+    X_neg = extract_feature_matrix_cached(model, processor, system_prompt, texts_neg, layer_idx, feats_neg_cache)
+    return X_pos, X_neg, feats_pos_cache, feats_neg_cache
 
 
 @dataclass
@@ -926,7 +1073,7 @@ def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 23,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    probe_layer_idx: int = 25,     # 你也可以试 -2 / 31 等（论文在多个层试过）
     alpha_grid = (0.25, 0.5, 0.7, 0.9, 1.0, 1.2, 1.5, 1.8, 2.0),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
@@ -937,10 +1084,15 @@ def run_model_surgery_once(
         model_name, device_map="auto", torch_dtype="auto"
     ).eval()
 
+    # ---- (A) 文本级切分（先切分，再训练探针）----
+    pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te = split_texts_balanced(
+        base_texts, variant_texts, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, seed=0
+    )
+
     # 1) 训练两类行为探针（CE），得到 Δw
-    delta_w, W2, b2 = fit_or_load_probe_ce(
+    delta_w, W2, b2, mu, sigma = fit_or_load_probe_ce(
         model, processor,
-        texts_pos=base_texts, texts_neg=variant_texts,
+        texts_pos=pos_tr, texts_neg=neg_tr,
         system_prompt=SYSTEM_PROMPT,
         probe_layer_idx=probe_layer_idx,
         save_dir="probe_ckpts",     # 可自定义
@@ -948,6 +1100,47 @@ def run_model_surgery_once(
         epochs=20, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0
     )
 
+    # ---- (C) 抽取 train/val/test 的特征（各自 split 名缓存），并评估探针 ACC/AUROC ----
+    X_pos_tr = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, pos_tr, probe_layer_idx, "probe_ckpts", "stance_invariance", "train_pos"
+    )
+    X_neg_tr = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, neg_tr, probe_layer_idx, "probe_ckpts", "stance_invariance", "train_neg"
+    )
+    X_pos_va = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, pos_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_pos"
+    )
+    X_neg_va = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, neg_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_neg"
+    )
+    X_pos_te = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, pos_te, probe_layer_idx, "probe_ckpts", "stance_invariance", "test_pos"
+    )
+    X_neg_te = extract_feature_matrix_for_texts_cached(
+        model, processor, SYSTEM_PROMPT, neg_te, probe_layer_idx, "probe_ckpts", "stance_invariance", "test_neg"
+    )
+
+    def _pack(Xp, Xn):
+        X = torch.cat([Xp, Xn], dim=0).float()
+        y = torch.tensor([1]*len(Xp) + [0]*len(Xn), dtype=torch.long)
+        # 打乱一下（可复现）
+        g = torch.Generator(device="cpu"); g.manual_seed(0)
+        perm = torch.randperm(len(y), generator=g)
+        return X[perm], y[perm]
+
+    Xtr, ytr = _pack(X_pos_tr, X_neg_tr)
+    Xva, yva = _pack(X_pos_va, X_neg_va)
+    Xte, yte = _pack(X_pos_te, X_neg_te)
+
+    eval_res = evaluate_probe_on_splits(
+        W2.float(), b2.float(), mu.float(), sigma.float(),
+        Xtr, ytr, Xva, yva, Xte, yte,
+        compute_auroc=(roc_auc_score is not None),
+        save_json=os.path.join("probe_ckpts", f"probe_eval_stance_invariance_L{probe_layer_idx}.json")
+    )
+    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  val={eval_res.acc_val:.3f}  test={eval_res.acc_test:.3f}")
+    if eval_res.auroc_test is not None:
+        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  val={eval_res.auroc_val:.3f}  test={eval_res.auroc_test:.3f}")
 
     # 2) 选择“通常在不良状态下不激活”的行向量（和 Δw 余弦最小）
     selections = select_inactive_gate_rows(model, delta_w, k_total=None, k_per_layer=k_per_layer)
@@ -1026,10 +1219,11 @@ def run_model_surgery_once(
 if __name__ == "__main__":
     torch.set_grad_enabled(True)
 
-    # print("=== Baseline diagnostics: activation patching / ablation ===")
-    # _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
-
     set_global_determinism(0, single_thread=True)
+
+    print("=== Baseline diagnostics: activation patching / ablation ===")
+    _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
+
     print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
     # For real experiments, expand these lists to dozens/hundreds of pairs.
     BASE_CSV_PATH    = "data/original_statements.csv"
