@@ -64,6 +64,7 @@ def get_decoder_layers(model: Gemma3ForConditionalGeneration):
             "No Gemma3DecoderLayer found via named_modules(). "
             "Check transformers version or model class."
         )
+    print(f"{len(layers)}")
     return layers
 
 @dataclass
@@ -442,8 +443,10 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})  (for reference)")
     print(f"[Clean target logit]   {clean_target_logit:.3f}  (ref)")
     print(f"[Corrupt target logit] {corrupt_target_logit:.3f}  (ref)")
-    print(f"[Clean objective]   {obj_clean:.6f}")
-    print(f"[Corrupt objective] {obj_corrupt:.6f}")
+    print(f"[Clean logits] {logits_clean_digits}")
+    print(f"[Clean probs]   {clean_probs}")
+    print(f"[Corrupt logits] {logits_corrupt_digits}")
+    print(f"[Corrupt probs] {corrupt_probs}")
     print("-" * 60)
 
     scores_sorted = attribution_scores_first_order(
@@ -1069,12 +1072,30 @@ def model_surgery_context(
         for row_param, ridx, buf in backups:
             row_param.data[ridx].copy_(buf)
 
+def js_divergence(p: torch.Tensor, q: torch.Tensor, eps=1e-12) -> torch.Tensor:
+    p = p.clamp_min(eps); q = q.clamp_min(eps)
+    m = 0.5 * (p + q)
+    kl_pm = (p * (p.log() - m.log())).sum(dim=-1)
+    kl_qm = (q * (q.log() - m.log())).sum(dim=-1)
+    return 0.5 * (kl_pm + kl_qm)
+
+def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
+    cdf_p = torch.cumsum(p, dim=-1)
+    cdf_q = torch.cumsum(q, dim=-1)
+    return torch.sum(torch.abs(cdf_p - cdf_q), dim=-1)
+
+def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
+    d0 = dist_fn(p_clean, p_corrupt)
+    dp = dist_fn(p_clean, p_patched)
+    R = 1.0 - dp / (d0 + eps)
+    return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
+
 def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 25,     # 你也可以试 -2 / 31 等（论文在多个层试过）
-    alpha_grid = (0.25, 0.5, 0.7, 0.9, 1.0, 1.2, 1.5, 1.8, 2.0),
+    probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    alpha_grid = (0.25, 0.5, 0.7, 0.9, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
 ):
@@ -1152,23 +1173,33 @@ def run_model_surgery_once(
         logits_clean   = forward_logits_only(model, enc_clean)
         logits_corrupt = forward_logits_only(model, enc_corrupt)
     clean_probs = digit_probs_from_logits_full(logits_clean, enc_clean, TEMP_FOR_PROBS)
+    corrupt_probs = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
     obj_clean   = objective_from_logits_full(logits_clean,   enc_clean,   clean_probs, TEMP_FOR_PROBS).item()
     obj_corrupt = objective_from_logits_full(logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
 
     # 3a) 全层合并编辑下的最佳 alpha
     best = None
+    best_probs = None
     for a in alpha_grid:
         with model_surgery_context(selections, delta_w, alpha=a):
             logits_patched = forward_logits_only(model, enc_corrupt)
+            logits_patched_digits = digit_logit_slice(logits_patched, enc_clean.digit_ids)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
         obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
         denom = obj_clean - obj_corrupt
+        r_js = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
+        r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
         r = float("nan") if abs(denom) < 1e-9 else (obj_patched - obj_corrupt) / denom
-        if (best is None) or (not math.isnan(r) and r > best[0]):
-            best = (r, a)
+        if (best is None) or (not math.isnan(r_w) and r_w > best[0]):
+            best = (r_w, a)
+            best_probs = patched_probs
     if best is None:
         print("No valid alpha found.")
         return
     r_all, a_all = best
+    print(f"[Clean probs]   {clean_probs}")
+    print(f"[Corrupt probs]   {corrupt_probs}")
+    print(f"[Patched logits] {best_probs}")
     print(f"[ModelSurgery] best alpha (all-layers) = {a_all:.3f}, restoration={r_all:.3f}")
 
     # 3b) 分层报告（用相同 a_all）——可与 3c) 对比
@@ -1180,14 +1211,16 @@ def run_model_surgery_once(
     for l in sorted(sel_map.keys()):
         with model_surgery_context(sel_map[l], delta_w, alpha=a_all):
             logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
         obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
         denom = obj_clean - obj_corrupt
-        r_l = float("nan") if abs(denom) < 1e-9 else (obj_patched - obj_corrupt) / denom
-        per_layer_same_alpha.append((l, r_l))
+        # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
+        r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
+        per_layer_same_alpha.append((l, r_w))
     per_layer_same_alpha.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
     print("[Per-layer @ same alpha] (top 20)")
-    for i, (l, r_l) in enumerate(per_layer_same_alpha[:20], 1):
-        txt = "nan" if math.isnan(r_l) else f"{r_l:.3f}"
+    for i, (l, r_w) in enumerate(per_layer_same_alpha[:20], 1):
+        txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
         print(f" #{i:02d} layer={l:02d} restoration={txt}")
 
     # 3c)（可选）逐层各自扫 alpha，解释你之前看到的“分层更高”的现象
@@ -1198,17 +1231,19 @@ def run_model_surgery_once(
             for a in alpha_grid:
                 with model_surgery_context(sel_map[l], delta_w, alpha=a):
                     logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
                 obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
                 denom = obj_clean - obj_corrupt
-                r_l = float("nan") if abs(denom) < 1e-9 else (obj_patched - obj_corrupt) / denom
-                if (best_l is None) or (not math.isnan(r_l) and r_l > best_l[0]):
-                    best_l = (r_l, a)
+                # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
+                r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
+                if (best_l is None) or (not math.isnan(r_w) and r_w > best_l[0]):
+                    best_l = (r_w, a)
             if best_l is not None:
                 per_layer_best.append((l, best_l[0], best_l[1]))
         per_layer_best.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
         print("[Per-layer best alpha] (top 20)")
-        for i, (l, r_l, a_l) in enumerate(per_layer_best[:20], 1):
-            txt = "nan" if math.isnan(r_l) else f"{r_l:.3f}"
+        for i, (l, r_w, a_l) in enumerate(per_layer_best[:20], 1):
+            txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
             print(f" #{i:02d} layer={l:02d} best_alpha={a_l:.3f} restoration={txt}")
 
 
@@ -1221,8 +1256,8 @@ if __name__ == "__main__":
 
     set_global_determinism(0, single_thread=True)
 
-    print("=== Baseline diagnostics: activation patching / ablation ===")
-    _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
+    # print("=== Baseline diagnostics: activation patching / ablation ===")
+    # _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
 
     print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
     # For real experiments, expand these lists to dozens/hundreds of pairs.
