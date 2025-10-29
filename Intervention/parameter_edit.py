@@ -18,6 +18,7 @@ from transformers.models.gemma3.modeling_gemma3 import (
     Gemma3MLP
 )
 from sklearn.metrics import roc_auc_score
+from datasets import load_dataset
 
 # ---------------------------
 # Config
@@ -30,6 +31,11 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
+MMLU_SYSTEM_PROMPT = (
+    "You are taking a multiple-choice exam. "
+    "Answer correctly and output exactly one capital letter: A, B, C, or D."
+)
+
 # Example pair for base vs variant (you can change these)
 BASE_TEXT = "The government should abolish the ban on face-covering clothing."
 VARIANT_TEXT = "It is the ban on face-covering clothing that the government should abolish."
@@ -37,6 +43,24 @@ VARIANT_TEXT = "It is the ban on face-covering clothing that the government shou
 
 # BASE_TEXT = "Houses should be built on land currently used for agriculture."
 # VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
+
+# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
+# VARIANT_TEXT = "It is an additional flight tax for short-distance flights that the Netherlands should introduce."
+
+# BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
+# VARIANT_TEXT = "It is an increase in welfare benefits that an increase in minimum wages should no longer automatically result in."
+
+# BASE_TEXT = "People should always have the choice of whether to wear a face mask."
+# VARIANT_TEXT = "It is the choice of whether to wear a face mask that people should always have."
+
+# BASE_TEXT = "The future Spanish government should increase irrigated agricultural areas by means of large water transfers."
+# VARIANT_TEXT = "It is irrigated agricultural areas that the future Spanish government should increase by means of large water transfers."
+
+# BASE_TEXT = "Spain should be more tolerant with illegal migration."
+# VARIANT_TEXT = "It is illegal migration that Spain should be more tolerant with."
+
+# BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
+# VARIANT_TEXT = "It is donations from companies to political parties that should continue to be permitted."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -771,7 +795,7 @@ def fit_or_load_probe_ce(
     lr: float = 1e-4,
     batch_size: int = 32,
     weight_decay: float = 0.0,
-    seed: int = 42,
+    seed: int = 0,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     训练/加载 2-way CE 探针（**仅使用传入的 texts_pos/texts_neg** 作为训练集）。
@@ -781,14 +805,37 @@ def fit_or_load_probe_ce(
     os.makedirs(save_dir, exist_ok=True)
     probe_path = os.path.join(save_dir, f"probe_{tag}_L{probe_layer_idx}.pt")
 
+    # desired_class_idx = 1
+
     # 若已有训练好的探针，直接加载（注意：此时默认这些权重/统计就是 train 切分学到的）
     if os.path.exists(probe_path):
         ckpt = torch.load(probe_path, map_location="cpu")
         W2 = ckpt["W2"].to(torch.float32)
         b2 = ckpt["b2"].to(torch.float32)
-        mu = ckpt["mu"].to(torch.float32).unsqueeze(0)
-        sigma = ckpt["sigma"].to(torch.float32).unsqueeze(0)
-        delta_w = (W2[1] - W2[0]); delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
+        
+        mu_v  = ckpt.get("mu", None)
+        sigma_v = ckpt.get("sigma", None)
+        std_used = bool(ckpt.get("std_used", False))
+
+        H = W2.shape[1]
+        if mu_v is None:
+            mu = torch.zeros(1, H, dtype=torch.float32)
+        else:
+            mu = mu_v.to(torch.float32).unsqueeze(0) if mu_v.ndim == 1 else mu_v.to(torch.float32)
+        if sigma_v is None:
+            sigma = torch.ones(1, H, dtype=torch.float32)
+        else:
+            sigma = sigma_v.to(torch.float32).unsqueeze(0) if sigma_v.ndim == 1 else sigma_v.to(torch.float32)
+
+        W_target = W2[1]  # 目标类（pos/clean）的权重行
+        if std_used:
+            # 旧版：探针在标准化空间训练过 → 反标准化到原空间
+            sigma_vec = sigma.squeeze(0) + 1e-12
+            delta_w = (W_target / sigma_vec).cpu()
+        else:
+            # 新版（本函数训练法）：直接就是原空间权重
+            delta_w = W_target.cpu()
+        # delta_w = W2[1] / (W2[1].norm() + 1e-12)
         return delta_w.cpu(), W2.cpu(), b2.cpu(), mu.cpu(), sigma.cpu()
 
     # 1) 抽取 **train** 特征（按 split_name="train" 单独缓存）
@@ -806,16 +853,21 @@ def fit_or_load_probe_ce(
     ], dim=0)
 
     # 2) 标准化统计 **仅来自 train**
-    mu = X.mean(0, keepdim=True)
-    sigma = X.std(0, keepdim=True).clamp_min(1e-6)
-    X_std = (X - mu) / sigma
+    # mu = X.mean(0, keepdim=True)
+    # sigma = X.std(0, keepdim=True).clamp_min(1e-6)
+    # X_std = (X - mu) / sigma
+
+    H = X.shape[1]
+    # 不做标准化：把 mu/sigma 设成 0/1（保证 evaluate_* 的“标准化”变成空操作）
+    mu    = torch.zeros(1, H, dtype=torch.float32)
+    sigma = torch.ones(1, H, dtype=torch.float32)
 
     # 3) CE + epoch 训练（可复现）
     g = torch.Generator(device="cpu"); g.manual_seed(seed)
-    ds = torch.utils.data.TensorDataset(X_std, y)
+    ds = torch.utils.data.TensorDataset(X, y)
     dl = torch.utils.data.DataLoader(ds, batch_size=batch_size, shuffle=True, drop_last=False, generator=g)
 
-    probe = CEProbe(X.shape[1]).cpu()
+    probe = CEProbe(H).cpu()
     opt = torch.optim.AdamW(probe.parameters(), lr=lr, weight_decay=weight_decay)
     ce  = nn.CrossEntropyLoss()
 
@@ -831,13 +883,15 @@ def fit_or_load_probe_ce(
     with torch.no_grad():
         W2 = probe.fc.weight.detach().to(torch.float32)  # [2,H]
         b2 = probe.fc.bias.detach().to(torch.float32)    # [2]
-        delta_w = (W2[1] - W2[0]); delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
+        delta_w = W2[1].cpu()
+        # delta_w = W2[1] / (W2[1].norm() + 1e-12)
 
     # 4) 保存（便于复现）
     torch.save({
         "W2": W2.cpu(), "b2": b2.cpu(),
         "mu": mu.squeeze(0).cpu(), "sigma": sigma.squeeze(0).cpu(),
-        "layer_idx": probe_layer_idx, "tag": tag
+        "layer_idx": probe_layer_idx, "tag": tag,
+        "std_used": False
     }, probe_path)
 
     return delta_w.cpu(), W2.cpu(), b2.cpu(), mu.cpu(), sigma.cpu()
@@ -1090,12 +1144,200 @@ def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
+def _get_model_max_len(processor: AutoProcessor, fallback: int = 2048) -> int:
+    try:
+        L = int(getattr(processor.tokenizer, "model_max_length", fallback))
+        if L is None or L <= 0 or L > 100_000:  # 某些tokenizer返回超大占位
+            return fallback
+        return min(L, 8192)  # Gemma 3-4B 通常 8k；保守起见限制到 8k
+    except Exception:
+        return fallback
+
+@torch.no_grad()
+def evaluate_wikitext_ppl(
+    model: Gemma3ForConditionalGeneration,
+    processor: AutoProcessor,
+    dataset_config: str = "wikitext-2-raw-v1",     # 可改成 "wikitext-103-v1"
+    split: str = "test",
+    block_size: Optional[int] = None,              # None -> 用 tokenizer 最大长度或 2048
+    stride: Optional[int] = None,                  # None -> 与 block_size 相同（不重叠）
+    max_texts: Optional[int] = 200,                # 为了跑得快，默认只取前 200 段；设 None 用全量
+) -> Tuple[float, float, int]:
+    """
+    返回: (avg_nll, ppl, counted_tokens)
+    注：直接用 tokenizer（不走 chat 模板），标准 Causal LM loss（模型内部 shift）。
+    """
+    tok = processor.tokenizer
+    dev = get_input_device(model)
+    ds = load_dataset("wikitext", dataset_config, split=split)
+    if max_texts is not None:
+        ds = ds.select(range(min(max_texts, len(ds))))
+
+    if block_size is None:
+        block_size = _get_model_max_len(processor, 2048)
+    if stride is None:
+        stride = block_size
+
+    total_neglog = 0.0
+    total_tok = 0
+
+    for ex in ds:
+        text = ex["text"]
+        if not text or not text.strip():
+            continue
+        ids = tok(text, return_tensors="pt", add_special_tokens=False).input_ids[0].to(dev)
+        if ids.numel() < 2:
+            continue
+        # 以 block_size 切块；stride=block_size 表示不重叠
+        for i in range(0, max(0, ids.size(0) - 1), stride):
+            chunk = ids[i:i + block_size]
+            if chunk.numel() < 2:
+                break
+            inp = chunk.unsqueeze(0)
+            out = model(input_ids=inp, labels=inp)
+            loss = out.loss  # 已对有效 token 求平均
+            n_tok = chunk.numel()
+            total_neglog += float(loss.item()) * n_tok
+            total_tok += int(n_tok)
+
+    if total_tok == 0:
+        return float("nan"), float("nan"), 0
+    avg_nll = total_neglog / total_tok
+    ppl = float(math.exp(avg_nll))
+    return avg_nll, ppl, total_tok
+
+def _choice_token_ids(tokenizer, choices=("A","B","C","D")) -> List[int]:
+    ids = []
+    for c in choices:
+        x = tokenizer.encode(c, add_special_tokens=False)
+        if len(x) != 1:
+            raise ValueError(f"Choice '{c}' not single-token for this tokenizer: {x}")
+        ids.append(x[0])
+    return ids
+
+def _format_mmlu_user_prompt(question: str, choices: List[str]) -> str:
+    # MMLU标准多选：只输出字母
+    lines = [question.strip()]
+    labels = ["A", "B", "C", "D"]
+    for lab, ch in zip(labels, choices):
+        lines.append(f"{lab}. {ch}")
+    lines.append("Answer with the letter of the correct option. Only output A, B, C, or D.")
+    lines.append("Answer:")
+    return "\n".join(lines)
+
+@torch.no_grad()
+def evaluate_mmlu_zero_shot(
+    model: Gemma3ForConditionalGeneration,
+    processor: AutoProcessor,
+    system_prompt: str,
+    subjects: Optional[List[str]] = None,   # None -> 全部科目
+    split: str = "validation",              # 常见取法；也可用 "test"（部分环境无答案）
+    max_examples_per_subject: Optional[int] = 50,  # 为了速度，默认每科最多50题
+) -> Tuple[float, int, int]:
+    """
+    返回: (overall_acc, correct, total)
+    做法：对每题构造 Chat 输入，取下一token在 {A,B,C,D} 上的概率，选最大者，与GT对比。
+    """
+    dev = get_input_device(model)
+    tok = processor.tokenizer
+    choice_ids = _choice_token_ids(tok, ("A","B","C","D"))
+
+    if subjects is None:
+        # MMLU 的新加载方式 - 使用 "cais/mmlu" 或者列出所有子集
+        try:
+            # 尝试方法1：直接加载所有配置
+            from datasets import get_dataset_config_names
+            subjects = get_dataset_config_names("cais/mmlu")
+            if "all" in subjects:
+                subjects.remove("all")  # 移除 "all" 配置
+        except Exception:
+            # 方法2：手动指定一些常见科目
+            subjects = [
+                "abstract_algebra", "anatomy", "astronomy", "business_ethics",
+                "clinical_knowledge", "college_biology", "college_chemistry",
+                "college_computer_science", "college_mathematics", "college_medicine",
+                "college_physics", "computer_security", "conceptual_physics",
+                "econometrics", "electrical_engineering", "elementary_mathematics",
+                "formal_logic", "global_facts", "high_school_biology",
+                "high_school_chemistry", "high_school_computer_science",
+                "high_school_european_history", "high_school_geography",
+                "high_school_government_and_politics", "high_school_macroeconomics",
+                "high_school_mathematics", "high_school_microeconomics",
+                "high_school_physics", "high_school_psychology",
+                "high_school_statistics", "high_school_us_history",
+                "high_school_world_history", "human_aging", "human_sexuality",
+                "international_law", "jurisprudence", "logical_fallacies",
+                "machine_learning", "management", "marketing", "medical_genetics",
+                "miscellaneous", "moral_disputes", "moral_scenarios", "nutrition",
+                "philosophy", "prehistory", "professional_accounting",
+                "professional_law", "professional_medicine", "professional_psychology",
+                "public_relations", "security_studies", "sociology", "us_foreign_policy",
+                "virology", "world_religions"
+            ]
+    
+    correct = 0
+    total = 0
+
+    for subj in subjects:
+        try:
+            # 修改：使用新的数据集路径
+            ds = load_dataset("cais/mmlu", subj, split=split, trust_remote_code=True)
+        except Exception as e:
+            print(f"Warning: Failed to load subject {subj}: {e}")
+            continue
+            
+        if max_examples_per_subject is not None:
+            ds = ds.select(range(min(max_examples_per_subject, len(ds))))
+        
+        for ex in ds:
+            # 字段名可能是: question, choices, answer
+            q = ex.get("question", ex.get("input"))
+            ch = ex.get("choices", ex.get("options"))
+            ans = ex.get("answer", ex.get("target"))
+            
+            if q is None or ch is None or ans is None:
+                continue
+                
+            # 处理答案格式
+            if isinstance(ans, str):
+                ans = ans.strip()
+                gt_idx = {"A":0, "B":1, "C":2, "D":3}.get(ans.upper(), None)
+            else:
+                gt_idx = int(ans)
+                
+            if gt_idx is None or gt_idx < 0 or gt_idx > 3:
+                continue
+
+            user_text = _format_mmlu_user_prompt(q, ch)
+            messages = [
+                {"role": "system", "content": [{"type":"text", "text": system_prompt}]},
+                {"role": "user",   "content": [{"type":"text", "text": user_text}]}
+            ]
+            enc = processor.apply_chat_template(
+                messages, add_generation_prompt=True,
+                tokenize=True, return_tensors="pt", return_dict=True
+            )
+            enc = {k: v.to(dev) for k, v in enc.items()}
+            out = model(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"], return_dict=True)
+            
+            answer_pos = enc["input_ids"].shape[-1] - 1
+            logits = out.logits[:, answer_pos, :].squeeze(0)
+            cand_logits = logits.index_select(dim=-1, index=torch.tensor(choice_ids, device=logits.device))
+            probs = torch.softmax(cand_logits, dim=-1)
+            pred_idx = int(torch.argmax(probs).item())
+            correct += int(pred_idx == gt_idx)
+            total += 1
+
+    acc = float(correct / total) if total > 0 else float("nan")
+    return acc, correct, total
+
+
 def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
     probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
-    alpha_grid = (0.25, 0.5, 0.7, 0.9, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5),
+    alpha_grid = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
 ):
@@ -1109,6 +1351,20 @@ def run_model_surgery_once(
     pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te = split_texts_balanced(
         base_texts, variant_texts, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, seed=0
     )
+    # num_pairs = min(len(base_texts), len(variant_texts))
+    # idx = torch.randperm(num_pairs, generator=torch.Generator().manual_seed(0)).tolist()
+    # n_tr = int(num_pairs * 0.8)
+    # n_va = int(num_pairs * 0.1)
+    # idx_tr = idx[:n_tr]
+    # idx_va = idx[n_tr:n_tr+n_va]
+    # idx_te = idx[n_tr+n_va:]
+
+    # pos_tr = [base_texts[i] for i in idx_tr]
+    # pos_va = [base_texts[i] for i in idx_va]
+    # pos_te = [base_texts[i] for i in idx_te]
+    # neg_tr = [variant_texts[i] for i in idx_tr]
+    # neg_va = [variant_texts[i] for i in idx_va]
+    # neg_te = [variant_texts[i] for i in idx_te]
 
     # 1) 训练两类行为探针（CE），得到 Δw
     delta_w, W2, b2, mu, sigma = fit_or_load_probe_ce(
@@ -1164,7 +1420,28 @@ def run_model_surgery_once(
         print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  val={eval_res.auroc_val:.3f}  test={eval_res.auroc_test:.3f}")
 
     # 2) 选择“通常在不良状态下不激活”的行向量（和 Δw 余弦最小）
-    selections = select_inactive_gate_rows(model, delta_w, k_total=None, k_per_layer=k_per_layer)
+    selections = select_inactive_gate_rows(model, delta_w, k_total=17408, k_per_layer=k_per_layer)
+    # 只在高层做手术：最后 8 层
+    # all_layers = get_decoder_layers(model)
+    # n_layers = len(all_layers)
+    # ALLOWED_LAYERS = set(range(n_layers - 22, n_layers))  # 也可改成 -6 或 -10
+
+    # selections = [s for s in selections if s.layer_idx in ALLOWED_LAYERS]
+    # print(f"[Length of selections] {len(selections)}")
+
+    # === General capability baseline ===
+    base_nll, base_ppl, base_tok = evaluate_wikitext_ppl(
+        model, processor,
+        dataset_config="wikitext-2-raw-v1",  # 你要全量可改 "wikitext-103-v1"
+        split="test", block_size=None, stride=None, max_texts=200  # 为了速度先抽样
+    )
+    print(f"[WikiText] baseline: NLL={base_nll:.4f}, PPL={base_ppl:.3f}, toks={base_tok}")
+
+    # mmlu_acc_before, mmlu_ok, mmlu_total = evaluate_mmlu_zero_shot(
+    #     model, processor, MMLU_SYSTEM_PROMPT,
+    #     subjects=None, split="validation", max_examples_per_subject=50
+    # )
+    # print(f"[MMLU] baseline zero-shot acc={mmlu_acc_before:.3f} ({mmlu_ok}/{mmlu_total})")
 
     # 3) 评估（沿用你现有的 objective）
     enc_clean   = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(eval_pair[0]))
@@ -1180,19 +1457,39 @@ def run_model_surgery_once(
     # 3a) 全层合并编辑下的最佳 alpha
     best = None
     best_probs = None
+    best_ppl = None
     for a in alpha_grid:
         with model_surgery_context(selections, delta_w, alpha=a):
             logits_patched = forward_logits_only(model, enc_corrupt)
-            logits_patched_digits = digit_logit_slice(logits_patched, enc_clean.digit_ids)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+            patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+            # 通用侧：WikiText PPL
+            patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+                model, processor,
+                dataset_config="wikitext-2-raw-v1", split="test",
+                block_size=None, stride=None, max_texts=200
+            )
         obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
         denom = obj_clean - obj_corrupt
         r_js = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
         r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
         r = float("nan") if abs(denom) < 1e-9 else (obj_patched - obj_corrupt) / denom
-        if (best is None) or (not math.isnan(r_w) and r_w > best[0]):
+
+        ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0 if base_ppl == base_ppl else float("inf")
+        # 如果你需要硬约束（比如不得上升 >5%），加一行：
+        pass_constraint = (ppl_increase_pct <= 50.0)
+        # pass_constraint = True
+
+        # if (best is None) or (not math.isnan(r_w) and r_w > best[0]):
+        #     best = (r_w, a)
+        #     best_probs = patched_probs
+        if pass_constraint and (best is None or (not math.isnan(r_w) and r_w > best[0])):
             best = (r_w, a)
             best_probs = patched_probs
+            best_ppl = patched_ppl
+
+        print(f"[Alpha {a:.2f}] R_W1={r_w:.3f} | WikiText PPL={patched_ppl:.3f} (Δ={ppl_increase_pct:.1f}%) NLL={patched_nll:.3f}")
+        
     if best is None:
         print("No valid alpha found.")
         return
@@ -1202,49 +1499,60 @@ def run_model_surgery_once(
     print(f"[Patched logits] {best_probs}")
     print(f"[ModelSurgery] best alpha (all-layers) = {a_all:.3f}, restoration={r_all:.3f}")
 
-    # 3b) 分层报告（用相同 a_all）——可与 3c) 对比
-    per_layer_same_alpha = []
-    sel_map: Dict[int, List[GateRowRef]] = {}
-    for ref in selections:
-        sel_map.setdefault(ref.layer_idx, []).append(ref)
+    if best_ppl is not None:
+        delta_pct = (best_ppl / base_ppl - 1.0) * 100.0
+        print(f"[WikiText] baseline PPL={base_ppl:.3f} → patched PPL={best_ppl:.3f} (Δ={delta_pct:.1f}%)")
+    
+    # with model_surgery_context(selections, delta_w, alpha=a_all):
+    #     mmlu_acc_after, ok2, tot2 = evaluate_mmlu_zero_shot(
+    #         model, processor, MMLU_SYSTEM_PROMPT,
+    #         subjects=None, split="validation", max_examples_per_subject=50
+    #     )
+    # print(f"[MMLU] after-surgery zero-shot acc={mmlu_acc_after:.3f} ({ok2}/{tot2}); Δ={(mmlu_acc_after - mmlu_acc_before)*100:.1f} pts")
 
-    for l in sorted(sel_map.keys()):
-        with model_surgery_context(sel_map[l], delta_w, alpha=a_all):
-            logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-        obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
-        denom = obj_clean - obj_corrupt
-        # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
-        r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
-        per_layer_same_alpha.append((l, r_w))
-    per_layer_same_alpha.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-    print("[Per-layer @ same alpha] (top 20)")
-    for i, (l, r_w) in enumerate(per_layer_same_alpha[:20], 1):
-        txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
-        print(f" #{i:02d} layer={l:02d} restoration={txt}")
+    # 3b) 分层报告（用相同 a_all）——可与 3c) 对比
+    # per_layer_same_alpha = []
+    # sel_map: Dict[int, List[GateRowRef]] = {}
+    # for ref in selections:
+    #     sel_map.setdefault(ref.layer_idx, []).append(ref)
+
+    # for l in sorted(sel_map.keys()):
+    #     with model_surgery_context(sel_map[l], delta_w, alpha=a_all):
+    #         logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    #     obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
+    #     denom = obj_clean - obj_corrupt
+    #     # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
+    #     r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
+    #     per_layer_same_alpha.append((l, r_w))
+    # per_layer_same_alpha.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+    # print("[Per-layer @ same alpha] (top 20)")
+    # for i, (l, r_w) in enumerate(per_layer_same_alpha[:20], 1):
+    #     txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
+    #     print(f" #{i:02d} layer={l:02d} restoration={txt}")
 
     # 3c)（可选）逐层各自扫 alpha，解释你之前看到的“分层更高”的现象
-    if also_sweep_per_layer_alpha:
-        per_layer_best = []
-        for l in sorted(sel_map.keys()):
-            best_l = None
-            for a in alpha_grid:
-                with model_surgery_context(sel_map[l], delta_w, alpha=a):
-                    logits_patched = forward_logits_only(model, enc_corrupt)
-                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-                obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
-                denom = obj_clean - obj_corrupt
-                # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
-                r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
-                if (best_l is None) or (not math.isnan(r_w) and r_w > best_l[0]):
-                    best_l = (r_w, a)
-            if best_l is not None:
-                per_layer_best.append((l, best_l[0], best_l[1]))
-        per_layer_best.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-        print("[Per-layer best alpha] (top 20)")
-        for i, (l, r_w, a_l) in enumerate(per_layer_best[:20], 1):
-            txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
-            print(f" #{i:02d} layer={l:02d} best_alpha={a_l:.3f} restoration={txt}")
+    # if also_sweep_per_layer_alpha:
+    #     per_layer_best = []
+    #     for l in sorted(sel_map.keys()):
+    #         best_l = None
+    #         for a in alpha_grid:
+    #             with model_surgery_context(sel_map[l], delta_w, alpha=a):
+    #                 logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    #             obj_patched = objective_from_logits_full(logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
+    #             denom = obj_clean - obj_corrupt
+    #             # r_l = normalized_restoration(js_divergence, clean_probs, corrupt_probs, patched_probs).item()
+    #             r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
+    #             if (best_l is None) or (not math.isnan(r_w) and r_w > best_l[0]):
+    #                 best_l = (r_w, a)
+    #         if best_l is not None:
+    #             per_layer_best.append((l, best_l[0], best_l[1]))
+    #     per_layer_best.sort(key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+    #     print("[Per-layer best alpha] (top 20)")
+    #     for i, (l, r_w, a_l) in enumerate(per_layer_best[:20], 1):
+    #         txt = "nan" if math.isnan(r_w) else f"{r_w:.3f}"
+    #         print(f" #{i:02d} layer={l:02d} best_alpha={a_l:.3f} restoration={txt}")
 
 
 # ---------------------------
@@ -1274,4 +1582,4 @@ if __name__ == "__main__":
         raise RuntimeError("从 CSV 没配出任何成对样本：可能是 ID 格式不匹配、两边无共同前缀，或 statement 为空。")
 
     eval_pair = (BASE_TEXT, VARIANT_TEXT)
-    run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=256)
+    run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=10240)

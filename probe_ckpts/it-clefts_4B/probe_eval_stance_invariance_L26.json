@@ -1,8 +1,0 @@
-{
-  "acc_train": 1.0,
-  "acc_val": 1.0,
-  "acc_test": 1.0,
-  "auroc_train": 1.0,
-  "auroc_val": 1.0,
-  "auroc_test": 1.0
-}
