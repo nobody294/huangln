@@ -38,109 +38,88 @@ MMLU_SYSTEM_PROMPT = (
 
 # Example pair for base vs variant (you can change these)
 # BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-# VARIANT_TEXT = "It is the ban on face-covering clothing that the government should abolish."
+# VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
 
-# BASE_TEXT = "Houses should be built on land currently used for agriculture."
-# VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
-
-# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# VARIANT_TEXT = "It is an additional flight tax for short-distance flights that the Netherlands should introduce."
+# BASE_TEXT = "The government should make Dutch-language education more frequently mandatory at universities and colleges."
+# VARIANT_TEXT = "What the government should make more frequently mandatory at universities and colleges is Dutch-language education."
 
 # BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
-# VARIANT_TEXT = "It is an increase in welfare benefits that an increase in minimum wages should no longer automatically result in."
+# VARIANT_TEXT = "What an increase in minimum wages should no longer automatically result in is an increase in welfare benefits."
 
-# BASE_TEXT = "People should always have the choice of whether to wear a face mask."
-# VARIANT_TEXT = "It is the choice of whether to wear a face mask that people should always have."
+# BASE_TEXT = "The efficiency of public services improves when they are privatized."
+# VARIANT_TEXT = "What improves when they are privatized is the efficiency of public services."
 
 # BASE_TEXT = "The future Spanish government should increase irrigated agricultural areas by means of large water transfers."
-# VARIANT_TEXT = "It is irrigated agricultural areas that the future Spanish government should increase by means of large water transfers."
+# VARIANT_TEXT = "What the future Spanish government should increase by means of large water transfers is irrigated agricultural areas."
 
 # BASE_TEXT = "Spain should be more tolerant with illegal migration."
-# VARIANT_TEXT = "It is illegal migration that Spain should be more tolerant with."
+# VARIANT_TEXT = "What Spain should be more tolerant with is illegal migration."
+
+# BASE_TEXT = "All employed persons are to be required to be insured in the statutory pension scheme."
+# VARIANT_TEXT = "What all employed persons are to be required to be insured in is the statutory pension scheme."
 
 # BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
-# VARIANT_TEXT = "It is donations from companies to political parties that should continue to be permitted."
+# VARIANT_TEXT = "What should continue to be permitted are donations from companies to political parties."
 
-# BASE_TEXT = "The federal government is to be given more responsibilities in school policy."
-# VARIANT_TEXT = "It is more responsibilities in school policy that the federal government is to be given."
+# BASE_TEXT = "The Nord Stream 2 Baltic Sea pipeline, which transports gas from Russia to Germany, is to be allowed to go into operation as planned."
+# VARIANT_TEXT = "What is to be allowed to go into operation as planned is the Nord Stream 2 Baltic Sea pipeline, which transports gas from Russia to Germany."
 
-# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-# VARIANT_TEXT = "It is contracts for the expansion of the communications infrastructure in Germany that Chinese companies should not be allowed to receive."
+# BASE_TEXT = "The registration of new cars with combustion engines should also be possible in the long term."
+# VARIANT_TEXT = "What should also be possible in the long term is the registration of new cars with combustion engines."
 
-# BASE_TEXT = "A tax is to be levied again on high assets."
-# VARIANT_TEXT = "It is high assets that a tax is to be levied again on."
+# BASE_TEXT = "Islamic associations are to be able to be recognized by the state as religious communities."
+# VARIANT_TEXT = "What are to be able to be recognized by the state as religious communities are Islamic associations."
 
-# BASE_TEXT = "Facial recognition software should be allowed to be used for video surveillance in public places."
-# VARIANT_TEXT = "It is video surveillance in public places that facial recognition software should be allowed to be used for."
-
-# BASE_TEXT = "Married couples without children should continue to receive tax breaks."
-# VARIANT_TEXT = "It is tax breaks that Married couples without children should continue to receive."
+# BASE_TEXT = "The government-set price for CO2 emissions from heating and driving is to rise more than planned."
+# VARIANT_TEXT = "What is to rise more than planned is the government-set price for CO2 emissions from heating and driving."
 
 # BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "It is air traffic that is to be taxed more heavily."
+# VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
 
-# BASE_TEXT = "The share of defense spending in Poland's GDP should be further increased."
-# VARIANT_TEXT = "It is the share of defense spending in Poland's GDP that should be further increased."
+# BASE_TEXT = "The European Union should have less influence on Polish domestic policy."
+# VARIANT_TEXT = "What the European Union should have less influence on is Polish domestic policy."
 
 # BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-# VARIANT_TEXT = "It is by referendum that Hungary should decide whether to remain part of the EU."
+# VARIANT_TEXT = "What Hungary should decide by referendum is whether to remain part of the EU."
 
-# BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
-# VARIANT_TEXT = "It is the European Public Prosecutor's Office that Hungary should join."
-
-# BASE_TEXT = "Only men and women should be allowed to marry."
-# VARIANT_TEXT = "It is only men and women that should be allowed to marry."
-
-# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
-
-# BASE_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation."
-# VARIANT_TEXT = "It is inflation that a price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight."
+# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
+# VARIANT_TEXT = "What has been reduced by changing the university model (reorganisation into a trust) is political influence."
 
 # BASE_TEXT = "Italy should get out of the Eurozone."
-# VARIANT_TEXT = "It is the Eurozone that Italy should get out of."
+# VARIANT_TEXT = "What Italy should get out of is the Eurozone."
 
-# BASE_TEXT = "European economic integration has gone too far: member states should regain more autonomy."
-# VARIANT_TEXT = "It is European economic integration that has gone too far: it is member states that should regain more autonomy."
+# BASE_TEXT = "The construction of Major Works is a priority for Italy."
+# VARIANT_TEXT = "What is a priority for Italy is the construction of Major Works."
 
-# BASE_TEXT = "Restrictions on personal freedom and privacy are acceptable to deal with health emergencies such as Covid-19."
-# VARIANT_TEXT = "It is health emergencies such as Covid-19 that restrictions on personal freedom and privacy are acceptable to deal with."
-
-BASE_TEXT = "Drilling is necessary to find more energy resources."
-VARIANT_TEXT = "It is more energy resources that drilling is necessary to find."
-
-# BASE_TEXT = "There should be an increase in the retirement age."
-# VARIANT_TEXT = "It is the retirement age that there should be an increase in."
+# BASE_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited."
+# VARIANT_TEXT = "What should be more limited is the Federal Council's ability to restrict private and economic life in the event of a pandemic."
 
 # BASE_TEXT = "The federal government should be given the authority to determine the hospital offering (national hospital planning with regard to locations and range of services)."
-# VARIANT_TEXT = "It is the hospital offering (national hospital planning with regard to locations and range of services) that the federal government should be given the authority to determine."
+# VARIANT_TEXT = "What the federal government should be given the authority to determine is the hospital offering (national hospital planning with regard to locations and range of services)."
+
+# BASE_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes."
+# VARIANT_TEXT = "What should be taught in regular classes according to the Swiss integrated schooling concept are children with learning difficulties or disabilities."
+
+BASE_TEXT = "The federal government should raise the requirements for the high school."
+VARIANT_TEXT = "What the federal government should raise are the requirements for the high school."
 
 # BASE_TEXT = "There should be efforts to house asylum seekers in centers outside Europe during the asylum procedure."
-# VARIANT_TEXT = "It is efforts to house asylum seekers in centers outside Europe during the asylum procedure that there should be."
+# VARIANT_TEXT = "What there should be are efforts to house asylum seekers in centers outside Europe during the asylum procedure."
 
-# BASE_TEXT = "There should be tax cuts at the federal level over the next four years."
-# VARIANT_TEXT = "It is tax cuts that there should be at the federal level over the next four years."
+# BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
+# VARIANT_TEXT = "What doctors should be allowed to administer is direct active euthanasia."
 
 # BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "It is all inheritances over one million Swiss francs that there should be the introduction of a national inheritance tax on."
+# VARIANT_TEXT = "What there should be the introduction of a national inheritance tax on are all inheritances over one million Swiss francs."
 
 # BASE_TEXT = "There should be stricter controls on equal pay for women and men."
-# VARIANT_TEXT = "It is stricter controls on equal pay for women and men that there should be."
+# VARIANT_TEXT = "What there should be are stricter controls on equal pay for women and men."
 
-# BASE_TEXT = "To achieve climate targets, incentives and target agreements should be relied on exclusively, rather than bans and restrictions."
-# VARIANT_TEXT = "It is incentives and target agreements that should be relied on exclusively, rather than bans and restrictions, to achieve climate targets."
-
-# BASE_TEXT = "The army's target number of soldiers should expand to at least 120,000."
-# VARIANT_TEXT = "It is at least 120,000 that the army's target number of soldiers should expand to."
-
-# BASE_TEXT = "The Swiss Armed Forces should expand their cooperation with NATO."
-# VARIANT_TEXT = "It is their cooperation with NATO that the Swiss Armed Forces should expand."
+# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
+# VARIANT_TEXT = "What should be banned in public spaces is automatic facial recognition."
 
 # BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "It is the Bilateral Agreements with the EU that Switzerland should terminate and it is a free trade agreement without the free movement of persons that Switzerland should seek."
-
-# BASE_TEXT = "Switzerland should return to a strict interpretation of neutrality (renounce economic sanctions to a large extent)."
-# VARIANT_TEXT = "It is a strict interpretation of neutrality that Switzerland should return to (renounce economic sanctions to a large extent)."
+# VARIANT_TEXT = "What Switzerland should terminate are the Bilateral Agreements with the EU and what Switzerland should seek is a free trade agreement without the free movement of persons."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -1468,151 +1447,14 @@ def evaluate_mmlu_zero_shot(
     acc = float(correct / total) if total > 0 else float("nan")
     return acc, correct, total
 
-# ===== Alpha 搜索工具：分段网格细化 & 黄金分割，带 PPL 约束与结果缓存 =====
-
-def _alpha_search_eval_factory(
-    model, processor,
-    selections, delta_w,
-    enc_clean, enc_corrupt,
-    clean_probs, corrupt_probs,
-    base_ppl: float,
-    ppl_budget_pct: float = 20.0,
-):
-    """
-    返回一个 evaluate_alpha(alpha) 闭包：
-    - 计算在 alpha 下的恢复分值 r_w（越大越好）
-    - 计算 WikiText PPL 并施加约束：超过 ppl_budget_pct% 的一律视作 -inf（不可行）
-    - 结果做了缓存（alpha -> (score, ppl, probs, nll, Δppl%)）
-    """
-    cache = {}
-
-    def evaluate_alpha(alpha: float):
-        if alpha in cache:
-            return cache[alpha]
-
-        # 执行一次“手术”、算目标分数与 PPL
-        with model_surgery_context(selections, delta_w, alpha=alpha):
-            logits_patched = forward_logits_only(model, enc_corrupt)
-            patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-
-            patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-                model, processor,
-                dataset_config="wikitext-2-raw-v1", split="test",
-                block_size=None, stride=None, max_texts=200  # 为速度，抽样 200 段
-            )
-
-        # 恢复度（你当前使用的 W1 距离）
-        r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
-        ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0 if base_ppl == base_ppl else float("inf")
-
-        # 超过 PPL 预算 → 视作不可行
-        if ppl_increase_pct > ppl_budget_pct:
-            r_w = float("-inf")
-
-        out = (r_w, float(patched_ppl), patched_probs, float(patched_nll), float(ppl_increase_pct))
-        cache[alpha] = out
-        print(f"[Eval alpha={alpha:.4f}] R_W1={r_w:.4f} | PPL={patched_ppl:.3f} (Δ={ppl_increase_pct:.1f}%)")
-        return out
-
-    return evaluate_alpha
-
-
-def search_alpha_grid_refine(
-    evaluate_alpha,
-    a_min: float = 0.0,
-    a_max: float = 3.0,
-    rounds: tuple[int, ...] = (25, 11, 7),
-):
-    """
-    分段网格细化：每一轮在 [lo,hi] 等间距取 n 点，选出最优点的相邻区间作为下一轮的 [lo,hi]。
-    rounds 控制每一轮评估点数。总评估次数约为 sum(rounds)。
-    返回: (best_alpha, best_score, best_probs, best_ppl, best_nll, best_delta_pct)
-    """
-    lo, hi = float(a_min), float(a_max)
-    best_pack = None
-
-    for n in rounds:
-        grid = np.linspace(lo, hi, n)
-        vals = []
-        for a in grid:
-            score, ppl, probs, nll, d_pct = evaluate_alpha(float(a))
-            vals.append(score)
-
-        # 找到当前网格的最佳点，并把区间夹紧为其左右邻居
-        # 注：若最优在边界，下一轮会继续包含边界，直到 rounds 用完
-        arr = np.array(vals, dtype=float)
-        idx = int(np.nanargmax(arr))
-        a_star = float(grid[idx])
-
-        left_idx  = max(0, idx - 1)
-        right_idx = min(len(grid) - 1, idx + 1)
-        lo, hi = float(grid[left_idx]), float(grid[right_idx])
-
-        # 记录最佳
-        best_pack = (a_star, *evaluate_alpha(a_star))
-
-    a_best, r_best, _, ppl_best, probs_best, nll_best, d_pct_best = best_pack[0], best_pack[1], None, best_pack[2], best_pack[3], best_pack[4], best_pack[5]
-    return a_best, r_best, probs_best, ppl_best, nll_best, d_pct_best
-
-
-def search_alpha_golden(
-    evaluate_alpha,
-    a_min: float = 0.0,
-    a_max: float = 3.0,
-    tol: float = 1e-2,
-    max_iter: int = 20,
-):
-    """
-    黄金分割搜索：假设可行区内目标（R_W1）近似单峰。
-    违反 PPL 约束的点评为 -inf，算法会自动避开。
-    返回: (best_alpha, best_score, best_probs, best_ppl, best_nll, best_delta_pct)
-    """
-    import math
-    phi = (1 + 5 ** 0.5) / 2  # 黄金比
-    invphi = 1 / phi
-
-    lo, hi = float(a_min), float(a_max)
-    c = hi - invphi * (hi - lo)
-    d = lo + invphi * (hi - lo)
-
-    fc = evaluate_alpha(c)[0]
-    fd = evaluate_alpha(d)[0]
-
-    for _ in range(max_iter):
-        if abs(hi - lo) <= tol:
-            break
-        if fc < fd:
-            lo = c
-            c = d
-            fc = fd
-            d = lo + invphi * (hi - lo)
-            fd = evaluate_alpha(d)[0]
-        else:
-            hi = d
-            d = c
-            fd = fc
-            c = hi - invphi * (hi - lo)
-            fc = evaluate_alpha(c)[0]
-
-    # 取区间端点及中点里最好的一个，拿到完整指标
-    candidates = [lo, (lo + hi) / 2.0, hi]
-    best = None
-    for a in candidates:
-        pack = (a, *evaluate_alpha(a))
-        if (best is None) or (pack[1] > best[1]):
-            best = pack
-
-    a_best, r_best, ppl_best, probs_best, nll_best, d_pct_best = best[0], best[1], best[2], best[3], best[4], best[5]
-    return a_best, r_best, probs_best, ppl_best, nll_best, d_pct_best
-
 # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0
 
 def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 21,     # 你也可以试 -2 / 31 等（论文在多个层试过）
-    alpha_grid = (0.1, 0.2),
+    probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    alpha_grid = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
     use_raw_text_for_probe: bool = False,   # << 新增：训练探头是否用原始文本
@@ -1739,39 +1581,7 @@ def run_model_surgery_once(
     obj_clean   = objective_from_logits_full(logits_clean,   enc_clean,   clean_probs, TEMP_FOR_PROBS).item()
     obj_corrupt = objective_from_logits_full(logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
 
-    # 3a) 全层合并编辑下的最佳 alpha —— 连续搜索版本（支持 PPL 约束 + 缓存）
-    # ppl_budget_pct = 20.0   # 你也可以改成 5/10 等更严格的阈值
-    # a_min, a_max = 0.0, 3.0 # 搜索区间
-    # evaluate_alpha = _alpha_search_eval_factory(
-    #     model, processor,
-    #     selections, delta_w,
-    #     enc_clean, enc_corrupt,
-    #     clean_probs, corrupt_probs,
-    #     base_ppl=base_ppl,
-    #     ppl_budget_pct=ppl_budget_pct,
-    # )
-
-    # # 方案一：分段网格逐步细化（稳健，默认）
-    # a_all, r_all, best_probs, best_ppl, best_nll, best_delta_pct = search_alpha_grid_refine(
-    #     evaluate_alpha,
-    #     a_min=a_min, a_max=a_max,
-    #     rounds=(25, 11, 7)  # 评估次数 ≈ 43 次；可改小提速或改大提精度
-    # )
-
-    # # 如果你想用方案二（黄金分割），把上面的调用注释掉，启用下面这行：
-    # # a_all, r_all, best_probs, best_ppl, best_nll, best_delta_pct = search_alpha_golden(
-    # #     evaluate_alpha, a_min=a_min, a_max=a_max, tol=1e-2, max_iter=20
-    # # )
-
-    # print(f"[ModelSurgery] best alpha = {a_all:.4f}, restoration(R_W1) = {r_all:.3f}")
-    # print(f"[WikiText] baseline PPL={base_ppl:.3f} → patched PPL={best_ppl:.3f} (Δ={best_delta_pct:.1f}%), NLL={best_nll:.3f}")
-
-    # if not (best_probs is None):
-    #     print(f"[Clean probs]   {clean_probs}")
-    #     print(f"[Corrupt probs] {corrupt_probs}")
-    #     print(f"[Patched probs @ alpha*] {best_probs}")
-
-
+    # 3a) 全层合并编辑下的最佳 alpha
     best = None
     best_probs = None
     best_ppl = None
@@ -1819,8 +1629,6 @@ def run_model_surgery_once(
     if best_ppl is not None:
         delta_pct = (best_ppl / base_ppl - 1.0) * 100.0
         print(f"[WikiText] baseline PPL={base_ppl:.3f} → patched PPL={best_ppl:.3f} (Δ={delta_pct:.1f}%)")
-
-    
     
     # with model_surgery_context(selections, delta_w, alpha=a_all):
     #     mmlu_acc_after, ok2, tot2 = evaluate_mmlu_zero_shot(
@@ -1889,8 +1697,8 @@ if __name__ == "__main__":
     print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
     # For real experiments, expand these lists to dozens/hundreds of pairs.
     BASE_CSV_PATH    = "data/original_statements.csv"
-    VARIANT_CSV_PATH = "data/it-clefts_variants.csv"
-    FLIP_CSV_PATH = "data/flip rate/it-clefts_flip_4B.csv"
+    VARIANT_CSV_PATH = "data/wh-clefts_variants.csv"
+    FLIP_CSV_PATH = "data/flip rate/wh-clefts_flip_4B.csv"
 
     train_base, train_variant, rep = build_train_lists_from_csv(
         BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
