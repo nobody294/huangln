@@ -37,8 +37,8 @@ MMLU_SYSTEM_PROMPT = (
 )
 
 # Example pair for base vs variant (you can change these)
-# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-# VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
+BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
 
 # BASE_TEXT = "The government should make Dutch-language education more frequently mandatory at universities and colleges."
 # VARIANT_TEXT = "What the government should make more frequently mandatory at universities and colleges is Dutch-language education."
@@ -100,11 +100,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes."
 # VARIANT_TEXT = "What should be taught in regular classes according to the Swiss integrated schooling concept are children with learning difficulties or disabilities."
 
-BASE_TEXT = "The federal government should raise the requirements for the high school."
-VARIANT_TEXT = "What the federal government should raise are the requirements for the high school."
-
-# BASE_TEXT = "There should be efforts to house asylum seekers in centers outside Europe during the asylum procedure."
-# VARIANT_TEXT = "What there should be are efforts to house asylum seekers in centers outside Europe during the asylum procedure."
+# BASE_TEXT = "The federal government should raise the requirements for the high school."
+# VARIANT_TEXT = "What the federal government should raise are the requirements for the high school."
 
 # BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
 # VARIANT_TEXT = "What doctors should be allowed to administer is direct active euthanasia."
@@ -718,6 +715,8 @@ def build_train_lists_from_csv(
     base_csv_path: str,
     variant_csv_path: str,
     flip_csv_path: Optional[str] = None,
+    base_non_significant_csv_path: Optional[str] = None,
+    variant_non_significant_csv_path: Optional[str] = None,
     keep_order_by_base: bool = False,
     verbose: bool = True
 ) -> Tuple[List[str], List[str], Dict[str, int]]:
@@ -740,7 +739,17 @@ def build_train_lists_from_csv(
     else:
         flip_prefixes, flip_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
 
-    common = common_before_flip - flip_prefixes
+    if base_non_significant_csv_path:
+        base_non_significant_prefixes, base_non_stats = _load_flip_prefix_set(base_non_significant_csv_path)
+    else:
+        base_non_significant_prefixes, base_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    if variant_non_significant_csv_path:
+        v_non_significant_prefixes, v_non_stats = _load_flip_prefix_set(variant_non_significant_csv_path)
+    else:
+        v_non_significant_prefixes, v_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    common = common_before_flip - flip_prefixes - base_non_significant_prefixes - v_non_significant_prefixes
 
     if keep_order_by_base:
         ordered = []
@@ -758,6 +767,8 @@ def build_train_lists_from_csv(
     train_variant = [var_map[p][1]  for p in prefix_list]
 
     blocked_by_flip = len(common_before_flip & flip_prefixes)
+    blocked_by_base_non_significant = len(common_before_flip & base_non_significant_prefixes)
+    blocked_by_variant_non_significant = len(common_before_flip & v_non_significant_prefixes)
     report = {
         "base_rows": base_stats["rows"],
         "variant_rows": var_stats["rows"],
@@ -774,6 +785,8 @@ def build_train_lists_from_csv(
         "bad_id_flip": flip_stats["bad_id"],
         "dup_prefix_flip": flip_stats["dup_prefix"],
         "blocked_by_flip": blocked_by_flip,
+        "blocked_by_base_non_significant": blocked_by_base_non_significant,
+        "blocked_by_variant_non_significant": blocked_by_variant_non_significant,
     }
 
     if verbose:
@@ -782,6 +795,8 @@ def build_train_lists_from_csv(
         if flip_csv_path:
             print(f"[CSV] flip rows={report['flip_rows']} (bad_id={report['bad_id_flip']}, dup={report['dup_prefix_flip']}); blocked_by_flip={report['blocked_by_flip']}")
         print(f"[CSV] paired(after flip filter)={report['paired']}, only_in_base_after_filter={report['only_in_base_after_filter']}, only_in_variant_after_filter={report['only_in_variant_after_filter']}")
+        print(f"[CSV] blocked_by_base_non_significant={report['blocked_by_base_non_significant']}")
+        print(f"[CSV] blocked_by_variant_non_significant={report['blocked_by_variant_non_significant']}")
         # 打印前 3 对样例（便于人工核对）
         for p in prefix_list[:3]:
             print(f"[CSV] sample pair prefix={p} | base_id={base_map[p][0]} | variant_id={var_map[p][0]}")
@@ -1699,9 +1714,12 @@ if __name__ == "__main__":
     BASE_CSV_PATH    = "data/original_statements.csv"
     VARIANT_CSV_PATH = "data/wh-clefts_variants.csv"
     FLIP_CSV_PATH = "data/flip rate/wh-clefts_flip_4B.csv"
+    BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
+    V_NON_SIGNIFICANT_CSV_PATH = "data/significance/wh-clefts_4B_not_significant.csv"
 
     train_base, train_variant, rep = build_train_lists_from_csv(
         BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
+        BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
         keep_order_by_base=False,  # 或 True：按 base CSV 顺序
         verbose=True
     )
