@@ -43,6 +43,9 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Houses should be built on land currently used for agriculture."
 # VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
 
+BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
+VARIANT_TEXT = "It is as much as secondary school teachers that primary school teachers should earn."
+
 # BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
 # VARIANT_TEXT = "It is an additional flight tax for short-distance flights that the Netherlands should introduce."
 
@@ -106,8 +109,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Restrictions on personal freedom and privacy are acceptable to deal with health emergencies such as Covid-19."
 # VARIANT_TEXT = "It is health emergencies such as Covid-19 that restrictions on personal freedom and privacy are acceptable to deal with."
 
-BASE_TEXT = "Drilling is necessary to find more energy resources."
-VARIANT_TEXT = "It is more energy resources that drilling is necessary to find."
+# BASE_TEXT = "Drilling is necessary to find more energy resources."
+# VARIANT_TEXT = "It is more energy resources that drilling is necessary to find."
 
 # BASE_TEXT = "There should be an increase in the retirement age."
 # VARIANT_TEXT = "It is the retirement age that there should be an increase in."
@@ -739,6 +742,8 @@ def build_train_lists_from_csv(
     base_csv_path: str,
     variant_csv_path: str,
     flip_csv_path: Optional[str] = None,
+    base_non_significant_csv_path: Optional[str] = None,
+    variant_non_significant_csv_path: Optional[str] = None,
     keep_order_by_base: bool = False,
     verbose: bool = True
 ) -> Tuple[List[str], List[str], Dict[str, int]]:
@@ -761,7 +766,17 @@ def build_train_lists_from_csv(
     else:
         flip_prefixes, flip_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
 
-    common = common_before_flip - flip_prefixes
+    if base_non_significant_csv_path:
+        base_non_significant_prefixes, base_non_stats = _load_flip_prefix_set(base_non_significant_csv_path)
+    else:
+        base_non_significant_prefixes, base_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    if variant_non_significant_csv_path:
+        v_non_significant_prefixes, v_non_stats = _load_flip_prefix_set(variant_non_significant_csv_path)
+    else:
+        v_non_significant_prefixes, v_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    common = common_before_flip - flip_prefixes - base_non_significant_prefixes - v_non_significant_prefixes
 
     if keep_order_by_base:
         ordered = []
@@ -779,6 +794,8 @@ def build_train_lists_from_csv(
     train_variant = [var_map[p][1]  for p in prefix_list]
 
     blocked_by_flip = len(common_before_flip & flip_prefixes)
+    blocked_by_base_non_significant = len(common_before_flip & base_non_significant_prefixes)
+    blocked_by_variant_non_significant = len(common_before_flip & v_non_significant_prefixes)
     report = {
         "base_rows": base_stats["rows"],
         "variant_rows": var_stats["rows"],
@@ -795,6 +812,8 @@ def build_train_lists_from_csv(
         "bad_id_flip": flip_stats["bad_id"],
         "dup_prefix_flip": flip_stats["dup_prefix"],
         "blocked_by_flip": blocked_by_flip,
+        "blocked_by_base_non_significant": blocked_by_base_non_significant,
+        "blocked_by_variant_non_significant": blocked_by_variant_non_significant,
     }
 
     if verbose:
@@ -803,6 +822,8 @@ def build_train_lists_from_csv(
         if flip_csv_path:
             print(f"[CSV] flip rows={report['flip_rows']} (bad_id={report['bad_id_flip']}, dup={report['dup_prefix_flip']}); blocked_by_flip={report['blocked_by_flip']}")
         print(f"[CSV] paired(after flip filter)={report['paired']}, only_in_base_after_filter={report['only_in_base_after_filter']}, only_in_variant_after_filter={report['only_in_variant_after_filter']}")
+        print(f"[CSV] blocked_by_base_non_significant={report['blocked_by_base_non_significant']}")
+        print(f"[CSV] blocked_by_variant_non_significant={report['blocked_by_variant_non_significant']}")
         # 打印前 3 对样例（便于人工核对）
         for p in prefix_list[:3]:
             print(f"[CSV] sample pair prefix={p} | base_id={base_map[p][0]} | variant_id={var_map[p][0]}")
@@ -1044,10 +1065,8 @@ def fit_or_load_probe_ce(
 
 class ProbeEvalResult(NamedTuple):
     acc_train: float
-    acc_val: float
     acc_test: float
     auroc_train: Optional[float]
-    auroc_val: Optional[float]
     auroc_test: Optional[float]
 
 def _softmax_logits_to_pred_and_prob(logits: torch.Tensor):
@@ -1061,7 +1080,6 @@ def evaluate_probe_on_splits(
     W2: torch.Tensor, b2: torch.Tensor,
     mu: torch.Tensor, sigma: torch.Tensor,
     X_train: torch.Tensor, y_train: torch.Tensor,
-    X_val: torch.Tensor,   y_val: torch.Tensor,
     X_test: torch.Tensor,  y_test: torch.Tensor,
     compute_auroc: bool = False,
     save_json: Optional[str] = None,
@@ -1072,40 +1090,35 @@ def evaluate_probe_on_splits(
     """
     # 标准化
     Xtr = (X_train - mu) / sigma
-    Xva = (X_val   - mu) / sigma
     Xte = (X_test  - mu) / sigma
 
     # 前向（线性头）
     with torch.no_grad():
         logits_tr = Xtr @ W2.T + b2          # [Ntr,2]
-        logits_va = Xva @ W2.T + b2          # [Nva,2]
         logits_te = Xte @ W2.T + b2          # [Nte,2]
 
         pred_tr, pos_tr = _softmax_logits_to_pred_and_prob(logits_tr)
-        pred_va, pos_va = _softmax_logits_to_pred_and_prob(logits_va)
         pred_te, pos_te = _softmax_logits_to_pred_and_prob(logits_te)
 
     acc_tr = float((pred_tr == y_train).float().mean().item())
-    acc_va = float((pred_va == y_val).float().mean().item())
     acc_te = float((pred_te == y_test).float().mean().item())
 
     if compute_auroc:
         try:
             au_tr = float(roc_auc_score(y_train.numpy(), pos_tr.numpy()))
-            au_va = float(roc_auc_score(y_val.numpy(),   pos_va.numpy()))
             au_te = float(roc_auc_score(y_test.numpy(),  pos_te.numpy()))
         except Exception:
-            au_tr = au_va = au_te = None
+            au_tr = au_te = None
     else:
-        au_tr = au_va = au_te = None
+        au_tr = au_te = None
 
-    res = ProbeEvalResult(acc_tr, acc_va, acc_te, au_tr, au_va, au_te)
+    res = ProbeEvalResult(acc_tr, acc_te, au_tr, au_te)
 
     if save_json is not None:
         with open(save_json, "w", encoding="utf-8") as f:
             json.dump({
-                "acc_train": res.acc_train, "acc_val": res.acc_val, "acc_test": res.acc_test,
-                "auroc_train": res.auroc_train, "auroc_val": res.auroc_val, "auroc_test": res.auroc_test,
+                "acc_train": res.acc_train, "acc_test": res.acc_test,
+                "auroc_train": res.auroc_train, "auroc_test": res.auroc_test,
             }, f, ensure_ascii=False, indent=2)
 
     return res
@@ -1114,27 +1127,23 @@ def split_texts_balanced(
     texts_pos: List[str],
     texts_neg: List[str],
     train_ratio: float = 0.8,
-    val_ratio: float = 0.1,
-    test_ratio: float = 0.1,
     seed: int = 0
 ) -> Tuple[List[str], List[str], List[str], List[str], List[str], List[str]]:
     """
     先对正类、负类各自独立随机打乱并按比例切分，再合并（保证类平衡、可复现）。
-    返回: pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te（全是文本列表）
+    返回: pos_tr, pos_te, neg_tr, neg_te（全是文本列表）
     """
-    assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
     g = torch.Generator(device="cpu"); g.manual_seed(seed)
 
     def _split_one(lst: List[str]):
         idx = torch.randperm(len(lst), generator=g).tolist()
         lst = [lst[i] for i in idx]
         n_tr = int(len(lst) * train_ratio)
-        n_va = int(len(lst) * val_ratio)
-        return lst[:n_tr], lst[n_tr:n_tr+n_va], lst[n_tr+n_va:]
+        return lst[:n_tr], lst[n_tr:]
 
-    pos_tr, pos_va, pos_te = _split_one(texts_pos)
-    neg_tr, neg_va, neg_te = _split_one(texts_neg)
-    return pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te
+    pos_tr, pos_te = _split_one(texts_pos)
+    neg_tr, neg_te = _split_one(texts_neg)
+    return pos_tr, pos_te, neg_tr, neg_te
 
 @torch.no_grad()
 def extract_feature_matrix_for_texts_cached(
@@ -1625,8 +1634,8 @@ def run_model_surgery_once(
     ).eval()
 
     # ---- (A) 文本级切分（先切分，再训练探针）----
-    pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te = split_texts_balanced(
-        base_texts, variant_texts, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, seed=0
+    pos_tr, pos_te, neg_tr, neg_te = split_texts_balanced(
+        base_texts, variant_texts, train_ratio=0.8, seed=0
     )
     # num_pairs = min(len(base_texts), len(variant_texts))
     # idx = torch.randperm(num_pairs, generator=torch.Generator().manual_seed(0)).tolist()
@@ -1665,14 +1674,6 @@ def run_model_surgery_once(
         model, processor, SYSTEM_PROMPT, neg_tr, probe_layer_idx, "probe_ckpts", "stance_invariance", "train_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe
     )
-    X_pos_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, pos_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_pos", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
-    X_neg_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, neg_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
     X_pos_te = extract_feature_matrix_for_texts_cached(
         model, processor, SYSTEM_PROMPT, pos_te, probe_layer_idx, "probe_ckpts", "stance_invariance", "test_pos", input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe
@@ -1691,18 +1692,17 @@ def run_model_surgery_once(
         return X[perm], y[perm]
 
     Xtr, ytr = _pack(X_pos_tr, X_neg_tr)
-    Xva, yva = _pack(X_pos_va, X_neg_va)
     Xte, yte = _pack(X_pos_te, X_neg_te)
 
     eval_res = evaluate_probe_on_splits(
         W2.float(), b2.float(), mu.float(), sigma.float(),
-        Xtr, ytr, Xva, yva, Xte, yte,
+        Xtr, ytr, Xte, yte,
         compute_auroc=(roc_auc_score is not None),
         save_json=os.path.join("probe_ckpts", f"probe_eval_stance_invariance_L{probe_layer_idx}.json")
     )
-    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  val={eval_res.acc_val:.3f}  test={eval_res.acc_test:.3f}")
+    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  test={eval_res.acc_test:.3f}")
     if eval_res.auroc_test is not None:
-        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  val={eval_res.auroc_val:.3f}  test={eval_res.auroc_test:.3f}")
+        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  test={eval_res.auroc_test:.3f}")
 
     # 2) 选择“通常在不良状态下不激活”的行向量（和 Δw 余弦最小）
     selections = select_inactive_gate_rows(model, delta_w, k_total=17408, k_per_layer=k_per_layer)
@@ -1891,9 +1891,12 @@ if __name__ == "__main__":
     BASE_CSV_PATH    = "data/original_statements.csv"
     VARIANT_CSV_PATH = "data/it-clefts_variants.csv"
     FLIP_CSV_PATH = "data/flip rate/it-clefts_flip_4B.csv"
+    BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
+    V_NON_SIGNIFICANT_CSV_PATH = "data/significance/it-clefts_4B_not_significant.csv"
 
     train_base, train_variant, rep = build_train_lists_from_csv(
         BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
+        BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
         keep_order_by_base=False,  # 或 True：按 base CSV 顺序
         verbose=True
     )

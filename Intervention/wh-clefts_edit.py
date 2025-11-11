@@ -37,8 +37,8 @@ MMLU_SYSTEM_PROMPT = (
 )
 
 # Example pair for base vs variant (you can change these)
-BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
+# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+# VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
 
 # BASE_TEXT = "The government should make Dutch-language education more frequently mandatory at universities and colleges."
 # VARIANT_TEXT = "What the government should make more frequently mandatory at universities and colleges is Dutch-language education."
@@ -64,6 +64,7 @@ VARIANT_TEXT = "What the government should abolish is the ban on face-covering c
 # BASE_TEXT = "The Nord Stream 2 Baltic Sea pipeline, which transports gas from Russia to Germany, is to be allowed to go into operation as planned."
 # VARIANT_TEXT = "What is to be allowed to go into operation as planned is the Nord Stream 2 Baltic Sea pipeline, which transports gas from Russia to Germany."
 
+# No. 10
 # BASE_TEXT = "The registration of new cars with combustion engines should also be possible in the long term."
 # VARIANT_TEXT = "What should also be possible in the long term is the registration of new cars with combustion engines."
 
@@ -73,8 +74,8 @@ VARIANT_TEXT = "What the government should abolish is the ban on face-covering c
 # BASE_TEXT = "The government-set price for CO2 emissions from heating and driving is to rise more than planned."
 # VARIANT_TEXT = "What is to rise more than planned is the government-set price for CO2 emissions from heating and driving."
 
-# BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
+BASE_TEXT = "Air traffic is to be taxed more heavily."
+VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
 
 # BASE_TEXT = "The European Union should have less influence on Polish domestic policy."
 # VARIANT_TEXT = "What the European Union should have less influence on is Polish domestic policy."
@@ -94,6 +95,7 @@ VARIANT_TEXT = "What the government should abolish is the ban on face-covering c
 # BASE_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited."
 # VARIANT_TEXT = "What should be more limited is the Federal Council's ability to restrict private and economic life in the event of a pandemic."
 
+# No. 20
 # BASE_TEXT = "The federal government should be given the authority to determine the hospital offering (national hospital planning with regard to locations and range of services)."
 # VARIANT_TEXT = "What the federal government should be given the authority to determine is the hospital offering (national hospital planning with regard to locations and range of services)."
 
@@ -1038,10 +1040,8 @@ def fit_or_load_probe_ce(
 
 class ProbeEvalResult(NamedTuple):
     acc_train: float
-    acc_val: float
     acc_test: float
     auroc_train: Optional[float]
-    auroc_val: Optional[float]
     auroc_test: Optional[float]
 
 def _softmax_logits_to_pred_and_prob(logits: torch.Tensor):
@@ -1055,7 +1055,6 @@ def evaluate_probe_on_splits(
     W2: torch.Tensor, b2: torch.Tensor,
     mu: torch.Tensor, sigma: torch.Tensor,
     X_train: torch.Tensor, y_train: torch.Tensor,
-    X_val: torch.Tensor,   y_val: torch.Tensor,
     X_test: torch.Tensor,  y_test: torch.Tensor,
     compute_auroc: bool = False,
     save_json: Optional[str] = None,
@@ -1066,40 +1065,35 @@ def evaluate_probe_on_splits(
     """
     # 标准化
     Xtr = (X_train - mu) / sigma
-    Xva = (X_val   - mu) / sigma
     Xte = (X_test  - mu) / sigma
 
     # 前向（线性头）
     with torch.no_grad():
         logits_tr = Xtr @ W2.T + b2          # [Ntr,2]
-        logits_va = Xva @ W2.T + b2          # [Nva,2]
         logits_te = Xte @ W2.T + b2          # [Nte,2]
 
         pred_tr, pos_tr = _softmax_logits_to_pred_and_prob(logits_tr)
-        pred_va, pos_va = _softmax_logits_to_pred_and_prob(logits_va)
         pred_te, pos_te = _softmax_logits_to_pred_and_prob(logits_te)
 
     acc_tr = float((pred_tr == y_train).float().mean().item())
-    acc_va = float((pred_va == y_val).float().mean().item())
     acc_te = float((pred_te == y_test).float().mean().item())
 
     if compute_auroc:
         try:
             au_tr = float(roc_auc_score(y_train.numpy(), pos_tr.numpy()))
-            au_va = float(roc_auc_score(y_val.numpy(),   pos_va.numpy()))
             au_te = float(roc_auc_score(y_test.numpy(),  pos_te.numpy()))
         except Exception:
-            au_tr = au_va = au_te = None
+            au_tr = au_te = None
     else:
-        au_tr = au_va = au_te = None
+        au_tr = au_te = None
 
-    res = ProbeEvalResult(acc_tr, acc_va, acc_te, au_tr, au_va, au_te)
+    res = ProbeEvalResult(acc_tr, acc_te, au_tr, au_te)
 
     if save_json is not None:
         with open(save_json, "w", encoding="utf-8") as f:
             json.dump({
-                "acc_train": res.acc_train, "acc_val": res.acc_val, "acc_test": res.acc_test,
-                "auroc_train": res.auroc_train, "auroc_val": res.auroc_val, "auroc_test": res.auroc_test,
+                "acc_train": res.acc_train, "acc_test": res.acc_test,
+                "auroc_train": res.auroc_train, "auroc_test": res.auroc_test,
             }, f, ensure_ascii=False, indent=2)
 
     return res
@@ -1108,27 +1102,23 @@ def split_texts_balanced(
     texts_pos: List[str],
     texts_neg: List[str],
     train_ratio: float = 0.8,
-    val_ratio: float = 0.1,
-    test_ratio: float = 0.1,
     seed: int = 0
 ) -> Tuple[List[str], List[str], List[str], List[str], List[str], List[str]]:
     """
     先对正类、负类各自独立随机打乱并按比例切分，再合并（保证类平衡、可复现）。
-    返回: pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te（全是文本列表）
+    返回: pos_tr, pos_te, neg_tr, neg_te（全是文本列表）
     """
-    assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
     g = torch.Generator(device="cpu"); g.manual_seed(seed)
 
     def _split_one(lst: List[str]):
         idx = torch.randperm(len(lst), generator=g).tolist()
         lst = [lst[i] for i in idx]
         n_tr = int(len(lst) * train_ratio)
-        n_va = int(len(lst) * val_ratio)
-        return lst[:n_tr], lst[n_tr:n_tr+n_va], lst[n_tr+n_va:]
+        return lst[:n_tr], lst[n_tr:]
 
-    pos_tr, pos_va, pos_te = _split_one(texts_pos)
-    neg_tr, neg_va, neg_te = _split_one(texts_neg)
-    return pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te
+    pos_tr, pos_te = _split_one(texts_pos)
+    neg_tr, neg_te = _split_one(texts_neg)
+    return pos_tr, pos_te, neg_tr, neg_te
 
 @torch.no_grad()
 def extract_feature_matrix_for_texts_cached(
@@ -1468,7 +1458,7 @@ def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    probe_layer_idx: int = 33,     # 你也可以试 -2 / 31 等（论文在多个层试过）
     alpha_grid = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
@@ -1482,8 +1472,8 @@ def run_model_surgery_once(
     ).eval()
 
     # ---- (A) 文本级切分（先切分，再训练探针）----
-    pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te = split_texts_balanced(
-        base_texts, variant_texts, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, seed=0
+    pos_tr, pos_te, neg_tr, neg_te = split_texts_balanced(
+        base_texts, variant_texts, train_ratio=0.8, seed=0
     )
     # num_pairs = min(len(base_texts), len(variant_texts))
     # idx = torch.randperm(num_pairs, generator=torch.Generator().manual_seed(0)).tolist()
@@ -1508,7 +1498,7 @@ def run_model_surgery_once(
         probe_layer_idx=probe_layer_idx,
         save_dir="probe_ckpts",     # 可自定义
         tag="stance_invariance",    # 区分不同数据/任务
-        epochs=30, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0,
+        epochs=20, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0,
         input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe,
     )
@@ -1520,14 +1510,6 @@ def run_model_surgery_once(
     )
     X_neg_tr = extract_feature_matrix_for_texts_cached(
         model, processor, SYSTEM_PROMPT, neg_tr, probe_layer_idx, "probe_ckpts", "stance_invariance", "train_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
-    X_pos_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, pos_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_pos", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
-    X_neg_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, neg_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe
     )
     X_pos_te = extract_feature_matrix_for_texts_cached(
@@ -1548,18 +1530,17 @@ def run_model_surgery_once(
         return X[perm], y[perm]
 
     Xtr, ytr = _pack(X_pos_tr, X_neg_tr)
-    Xva, yva = _pack(X_pos_va, X_neg_va)
     Xte, yte = _pack(X_pos_te, X_neg_te)
 
     eval_res = evaluate_probe_on_splits(
         W2.float(), b2.float(), mu.float(), sigma.float(),
-        Xtr, ytr, Xva, yva, Xte, yte,
+        Xtr, ytr, Xte, yte,
         compute_auroc=(roc_auc_score is not None),
         save_json=os.path.join("probe_ckpts", f"probe_eval_stance_invariance_L{probe_layer_idx}.json")
     )
-    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  val={eval_res.acc_val:.3f}  test={eval_res.acc_test:.3f}")
+    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  test={eval_res.acc_test:.3f}")
     if eval_res.auroc_test is not None:
-        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  val={eval_res.auroc_val:.3f}  test={eval_res.auroc_test:.3f}")
+        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  test={eval_res.auroc_test:.3f}")
 
     # 2) 选择“通常在不良状态下不激活”的行向量（和 Δw 余弦最小）
     selections = select_inactive_gate_rows(model, delta_w, k_total=17408, k_per_layer=k_per_layer)
