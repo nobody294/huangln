@@ -74,8 +74,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "The government-set price for CO2 emissions from heating and driving is to rise more than planned."
 # VARIANT_TEXT = "What is to rise more than planned is the government-set price for CO2 emissions from heating and driving."
 
-BASE_TEXT = "Air traffic is to be taxed more heavily."
-VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
+# BASE_TEXT = "Air traffic is to be taxed more heavily."
+# VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
 
 # BASE_TEXT = "The European Union should have less influence on Polish domestic policy."
 # VARIANT_TEXT = "What the European Union should have less influence on is Polish domestic policy."
@@ -117,8 +117,8 @@ VARIANT_TEXT = "What is to be taxed more heavily is air traffic."
 # BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
 # VARIANT_TEXT = "What should be banned in public spaces is automatic facial recognition."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "What Switzerland should terminate are the Bilateral Agreements with the EU and what Switzerland should seek is a free trade agreement without the free movement of persons."
+BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+VARIANT_TEXT = "What Switzerland should terminate are the Bilateral Agreements with the EU and what Switzerland should seek is a free trade agreement without the free movement of persons."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -549,6 +549,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Corrupt probs] {corrupt_probs}")
     print("-" * 60)
 
+    # base_nll, base_ppl, base_tok = evaluate_wikitext_ppl(
+    #     model, processor,
+    #     dataset_config="wikitext-2-raw-v1",  # 你要全量可改 "wikitext-103-v1"
+    #     split="test", block_size=None, stride=None, max_texts=200  # 为了速度先抽样
+    # )
+    # print(f"[WikiText] baseline: NLL={base_nll:.4f}, PPL={base_ppl:.3f}, toks={base_tok}")
+
     # scores_sorted = attribution_scores_first_order(
     #     model, enc_clean, enc_corrupt, clean_probs
     # )
@@ -566,9 +573,11 @@ def run_activation_patching(base_text: str, variant_text: str):
         for l in range(n_layers):
             spec = {"block": [], "attn": [], "mlp": []}
             spec[kind] = [l]
+
             with patch_context(model, enc_corrupt, clean_cache, spec):
                 logits_patched = forward_logits_only(model, enc_corrupt)
                 patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+            
             obj_patched = objective_from_logits_full(
                 logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
             ).item()
@@ -580,10 +589,44 @@ def run_activation_patching(base_text: str, variant_text: str):
             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
             results.append((l, r))
         return results
+    
+    # def sweep_attn_patch(kind: str):
+    #     results = []
+    #     best_r = 0.6
+    #     best_patched_probs = None
+    #     ppl_increase_pct = 0.0
+    #     for l in range(n_layers):
+    #         spec = {"block": [], "attn": [], "mlp": []}
+    #         spec[kind] = [l]
 
-    block_results = sweep_patch("block")
-    attn_results = sweep_patch("attn")
-    mlp_results = sweep_patch("mlp")
+    #         with patch_context(model, enc_corrupt, clean_cache, spec):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    #             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #             if r > best_r:
+    #                 best_patched_probs = patched_probs
+    #                 best_r = r
+    #                 patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+    #                     model, processor,
+    #                     dataset_config="wikitext-2-raw-v1", split="test",
+    #                     block_size=None, stride=None, max_texts=200
+    #                 )
+    #                 ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
+            
+    #         obj_patched = objective_from_logits_full(
+    #             logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+    #         ).item()
+    #         # denom = obj_clean - obj_corrupt
+    #         # if abs(denom) < 1e-9:
+    #         #     r = float("nan")
+    #         # else:
+    #         #     r = (obj_patched - obj_corrupt) / denom
+    #         results.append((l, r))
+    #     return results, best_patched_probs, ppl_increase_pct
+
+    block_results= sweep_patch("block")
+    attn_results= sweep_patch("attn")
+    mlp_results= sweep_patch("mlp")
 
     def print_top(title, arr):
         arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
@@ -597,12 +640,15 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - ATTN - top layers]", attn_results)
     print_top("[Patch - MLP - top layers]", mlp_results)
 
-    def sweep_attn_ablate(ratio: float = 0.0) -> List[Tuple[int, float]]:
+    def sweep_attn_ablate(ratio: float = 0.0):
         results = []
+        best_r = 0.0
+        best_patched_probs = None
         for l in range(n_layers):
             with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
                 logits_patched = forward_logits_only(model, enc_corrupt)
                 patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
             obj_patched = objective_from_logits_full(
                 logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
             ).item()
@@ -612,10 +658,15 @@ def run_activation_patching(base_text: str, variant_text: str):
             # else:
             #     r = (obj_patched - obj_corrupt) / denom
             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+            if r > best_r:
+                best_r = r
+                best_patched_probs = patched_probs
             results.append((l, r))
-        return results
+        return results, best_patched_probs
 
-    ablate0_results = sweep_attn_ablate(ratio=0.0)
+    ablate0_results, best_probs= sweep_attn_ablate(ratio=0.0)
+    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs}")
+    print("-" * 60)
     print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
 
 # ---------------------------
@@ -965,7 +1016,7 @@ def fit_or_load_probe_ce(
         else:
             sigma = sigma_v.to(torch.float32).unsqueeze(0) if sigma_v.ndim == 1 else sigma_v.to(torch.float32)
 
-        W_target = W2[1]  # 目标类（pos/clean）的权重行
+        W_target = W2[0]  # 目标类（pos/clean）的权重行
         if std_used:
             # 旧版：探针在标准化空间训练过 → 反标准化到原空间
             # sigma_vec = sigma.squeeze(0) + 1e-12
@@ -1025,7 +1076,7 @@ def fit_or_load_probe_ce(
         # delta_w = W2[1] / (W2[1].norm() + 1e-12)
         # sigma_vec = sigma.squeeze(0) + 1e-12                          # [H]
         # delta_w = (W2[1] - W2[0]) / sigma_vec
-        delta_w = W2[1]
+        delta_w = W2[0]
         # delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
 
     # 4) 保存（便于复现）
@@ -1458,7 +1509,7 @@ def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 33,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
     alpha_grid = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
@@ -1498,7 +1549,7 @@ def run_model_surgery_once(
         probe_layer_idx=probe_layer_idx,
         save_dir="probe_ckpts",     # 可自定义
         tag="stance_invariance",    # 区分不同数据/任务
-        epochs=20, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0,
+        epochs=30, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0,
         input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe,
     )
@@ -1687,25 +1738,25 @@ if __name__ == "__main__":
 
     set_global_determinism(0, single_thread=True)
 
-    # print("=== Baseline diagnostics: activation patching / ablation ===")
-    # _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
+    print("=== Baseline diagnostics: activation patching / ablation ===")
+    _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
 
-    print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
-    # For real experiments, expand these lists to dozens/hundreds of pairs.
-    BASE_CSV_PATH    = "data/original_statements.csv"
-    VARIANT_CSV_PATH = "data/wh-clefts_variants.csv"
-    FLIP_CSV_PATH = "data/flip rate/wh-clefts_flip_4B.csv"
-    BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
-    V_NON_SIGNIFICANT_CSV_PATH = "data/significance/wh-clefts_4B_not_significant.csv"
+    # print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
+    # # For real experiments, expand these lists to dozens/hundreds of pairs.
+    # BASE_CSV_PATH    = "data/original_statements.csv"
+    # VARIANT_CSV_PATH = "data/wh-clefts_variants.csv"
+    # FLIP_CSV_PATH = "data/flip rate/wh-clefts_flip_4B.csv"
+    # BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
+    # V_NON_SIGNIFICANT_CSV_PATH = "data/significance/wh-clefts_4B_not_significant.csv"
 
-    train_base, train_variant, rep = build_train_lists_from_csv(
-        BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
-        BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
-        keep_order_by_base=False,  # 或 True：按 base CSV 顺序
-        verbose=True
-    )
-    if len(train_base) == 0:
-        raise RuntimeError("从 CSV 没配出任何成对样本：可能是 ID 格式不匹配、两边无共同前缀，或 statement 为空。")
+    # train_base, train_variant, rep = build_train_lists_from_csv(
+    #     BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
+    #     BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
+    #     keep_order_by_base=False,  # 或 True：按 base CSV 顺序
+    #     verbose=True
+    # )
+    # if len(train_base) == 0:
+    #     raise RuntimeError("从 CSV 没配出任何成对样本：可能是 ID 格式不匹配、两边无共同前缀，或 statement 为空。")
 
-    eval_pair = (BASE_TEXT, VARIANT_TEXT)
-    run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=10240)
+    # eval_pair = (BASE_TEXT, VARIANT_TEXT)
+    # run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=10240)

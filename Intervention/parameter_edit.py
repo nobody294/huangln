@@ -43,8 +43,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Houses should be built on land currently used for agriculture."
 # VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
 
-BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
-VARIANT_TEXT = "It is as much as secondary school teachers that primary school teachers should earn."
+# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
+# VARIANT_TEXT = "It is as much as secondary school teachers that primary school teachers should earn."
 
 # BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
 # VARIANT_TEXT = "It is an additional flight tax for short-distance flights that the Netherlands should introduce."
@@ -64,6 +64,7 @@ VARIANT_TEXT = "It is as much as secondary school teachers that primary school t
 # BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
 # VARIANT_TEXT = "It is donations from companies to political parties that should continue to be permitted."
 
+# No. 10
 # BASE_TEXT = "The federal government is to be given more responsibilities in school policy."
 # VARIANT_TEXT = "It is more responsibilities in school policy that the federal government is to be given."
 
@@ -91,12 +92,10 @@ VARIANT_TEXT = "It is as much as secondary school teachers that primary school t
 # BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
 # VARIANT_TEXT = "It is the European Public Prosecutor's Office that Hungary should join."
 
-# BASE_TEXT = "Only men and women should be allowed to marry."
-# VARIANT_TEXT = "It is only men and women that should be allowed to marry."
+BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
+VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
 
-# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
-
+# No. 20
 # BASE_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation."
 # VARIANT_TEXT = "It is inflation that a price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight."
 
@@ -127,6 +126,7 @@ VARIANT_TEXT = "It is as much as secondary school teachers that primary school t
 # BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
 # VARIANT_TEXT = "It is all inheritances over one million Swiss francs that there should be the introduction of a national inheritance tax on."
 
+# No. 30
 # BASE_TEXT = "There should be stricter controls on equal pay for women and men."
 # VARIANT_TEXT = "It is stricter controls on equal pay for women and men that there should be."
 
@@ -574,6 +574,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Corrupt probs] {corrupt_probs}")
     print("-" * 60)
 
+    # base_nll, base_ppl, base_tok = evaluate_wikitext_ppl(
+    #     model, processor,
+    #     dataset_config="wikitext-2-raw-v1",  # 你要全量可改 "wikitext-103-v1"
+    #     split="test", block_size=None, stride=None, max_texts=200  # 为了速度先抽样
+    # )
+    # print(f"[WikiText] baseline: NLL={base_nll:.4f}, PPL={base_ppl:.3f}, toks={base_tok}")
+
     # scores_sorted = attribution_scores_first_order(
     #     model, enc_clean, enc_corrupt, clean_probs
     # )
@@ -591,9 +598,11 @@ def run_activation_patching(base_text: str, variant_text: str):
         for l in range(n_layers):
             spec = {"block": [], "attn": [], "mlp": []}
             spec[kind] = [l]
+
             with patch_context(model, enc_corrupt, clean_cache, spec):
                 logits_patched = forward_logits_only(model, enc_corrupt)
                 patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+            
             obj_patched = objective_from_logits_full(
                 logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
             ).item()
@@ -605,10 +614,44 @@ def run_activation_patching(base_text: str, variant_text: str):
             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
             results.append((l, r))
         return results
+    
+    # def sweep_attn_patch(kind: str):
+    #     results = []
+    #     best_r = 0.6
+    #     best_patched_probs = None
+    #     ppl_increase_pct = 0.0
+    #     for l in range(n_layers):
+    #         spec = {"block": [], "attn": [], "mlp": []}
+    #         spec[kind] = [l]
 
-    block_results = sweep_patch("block")
-    attn_results = sweep_patch("attn")
-    mlp_results = sweep_patch("mlp")
+    #         with patch_context(model, enc_corrupt, clean_cache, spec):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    #             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #             if r > best_r:
+    #                 best_patched_probs = patched_probs
+    #                 best_r = r
+    #                 patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+    #                     model, processor,
+    #                     dataset_config="wikitext-2-raw-v1", split="test",
+    #                     block_size=None, stride=None, max_texts=200
+    #                 )
+    #                 ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
+            
+    #         obj_patched = objective_from_logits_full(
+    #             logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+    #         ).item()
+    #         # denom = obj_clean - obj_corrupt
+    #         # if abs(denom) < 1e-9:
+    #         #     r = float("nan")
+    #         # else:
+    #         #     r = (obj_patched - obj_corrupt) / denom
+    #         results.append((l, r))
+    #     return results, best_patched_probs, ppl_increase_pct
+
+    block_results= sweep_patch("block")
+    attn_results= sweep_patch("attn")
+    mlp_results= sweep_patch("mlp")
 
     def print_top(title, arr):
         arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
@@ -622,12 +665,15 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - ATTN - top layers]", attn_results)
     print_top("[Patch - MLP - top layers]", mlp_results)
 
-    def sweep_attn_ablate(ratio: float = 0.0) -> List[Tuple[int, float]]:
+    def sweep_attn_ablate(ratio: float = 0.0):
         results = []
+        best_r = 0.0
+        best_patched_probs = None
         for l in range(n_layers):
             with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
                 logits_patched = forward_logits_only(model, enc_corrupt)
                 patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
             obj_patched = objective_from_logits_full(
                 logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
             ).item()
@@ -637,10 +683,15 @@ def run_activation_patching(base_text: str, variant_text: str):
             # else:
             #     r = (obj_patched - obj_corrupt) / denom
             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+            if r > best_r:
+                best_r = r
+                best_patched_probs = patched_probs
             results.append((l, r))
-        return results
+        return results, best_patched_probs
 
-    ablate0_results = sweep_attn_ablate(ratio=0.0)
+    ablate0_results, best_probs= sweep_attn_ablate(ratio=0.0)
+    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs}")
+    print("-" * 60)
     print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
 
 # ---------------------------
@@ -1883,25 +1934,25 @@ if __name__ == "__main__":
 
     set_global_determinism(0, single_thread=True)
 
-    # print("=== Baseline diagnostics: activation patching / ablation ===")
-    # _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
+    print("=== Baseline diagnostics: activation patching / ablation ===")
+    _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)
 
-    print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
-    # For real experiments, expand these lists to dozens/hundreds of pairs.
-    BASE_CSV_PATH    = "data/original_statements.csv"
-    VARIANT_CSV_PATH = "data/it-clefts_variants.csv"
-    FLIP_CSV_PATH = "data/flip rate/it-clefts_flip_4B.csv"
-    BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
-    V_NON_SIGNIFICANT_CSV_PATH = "data/significance/it-clefts_4B_not_significant.csv"
+    # print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
+    # # For real experiments, expand these lists to dozens/hundreds of pairs.
+    # BASE_CSV_PATH    = "data/original_statements.csv"
+    # VARIANT_CSV_PATH = "data/it-clefts_variants.csv"
+    # FLIP_CSV_PATH = "data/flip rate/it-clefts_flip_4B.csv"
+    # BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
+    # V_NON_SIGNIFICANT_CSV_PATH = "data/significance/it-clefts_4B_not_significant.csv"
 
-    train_base, train_variant, rep = build_train_lists_from_csv(
-        BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
-        BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
-        keep_order_by_base=False,  # 或 True：按 base CSV 顺序
-        verbose=True
-    )
-    if len(train_base) == 0:
-        raise RuntimeError("从 CSV 没配出任何成对样本：可能是 ID 格式不匹配、两边无共同前缀，或 statement 为空。")
+    # train_base, train_variant, rep = build_train_lists_from_csv(
+    #     BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
+    #     BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
+    #     keep_order_by_base=False,  # 或 True：按 base CSV 顺序
+    #     verbose=True
+    # )
+    # if len(train_base) == 0:
+    #     raise RuntimeError("从 CSV 没配出任何成对样本：可能是 ID 格式不匹配、两边无共同前缀，或 statement 为空。")
 
-    eval_pair = (BASE_TEXT, VARIANT_TEXT)
-    run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=10240)
+    # eval_pair = (BASE_TEXT, VARIANT_TEXT)
+    # run_model_surgery_once(train_base, train_variant, eval_pair, k_per_layer=10240)
