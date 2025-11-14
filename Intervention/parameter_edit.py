@@ -35,6 +35,39 @@ MMLU_SYSTEM_PROMPT = (
     "You are taking a multiple-choice exam. "
     "Answer correctly and output exactly one capital letter: A, B, C, or D."
 )
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/parameter_edit.py
+# Not flip pair
+# BASE_TEXT = "Organizers of events should be able to request a vaccination certificate upon entry."
+# VARIANT_TEXT = "It is a vaccination certificate that organizers of events should be able to request upon entry."
+
+# BASE_TEXT = "The Netherlands should spend more money on defense."
+# VARIANT_TEXT = "It is more money on defense that the Netherlands should spend."
+
+# BASE_TEXT = "Childcare should be free for all parents for at least three days a week."
+# VARIANT_TEXT = "It is for all parents that childcare should be free for at least three days a week."
+
+# BASE_TEXT = "The Netherlands should exit the European Union (EU)."
+# VARIANT_TEXT = "It is the European Union (EU) that the Netherlands should exit."
+
+BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
+VARIANT_TEXT = "It is a tax per kilometer driven for motorists that there should be instead of the tax on car ownership."
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# -------------------------------------------------------------------
 
 # Example pair for base vs variant (you can change these)
 # BASE_TEXT = "The government should abolish the ban on face-covering clothing."
@@ -92,8 +125,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
 # VARIANT_TEXT = "It is the European Public Prosecutor's Office that Hungary should join."
 
-BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
+# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
+# VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
 
 # No. 20
 # BASE_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation."
@@ -111,22 +144,12 @@ VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive 
 # BASE_TEXT = "Drilling is necessary to find more energy resources."
 # VARIANT_TEXT = "It is more energy resources that drilling is necessary to find."
 
-# BASE_TEXT = "There should be an increase in the retirement age."
-# VARIANT_TEXT = "It is the retirement age that there should be an increase in."
-
 # BASE_TEXT = "The federal government should be given the authority to determine the hospital offering (national hospital planning with regard to locations and range of services)."
 # VARIANT_TEXT = "It is the hospital offering (national hospital planning with regard to locations and range of services) that the federal government should be given the authority to determine."
-
-# BASE_TEXT = "There should be efforts to house asylum seekers in centers outside Europe during the asylum procedure."
-# VARIANT_TEXT = "It is efforts to house asylum seekers in centers outside Europe during the asylum procedure that there should be."
 
 # BASE_TEXT = "There should be tax cuts at the federal level over the next four years."
 # VARIANT_TEXT = "It is tax cuts that there should be at the federal level over the next four years."
 
-# BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "It is all inheritances over one million Swiss francs that there should be the introduction of a national inheritance tax on."
-
-# No. 30
 # BASE_TEXT = "There should be stricter controls on equal pay for women and men."
 # VARIANT_TEXT = "It is stricter controls on equal pay for women and men that there should be."
 
@@ -136,6 +159,7 @@ VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive 
 # BASE_TEXT = "The army's target number of soldiers should expand to at least 120,000."
 # VARIANT_TEXT = "It is at least 120,000 that the army's target number of soldiers should expand to."
 
+# No. 30
 # BASE_TEXT = "The Swiss Armed Forces should expand their cooperation with NATO."
 # VARIANT_TEXT = "It is their cooperation with NATO that the Swiss Armed Forces should expand."
 
@@ -481,7 +505,8 @@ def attn_ablation_context(
     model: Gemma3ForConditionalGeneration,
     enc: EncodedChat,
     layers_to_edit: List[int],
-    ratio: float = 0.0
+    ratio: float = 0.0,
+    pos_strategy: str = "last"
 ):
     hooks = []
 
@@ -491,7 +516,13 @@ def attn_ablation_context(
                 return out
             hidden = out[0] if isinstance(out, tuple) else out
             new_hidden = hidden.clone()
-            new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
+
+            if pos_strategy == "fixed":
+                new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
+            elif pos_strategy == "last":
+                new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
+            else:
+                return out
             return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
         return _hook
 
@@ -505,6 +536,187 @@ def attn_ablation_context(
     finally:
         for h in hooks:
             h.remove()
+
+@contextlib.contextmanager
+def mlp_ablation_context(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layers_to_edit: List[int],
+    ratio: float = 0.0,
+    pos_strategy: str = "last"
+):
+    hooks = []
+
+    def make_hook(layer_idx):
+        def _hook(module, input, out):
+            if layer_idx not in layers_to_edit:
+                return out
+            hidden = out[0] if isinstance(out, tuple) else out
+            new_hidden = hidden.clone()
+
+            if pos_strategy == "fixed":
+                new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
+            elif pos_strategy == "last":
+                new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
+            else:
+                return out
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+        return _hook
+
+    for i, name, layer in get_decoder_layers(model):
+        for subname, sub in layer.named_modules():
+            if isinstance(sub, Gemma3MLP):
+                hooks.append(sub.register_forward_hook(make_hook(i)))
+
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
+
+@contextlib.contextmanager
+def attn_ablation_23(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layer_to_edit: int = 23,
+    ratio: float = 0.0
+):
+    with attn_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[layer_to_edit],
+        ratio=ratio,
+    ):
+        yield
+
+@contextlib.contextmanager
+def attn_ablation_23_16(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    ratio: float = 0.0
+):
+    with attn_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[16, 23],
+        ratio=ratio,
+    ):
+        yield
+
+@contextlib.contextmanager
+def attn_head_ablation_context(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layers_to_edit: List[int],
+    heads_to_edit: List[int],
+    ratio: float = 0.0,
+    all_positions: bool = False,
+):
+    """
+    在给定的层里，把若干 attention head 的输出缩放为 ratio。
+    - ratio=0.0 就是“把这个 head 设为 0”。
+    - all_positions=True: 所有 token 位置都 ablate
+      all_positions=False: 只在 enc.answer_pos 这个位置 ablate（更接近你现在的做法）
+    """
+    hooks = []
+
+    # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
+    num_heads = model.config.text_config.num_attention_heads
+
+    def make_o_proj_hook(layer_idx: int):
+        def _hook(module: nn.Linear, inputs, output):
+            # module 是 Gemma3Attention 里的 o_proj
+            if layer_idx not in layers_to_edit:
+                return output
+
+            # inputs[0] 是 o_proj 的输入：形状 [batch, seq, hidden_size]，
+            # 实际上就是 concat 后的所有 head
+            x = inputs[0]
+            B, T, H = x.shape
+            head_dim = H // num_heads
+
+            # [B, T, H] -> [B, T, num_heads, head_dim]
+            x = x.view(B, T, num_heads, head_dim)
+
+            # 做一个 clone 避免就地修改带来奇怪的梯度 / 共享引用问题
+            # x = x.clone()
+
+            if all_positions:
+                for h_idx in heads_to_edit:
+                    if 0 <= h_idx < num_heads:
+                        x[:, :, h_idx, :] = x[:, :, h_idx, :] * ratio
+            else:
+                pos = enc.answer_pos
+                for h_idx in heads_to_edit:
+                    if 0 <= h_idx < num_heads:
+                        x[:, pos, h_idx, :] = x[:, pos, h_idx, :] * ratio
+
+            # 再 reshape 回去
+            x = x.view(B, T, H)
+
+            # 手动走一次线性层，相当于 o_proj(x)
+            W = module.weight
+            b = module.bias
+            out = torch.nn.functional.linear(x, W, b)
+
+            return out
+        return _hook
+
+    for i, name, layer in get_decoder_layers(model):
+        if i not in layers_to_edit:
+            continue
+        for subname, sub in layer.named_modules():
+            if isinstance(sub, Gemma3Attention) and hasattr(sub, "o_proj"):
+                hooks.append(sub.o_proj.register_forward_hook(make_o_proj_hook(i)))
+
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
+
+@contextlib.contextmanager
+def attn_head_ablation_23(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    ratio: float = 0.0,
+    all_positions: bool = False,
+    head: int = 0
+):
+    """
+    只在第 23 层，把某个 head 的输出乘上 ratio。
+    默认 all_positions=False，也就是只在 answer_pos ablate。
+    """
+    with attn_head_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[23],
+        heads_to_edit=[head],
+        ratio=ratio,
+        all_positions=all_positions,
+    ):
+        yield
+
+@contextlib.contextmanager
+def attn_head_ablation_23_multiple_heads(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    ratio: float = 0.0,
+    all_positions: bool = False
+):
+    """
+    只在第 23 层，把某个 head 的输出乘上 ratio。
+    默认 all_positions=False，也就是只在 answer_pos ablate。
+    """
+    with attn_head_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[23],
+        heads_to_edit=[7, 6, 3],
+        ratio=ratio,
+        all_positions=all_positions,
+    ):
+        yield
 
 def js_divergence(p: torch.Tensor, q: torch.Tensor, eps=1e-12) -> torch.Tensor:
     p = p.clamp_min(eps); q = q.clamp_min(eps)
@@ -649,50 +861,185 @@ def run_activation_patching(base_text: str, variant_text: str):
     #         results.append((l, r))
     #     return results, best_patched_probs, ppl_increase_pct
 
-    block_results= sweep_patch("block")
-    attn_results= sweep_patch("attn")
-    mlp_results= sweep_patch("mlp")
 
-    def print_top(title, arr):
-        arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-        print(title)
-        for i, (l, r) in enumerate(arr_sorted[:print_top_layers], 1):
-            txt = "nan" if math.isnan(r) else f"{r:.3f}"
-            print(f" #{i:02d} layer={l:02d} restoration={txt}")
-        print("-" * 60)
+    # block_results= sweep_patch("block")
+    # attn_results= sweep_patch("attn")
+    # mlp_results= sweep_patch("mlp")
 
-    print_top("[Patch - BLOCK - top layers]", block_results)
-    print_top("[Patch - ATTN - top layers]", attn_results)
-    print_top("[Patch - MLP - top layers]", mlp_results)
+    # def print_top(title, arr):
+    #     arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+    #     print(title)
+    #     for i, (l, r) in enumerate(arr_sorted[:print_top_layers], 1):
+    #         txt = "nan" if math.isnan(r) else f"{r:.3f}"
+    #         print(f" #{i:02d} layer={l:02d} restoration={txt}")
+    #     print("-" * 60)
 
-    def sweep_attn_ablate(ratio: float = 0.0):
-        results = []
-        best_r = 0.0
-        best_patched_probs = None
-        for l in range(n_layers):
-            with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
-                logits_patched = forward_logits_only(model, enc_corrupt)
-                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # print_top("[Patch - BLOCK - top layers]", block_results)
+    # print_top("[Patch - ATTN - top layers]", attn_results)
+    # print_top("[Patch - MLP - top layers]", mlp_results)
 
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            # denom = obj_clean - obj_corrupt
-            # if abs(denom) < 1e-9:
-            #     r = float("nan")
-            # else:
-            #     r = (obj_patched - obj_corrupt) / denom
-            r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-            if r > best_r:
-                best_r = r
-                best_patched_probs = patched_probs
-            results.append((l, r))
-        return results, best_patched_probs
 
-    ablate0_results, best_probs= sweep_attn_ablate(ratio=0.0)
-    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs}")
-    print("-" * 60)
-    print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
+    # def sweep_attn_ablate(ratio: float = 0.0):
+    #     results = []
+    #     best_r = 0.0
+    #     best_patched_probs = None
+    #     best_ppl = None
+    #     for l in range(n_layers):
+    #         with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+    #             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #             if r > best_r:
+    #                 best_r = r
+    #                 best_patched_probs = patched_probs
+    #                 # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+    #                 #     model, processor,
+    #                 #     dataset_config="wikitext-2-raw-v1", split="test",
+    #                 #     block_size=None, stride=None, max_texts=200
+    #                 # )
+    #                 # ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
+    #                 # best_ppl = ppl_increase_pct
+
+
+    #         obj_patched = objective_from_logits_full(
+    #             logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+    #         ).item()
+    #         # denom = obj_clean - obj_corrupt
+    #         # if abs(denom) < 1e-9:
+    #         #     r = float("nan")
+    #         # else:
+    #         #     r = (obj_patched - obj_corrupt) / denom
+    #         # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #         # if r > best_r:
+    #         #     best_r = r
+    #         #     best_patched_probs = patched_probs
+    #         #     best_ppl = ppl_increase_pct
+    #         results.append((l, r))
+    #     return results, best_patched_probs, best_ppl
+
+    # ablate0_results, best_probs, best_ppl= sweep_attn_ablate(ratio=0.0)
+    # print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs}")
+    # # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
+    # print("-" * 60)
+    # print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
+
+
+    # def sweep_mlp_ablate(ratio: float = 0.0):
+    #     results = []
+    #     best_r = 0.0
+    #     best_patched_probs = None
+    #     best_ppl = None
+    #     for l in range(n_layers):
+    #         with mlp_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+    #             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #             if r > best_r:
+    #                 best_r = r
+    #                 best_patched_probs = patched_probs
+    #                 # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+    #                 #     model, processor,
+    #                 #     dataset_config="wikitext-2-raw-v1", split="test",
+    #                 #     block_size=None, stride=None, max_texts=200
+    #                 # )
+    #                 # ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
+    #                 # best_ppl = ppl_increase_pct
+
+
+    #         obj_patched = objective_from_logits_full(
+    #             logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+    #         ).item()
+    #         # denom = obj_clean - obj_corrupt
+    #         # if abs(denom) < 1e-9:
+    #         #     r = float("nan")
+    #         # else:
+    #         #     r = (obj_patched - obj_corrupt) / denom
+    #         # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #         # if r > best_r:
+    #         #     best_r = r
+    #         #     best_patched_probs = patched_probs
+    #         #     best_ppl = ppl_increase_pct
+    #         results.append((l, r))
+    #     return results, best_patched_probs, best_ppl
+
+    # mlp_ablate0_results, mlp_best_probs, best_ppl= sweep_mlp_ablate(ratio=0.0)
+    # print(f"[Ablate-MLP Best-Patched-Probs] {mlp_best_probs}")
+    # # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
+    # print("-" * 60)
+    # print_top("[Ablate-MLP ratio=0.0] top layers", mlp_ablate0_results)
+
+    with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[Only Ablate ATTN-23 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
+
+    # with attn_ablation_23_16(model, enc_corrupt, ratio=0.0):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Ablate ATTN-23-and-16 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
+
+    # 对注意力头进行patch
+    # def sweep_head_ablate(
+    #     ratio: float = 0.0,
+    #     all_positions: bool = False,
+    # ):
+    #     results = []
+    #     best_r = 0.0
+    #     best_patched_probs = None
+    #     num_heads = model.config.text_config.num_attention_heads
+
+    #     for h in range(num_heads):
+    #         with attn_head_ablation_23(
+    #             model,
+    #             enc_corrupt,
+    #             ratio=ratio,
+    #             all_positions=all_positions,
+    #             head=h
+    #         ):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(
+    #                 logits_patched, enc_clean, TEMP_FOR_PROBS
+    #             )
+
+    #         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+
+    #         if r > best_r:
+    #             best_r = r
+    #             best_patched_probs = patched_probs
+
+    #         results.append((h, r))
+
+    #     return results, best_patched_probs
+    
+    # head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
+    # print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
+
+    # def print_top_head(title, arr):
+    #     arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+    #     print(title)
+    #     for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
+    #         txt = "nan" if math.isnan(r) else f"{r:.3f}"
+    #         print(f" #{i:02d} head={h:02d} restoration={txt}")
+    #     print("-" * 60)
+    
+    # print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
+
+    # with attn_head_ablation_23_multiple_heads(model, enc_corrupt, ratio=0.0, all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Ablate ATTN-23 Head-3-6-7 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
+
 
 # ---------------------------
 # Paper-faithful pipeline (multi-GPU safe) — CE probe + Δw + min-cos rows + gate_proj add
