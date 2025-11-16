@@ -35,76 +35,79 @@ MMLU_SYSTEM_PROMPT = (
     "You are taking a multiple-choice exam. "
     "Answer correctly and output exactly one capital letter: A, B, C, or D."
 )
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/active-passive_edit.py
 
 # Example pair for base vs variant (you can change these)
-# BASE_TEXT = "There should be an additional tax on purchasing meat."
-# VARIANT_TEXT = "There should be a no additional tax on buying meat."
+# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
 
-# BASE_TEXT = "The national government, rather than provinces and municipalities, should decide where new residential areas are built."
-# VARIANT_TEXT = "The national government should not decide where new residential areas are built instead of provinces and municipalities."
+# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
+# VARIANT_TEXT = "As much as secondary school teachers earn should be earned by primary school teachers."
 
-# BASE_TEXT = "Houses should be built on land currently used for agriculture."
-# VARIANT_TEXT = "No housing should be built on land now used for agriculture."
+# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
+# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
 
-BASE_TEXT = "There should be fewer options for community service sentences instead of prison sentences."
-VARIANT_TEXT = "There should not be fewer opportunities to impose community service instead of prison sentences."
+# BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
+# VARIANT_TEXT = "An increase in welfare benefits should no longer automatically be the result of an increase in minimum wages."
 
-# BASE_TEXT = "People who consider their lives complete should be able to receive assistance with suicide."
-# VARIANT_TEXT = "People who consider their lives complete should not be able to get help with suicide."
-
-# BASE_TEXT = "The future Spanish government should increase irrigated agricultural areas by means of large water transfers."
-# VARIANT_TEXT = "It is irrigated agricultural areas that the future Spanish government should increase by means of large water transfers."
-
-# BASE_TEXT = "Spain should be more tolerant with illegal migration."
-# VARIANT_TEXT = "It is illegal migration that Spain should be more tolerant with."
+# BASE_TEXT = "All employed persons are to be required to be insured in the statutory pension scheme."
+# VARIANT_TEXT = "The government is to require all employed persons to be insured in the statutory pension scheme."
 
 # BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
-# VARIANT_TEXT = "It is donations from companies to political parties that should continue to be permitted."
+# VARIANT_TEXT = "Relative authorities should continue to permit donations from companies to political parties."
 
-# BASE_TEXT = "The federal government is to be given more responsibilities in school policy."
-# VARIANT_TEXT = "It is more responsibilities in school policy that the federal government is to be given."
-
-# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-# VARIANT_TEXT = "It is contracts for the expansion of the communications infrastructure in Germany that Chinese companies should not be allowed to receive."
+BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
+VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
 
 # BASE_TEXT = "A tax is to be levied again on high assets."
-# VARIANT_TEXT = "It is high assets that a tax is to be levied again on."
-
-# BASE_TEXT = "Facial recognition software should be allowed to be used for video surveillance in public places."
-# VARIANT_TEXT = "It is video surveillance in public places that facial recognition software should be allowed to be used for."
+# VARIANT_TEXT = "The government is to levy a tax on high assets again."
 
 # BASE_TEXT = "Married couples without children should continue to receive tax breaks."
-# VARIANT_TEXT = "It is tax breaks that Married couples without children should continue to receive."
+# VARIANT_TEXT = "Tax breaks should continue to be received by married couples without children."
 
+# No. 10
 # BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "It is air traffic that is to be taxed more heavily."
+# VARIANT_TEXT = "The government is to tax air traffic more heavily."
 
-# BASE_TEXT = "The share of defense spending in Poland's GDP should be further increased."
-# VARIANT_TEXT = "It is the share of defense spending in Poland's GDP that should be further increased."
+# BASE_TEXT = "The state should build low-rent apartments for rent."
+# VARIANT_TEXT = "Low-rent apartments should be built by the state for rent."
 
 # BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-# VARIANT_TEXT = "It is by referendum that Hungary should decide whether to remain part of the EU."
+# VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
+
+# BASE_TEXT = "Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities)."
+# VARIANT_TEXT = "Environmental influences (e.g. media content, sensitising activities) can influence gender identity."
 
 # BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
-# VARIANT_TEXT = "It is the European Public Prosecutor's Office that Hungary should join."
+# VARIANT_TEXT = "The European Public Prosecutor's Office should be joined by Hungary."
 
-# BASE_TEXT = "Only men and women should be allowed to marry."
-# VARIANT_TEXT = "It is only men and women that should be allowed to marry."
+# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
+# VARIANT_TEXT = "Changing the university model (reorganisation into a trust) has reduced political influence."
 
 # BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "It is a closer ratio of men to women that Parties should strive for when drawing up lists."
+# VARIANT_TEXT = "A closer ratio of men to women should be striven for by parties when lists are drawn up."
 
-# BASE_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation."
-# VARIANT_TEXT = "It is inflation that a price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight."
+# BASE_TEXT = "A law is needed to prevent companies from relocating their production abroad."
+# VARIANT_TEXT = "Relative authorities need to pass a law to prevent companies from relocating their production abroad."
 
-# BASE_TEXT = "Italy should get out of the Eurozone."
-# VARIANT_TEXT = "It is the Eurozone that Italy should get out of."
+# BASE_TEXT = "A heritage tax one's wealth should be introduced."
+# VARIANT_TEXT = "Relative authorities should introduce a heritage tax one's wealth."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Compulsory vaccination of children should be introduced based on the Swiss vaccination plan."
+# VARIANT_TEXT = "The government should introduce compulsory vaccination of children based on the Swiss vaccination plan."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# No. 20
+# BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
+# VARIANT_TEXT = "A national inheritance tax on all inheritances over one million Swiss francs should be introduced."
+
+# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
+# VARIANT_TEXT = "The government should ban automatic facial recognition in public spaces."
+
+# BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
+# VARIANT_TEXT = "The Schengen agreement with the EU should be terminated by Switzerland and more security checks directly on the border should be reintroduced."
+
+# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+# VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -114,14 +117,6 @@ EPS = 1e-9
 # ---------------------------
 # Utilities / Model Introspection
 # ---------------------------
-
-def flip_probs_1_to_7(p: torch.Tensor) -> torch.Tensor:
-    """
-    p: [..., 7]，最后一维是 1..7 的概率。
-    返回左右翻转后的分布（以 4 为中心镜像）。
-    """
-    idx = torch.tensor([6, 5, 4, 3, 2, 1, 0], device=p.device)
-    return p.index_select(dim=-1, index=idx)
 
 def get_input_device(model: Gemma3ForConditionalGeneration):
     # More robust than model.device under device_map="auto"
@@ -621,6 +616,88 @@ def attn_head_ablation_context(
             h.remove()
 
 @contextlib.contextmanager
+def attn_head_ablation_scaling_context(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layers_to_edit: List[int],
+    heads_to_ablate: List[int],
+    heads_to_scaling: List[int],
+    ablate_ratio: float = 0.0,
+    scaling_ratio: float = 2.0,
+    all_positions: bool = False,
+):
+    """
+    在给定的层里，把若干 attention head 的输出缩放为 ratio。
+    - ratio=0.0 就是“把这个 head 设为 0”。
+    - all_positions=True: 所有 token 位置都 ablate
+      all_positions=False: 只在 enc.answer_pos 这个位置 ablate（更接近你现在的做法）
+    """
+    hooks = []
+
+    # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
+    num_heads = model.config.text_config.num_attention_heads
+
+    def make_o_proj_hook(layer_idx: int):
+        def _hook(module: nn.Linear, inputs, output):
+            # module 是 Gemma3Attention 里的 o_proj
+            if layer_idx not in layers_to_edit:
+                return output
+
+            # inputs[0] 是 o_proj 的输入：形状 [batch, seq, hidden_size]，
+            # 实际上就是 concat 后的所有 head
+            x = inputs[0]
+            B, T, H = x.shape
+            head_dim = H // num_heads
+
+            # [B, T, H] -> [B, T, num_heads, head_dim]
+            x = x.view(B, T, num_heads, head_dim)
+
+            # 做一个 clone 避免就地修改带来奇怪的梯度 / 共享引用问题
+            # x = x.clone()
+
+            if all_positions:
+                for h_idx in heads_to_ablate:
+                    if 0 <= h_idx < num_heads:
+                        x[:, :, h_idx, :] = x[:, :, h_idx, :] * ablate_ratio
+                
+                for idx in heads_to_scaling:
+                    if 0 <= idx < num_heads:
+                        x[:, :, idx, :] = x[:, :, idx, :] * scaling_ratio
+            else:
+                pos = enc.answer_pos
+                for h_idx in heads_to_ablate:
+                    if 0 <= h_idx < num_heads:
+                        x[:, pos, h_idx, :] = x[:, pos, h_idx, :] * ablate_ratio
+                
+                for idx in heads_to_scaling:
+                    if 0 <= idx < num_heads:
+                        x[:, pos, idx, :] = x[:, pos, idx, :] * scaling_ratio
+
+            # 再 reshape 回去
+            x = x.view(B, T, H)
+
+            # 手动走一次线性层，相当于 o_proj(x)
+            W = module.weight
+            b = module.bias
+            out = torch.nn.functional.linear(x, W, b)
+
+            return out
+        return _hook
+
+    for i, name, layer in get_decoder_layers(model):
+        if i not in layers_to_edit:
+            continue
+        for subname, sub in layer.named_modules():
+            if isinstance(sub, Gemma3Attention) and hasattr(sub, "o_proj"):
+                hooks.append(sub.o_proj.register_forward_hook(make_o_proj_hook(i)))
+
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
+
+@contextlib.contextmanager
 def attn_head_ablation_23(
     model: Gemma3ForConditionalGeneration,
     enc: EncodedChat,
@@ -657,9 +734,46 @@ def attn_head_ablation_23_multiple_heads(
         model,
         enc,
         layers_to_edit=[23],
-        heads_to_edit=[7, 6, 3],
+        heads_to_edit=[7, 6, 3, 1],
         ratio=ratio,
         all_positions=all_positions,
+    ):
+        yield
+
+@contextlib.contextmanager
+def attn_head_scaling_up_23_multiple_heads(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    ratio: float = 2.0,
+    all_positions: bool = False
+):
+    with attn_head_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[23],
+        heads_to_edit=[0, 2, 4],
+        ratio=ratio,
+        all_positions=all_positions
+    ):
+        yield
+
+@contextlib.contextmanager
+def attn_head_ablation_scaling_multiple_23(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    ablate_ratio: float = 0.0,
+    scaling_ratio: float = 2.0,
+    all_positions: bool = False
+):
+    with attn_head_ablation_scaling_context(
+        model,
+        enc,
+        layers_to_edit=[23],
+        heads_to_ablate=[1, 3, 6, 7],
+        heads_to_scaling = [0, 2, 4],
+        ablate_ratio=ablate_ratio,
+        scaling_ratio=scaling_ratio,
+        all_positions=all_positions
     ):
         yield
 
@@ -675,18 +789,9 @@ def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
     cdf_q = torch.cumsum(q, dim=-1)
     return torch.sum(torch.abs(cdf_p - cdf_q), dim=-1)
 
-# def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-3):
-#     d0 = dist_fn(p_clean, p_corrupt)
-#     dp = dist_fn(p_clean, p_patched)
-#     # R = (dp - d0) / (dp + d0 + eps)
-#     R = (dp-d0) / 3.0
-#     # return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
-#     return R
-
 def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
-    p_target = flip_probs_1_to_7(p_clean)
-    d0 = dist_fn(p_target, p_corrupt)
-    dp = dist_fn(p_target, p_patched)
+    d0 = dist_fn(p_clean, p_corrupt)
+    dp = dist_fn(p_clean, p_patched)
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
@@ -739,6 +844,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Corrupt logits] {logits_corrupt_digits}")
     print(f"[Corrupt probs] {corrupt_probs}")
     print("-" * 60)
+
+    # base_nll, base_ppl, base_tok = evaluate_wikitext_ppl(
+    #     model, processor,
+    #     dataset_config="wikitext-2-raw-v1",  # 你要全量可改 "wikitext-103-v1"
+    #     split="test", block_size=None, stride=None, max_texts=200  # 为了速度先抽样
+    # )
+    # print(f"[WikiText] baseline: NLL={base_nll:.4f}, PPL={base_ppl:.3f}, toks={base_tok}")
 
     # scores_sorted = attribution_scores_first_order(
     #     model, enc_clean, enc_corrupt, clean_probs
@@ -871,12 +983,6 @@ def run_activation_patching(base_text: str, variant_text: str):
     print("-" * 60)
     print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
 
-    ablate_results, best_probs_1, best_ppl_1= sweep_attn_ablate(ratio=2.0)
-    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs_1}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
-    print("-" * 60)
-    print_top("[Ablate-ATTN ratio=2.0] top layers", ablate_results)
-
 
     # def sweep_mlp_ablate(ratio: float = 0.0):
     #     results = []
@@ -923,6 +1029,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print("-" * 60)
     # print_top("[Ablate-MLP ratio=0.0] top layers", mlp_ablate0_results)
 
+
     # with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0):
     #     logits_patched = forward_logits_only(model, enc_corrupt)
     #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
@@ -940,58 +1047,77 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Patched Probs] {patched_probs}")
 
     # 对注意力头进行patch
-    # def sweep_head_ablate(
-    #     ratio: float = 0.0,
-    #     all_positions: bool = False,
-    # ):
-    #     results = []
-    #     best_r = 0.0
-    #     best_patched_probs = None
-    #     num_heads = model.config.text_config.num_attention_heads
+    def sweep_head_ablate(
+        ratio: float = 0.0,
+        all_positions: bool = False,
+    ):
+        results = []
+        best_r = 0.0
+        best_patched_probs = None
+        num_heads = model.config.text_config.num_attention_heads
 
-    #     for h in range(num_heads):
-    #         with attn_head_ablation_23(
-    #             model,
-    #             enc_corrupt,
-    #             ratio=ratio,
-    #             all_positions=all_positions,
-    #             head=h
-    #         ):
-    #             logits_patched = forward_logits_only(model, enc_corrupt)
-    #             patched_probs = digit_probs_from_logits_full(
-    #                 logits_patched, enc_clean, TEMP_FOR_PROBS
-    #             )
+        for h in range(num_heads):
+            with attn_head_ablation_23(
+                model,
+                enc_corrupt,
+                ratio=ratio,
+                all_positions=all_positions,
+                head=h
+            ):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs = digit_probs_from_logits_full(
+                    logits_patched, enc_clean, TEMP_FOR_PROBS
+                )
 
-    #         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+            r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
 
-    #         if r > best_r:
-    #             best_r = r
-    #             best_patched_probs = patched_probs
+            if r > best_r:
+                best_r = r
+                best_patched_probs = patched_probs
 
-    #         results.append((h, r))
+            results.append((h, r))
 
-    #     return results, best_patched_probs
+        return results, best_patched_probs
     
-    # head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
-    # print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
+    head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
+    print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
 
-    # def print_top_head(title, arr):
-    #     arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-    #     print(title)
-    #     for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
-    #         txt = "nan" if math.isnan(r) else f"{r:.3f}"
-    #         print(f" #{i:02d} head={h:02d} restoration={txt}")
-    #     print("-" * 60)
+    def print_top_head(title, arr):
+        arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+        print(title)
+        for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
+            txt = "nan" if math.isnan(r) else f"{r:.3f}"
+            print(f" #{i:02d} head={h:02d} restoration={txt}")
+        print("-" * 60)
     
-    # print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
+    print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
 
-    # with attn_head_ablation_23_multiple_heads(model, enc_corrupt, ratio=0.0, all_positions=False):
-    #     logits_patched = forward_logits_only(model, enc_corrupt)
-    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    with attn_head_ablation_23_multiple_heads(model, enc_corrupt, ratio=0.0, all_positions=False):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    # print(f"[Only Ablate ATTN-23 Head-3-6-7 R-Score] {r}")
-    # print(f"[Patched Probs] {patched_probs}")
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[Only Ablate ATTN-23 Head-3-6-7 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
+
+
+    with attn_head_scaling_up_23_multiple_heads(model, enc_corrupt, ratio=2.0, all_positions=False):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[Only Scaling-up ATTN-23 Head-0-2-4 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
+
+
+    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, all_positions=False):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[ATTN-23 Ablate-Head-1-3-6-7 Scaling-Head-0-2-4 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
+
 
 # ---------------------------
 # Paper-faithful pipeline (multi-GPU safe) — CE probe + Δw + min-cos rows + gate_proj add
@@ -1092,6 +1218,8 @@ def build_train_lists_from_csv(
     base_csv_path: str,
     variant_csv_path: str,
     flip_csv_path: Optional[str] = None,
+    base_non_significant_csv_path: Optional[str] = None,
+    variant_non_significant_csv_path: Optional[str] = None,
     keep_order_by_base: bool = False,
     verbose: bool = True
 ) -> Tuple[List[str], List[str], Dict[str, int]]:
@@ -1114,7 +1242,17 @@ def build_train_lists_from_csv(
     else:
         flip_prefixes, flip_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
 
-    common = common_before_flip - flip_prefixes
+    if base_non_significant_csv_path:
+        base_non_significant_prefixes, base_non_stats = _load_flip_prefix_set(base_non_significant_csv_path)
+    else:
+        base_non_significant_prefixes, base_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    if variant_non_significant_csv_path:
+        v_non_significant_prefixes, v_non_stats = _load_flip_prefix_set(variant_non_significant_csv_path)
+    else:
+        v_non_significant_prefixes, v_non_stats = set(), {"rows": 0, "bad_id": 0, "dup_prefix": 0}
+    
+    common = common_before_flip - flip_prefixes - base_non_significant_prefixes - v_non_significant_prefixes
 
     if keep_order_by_base:
         ordered = []
@@ -1132,6 +1270,8 @@ def build_train_lists_from_csv(
     train_variant = [var_map[p][1]  for p in prefix_list]
 
     blocked_by_flip = len(common_before_flip & flip_prefixes)
+    blocked_by_base_non_significant = len(common_before_flip & base_non_significant_prefixes)
+    blocked_by_variant_non_significant = len(common_before_flip & v_non_significant_prefixes)
     report = {
         "base_rows": base_stats["rows"],
         "variant_rows": var_stats["rows"],
@@ -1148,6 +1288,8 @@ def build_train_lists_from_csv(
         "bad_id_flip": flip_stats["bad_id"],
         "dup_prefix_flip": flip_stats["dup_prefix"],
         "blocked_by_flip": blocked_by_flip,
+        "blocked_by_base_non_significant": blocked_by_base_non_significant,
+        "blocked_by_variant_non_significant": blocked_by_variant_non_significant,
     }
 
     if verbose:
@@ -1156,6 +1298,8 @@ def build_train_lists_from_csv(
         if flip_csv_path:
             print(f"[CSV] flip rows={report['flip_rows']} (bad_id={report['bad_id_flip']}, dup={report['dup_prefix_flip']}); blocked_by_flip={report['blocked_by_flip']}")
         print(f"[CSV] paired(after flip filter)={report['paired']}, only_in_base_after_filter={report['only_in_base_after_filter']}, only_in_variant_after_filter={report['only_in_variant_after_filter']}")
+        print(f"[CSV] blocked_by_base_non_significant={report['blocked_by_base_non_significant']}")
+        print(f"[CSV] blocked_by_variant_non_significant={report['blocked_by_variant_non_significant']}")
         # 打印前 3 对样例（便于人工核对）
         for p in prefix_list[:3]:
             print(f"[CSV] sample pair prefix={p} | base_id={base_map[p][0]} | variant_id={var_map[p][0]}")
@@ -1322,7 +1466,7 @@ def fit_or_load_probe_ce(
         else:
             sigma = sigma_v.to(torch.float32).unsqueeze(0) if sigma_v.ndim == 1 else sigma_v.to(torch.float32)
 
-        W_target = W2[0]  # 目标类（pos/clean）的权重行
+        W_target = W2[1]  # 目标类（pos/clean）的权重行
         if std_used:
             # 旧版：探针在标准化空间训练过 → 反标准化到原空间
             # sigma_vec = sigma.squeeze(0) + 1e-12
@@ -1382,7 +1526,7 @@ def fit_or_load_probe_ce(
         # delta_w = W2[1] / (W2[1].norm() + 1e-12)
         # sigma_vec = sigma.squeeze(0) + 1e-12                          # [H]
         # delta_w = (W2[1] - W2[0]) / sigma_vec
-        delta_w = W2[0]
+        delta_w = W2[1]
         # delta_w = delta_w / (delta_w.norm(p=2) + 1e-12)
 
     # 4) 保存（便于复现）
@@ -1397,10 +1541,8 @@ def fit_or_load_probe_ce(
 
 class ProbeEvalResult(NamedTuple):
     acc_train: float
-    acc_val: float
     acc_test: float
     auroc_train: Optional[float]
-    auroc_val: Optional[float]
     auroc_test: Optional[float]
 
 def _softmax_logits_to_pred_and_prob(logits: torch.Tensor):
@@ -1414,7 +1556,6 @@ def evaluate_probe_on_splits(
     W2: torch.Tensor, b2: torch.Tensor,
     mu: torch.Tensor, sigma: torch.Tensor,
     X_train: torch.Tensor, y_train: torch.Tensor,
-    X_val: torch.Tensor,   y_val: torch.Tensor,
     X_test: torch.Tensor,  y_test: torch.Tensor,
     compute_auroc: bool = False,
     save_json: Optional[str] = None,
@@ -1425,40 +1566,35 @@ def evaluate_probe_on_splits(
     """
     # 标准化
     Xtr = (X_train - mu) / sigma
-    Xva = (X_val   - mu) / sigma
     Xte = (X_test  - mu) / sigma
 
     # 前向（线性头）
     with torch.no_grad():
         logits_tr = Xtr @ W2.T + b2          # [Ntr,2]
-        logits_va = Xva @ W2.T + b2          # [Nva,2]
         logits_te = Xte @ W2.T + b2          # [Nte,2]
 
         pred_tr, pos_tr = _softmax_logits_to_pred_and_prob(logits_tr)
-        pred_va, pos_va = _softmax_logits_to_pred_and_prob(logits_va)
         pred_te, pos_te = _softmax_logits_to_pred_and_prob(logits_te)
 
     acc_tr = float((pred_tr == y_train).float().mean().item())
-    acc_va = float((pred_va == y_val).float().mean().item())
     acc_te = float((pred_te == y_test).float().mean().item())
 
     if compute_auroc:
         try:
             au_tr = float(roc_auc_score(y_train.numpy(), pos_tr.numpy()))
-            au_va = float(roc_auc_score(y_val.numpy(),   pos_va.numpy()))
             au_te = float(roc_auc_score(y_test.numpy(),  pos_te.numpy()))
         except Exception:
-            au_tr = au_va = au_te = None
+            au_tr = au_te = None
     else:
-        au_tr = au_va = au_te = None
+        au_tr = au_te = None
 
-    res = ProbeEvalResult(acc_tr, acc_va, acc_te, au_tr, au_va, au_te)
+    res = ProbeEvalResult(acc_tr, acc_te, au_tr, au_te)
 
     if save_json is not None:
         with open(save_json, "w", encoding="utf-8") as f:
             json.dump({
-                "acc_train": res.acc_train, "acc_val": res.acc_val, "acc_test": res.acc_test,
-                "auroc_train": res.auroc_train, "auroc_val": res.auroc_val, "auroc_test": res.auroc_test,
+                "acc_train": res.acc_train, "acc_test": res.acc_test,
+                "auroc_train": res.auroc_train, "auroc_test": res.auroc_test,
             }, f, ensure_ascii=False, indent=2)
 
     return res
@@ -1467,27 +1603,23 @@ def split_texts_balanced(
     texts_pos: List[str],
     texts_neg: List[str],
     train_ratio: float = 0.8,
-    val_ratio: float = 0.1,
-    test_ratio: float = 0.1,
     seed: int = 0
 ) -> Tuple[List[str], List[str], List[str], List[str], List[str], List[str]]:
     """
     先对正类、负类各自独立随机打乱并按比例切分，再合并（保证类平衡、可复现）。
-    返回: pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te（全是文本列表）
+    返回: pos_tr, pos_te, neg_tr, neg_te（全是文本列表）
     """
-    assert abs(train_ratio + val_ratio + test_ratio - 1.0) < 1e-6
     g = torch.Generator(device="cpu"); g.manual_seed(seed)
 
     def _split_one(lst: List[str]):
         idx = torch.randperm(len(lst), generator=g).tolist()
         lst = [lst[i] for i in idx]
         n_tr = int(len(lst) * train_ratio)
-        n_va = int(len(lst) * val_ratio)
-        return lst[:n_tr], lst[n_tr:n_tr+n_va], lst[n_tr+n_va:]
+        return lst[:n_tr], lst[n_tr:]
 
-    pos_tr, pos_va, pos_te = _split_one(texts_pos)
-    neg_tr, neg_va, neg_te = _split_one(texts_neg)
-    return pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te
+    pos_tr, pos_te = _split_one(texts_pos)
+    neg_tr, neg_te = _split_one(texts_neg)
+    return pos_tr, pos_te, neg_tr, neg_te
 
 @torch.no_grad()
 def extract_feature_matrix_for_texts_cached(
@@ -1821,13 +1953,151 @@ def evaluate_mmlu_zero_shot(
     acc = float(correct / total) if total > 0 else float("nan")
     return acc, correct, total
 
+# ===== Alpha 搜索工具：分段网格细化 & 黄金分割，带 PPL 约束与结果缓存 =====
+
+def _alpha_search_eval_factory(
+    model, processor,
+    selections, delta_w,
+    enc_clean, enc_corrupt,
+    clean_probs, corrupt_probs,
+    base_ppl: float,
+    ppl_budget_pct: float = 20.0,
+):
+    """
+    返回一个 evaluate_alpha(alpha) 闭包：
+    - 计算在 alpha 下的恢复分值 r_w（越大越好）
+    - 计算 WikiText PPL 并施加约束：超过 ppl_budget_pct% 的一律视作 -inf（不可行）
+    - 结果做了缓存（alpha -> (score, ppl, probs, nll, Δppl%)）
+    """
+    cache = {}
+
+    def evaluate_alpha(alpha: float):
+        if alpha in cache:
+            return cache[alpha]
+
+        # 执行一次“手术”、算目标分数与 PPL
+        with model_surgery_context(selections, delta_w, alpha=alpha):
+            logits_patched = forward_logits_only(model, enc_corrupt)
+            patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+            patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
+                model, processor,
+                dataset_config="wikitext-2-raw-v1", split="test",
+                block_size=None, stride=None, max_texts=200  # 为速度，抽样 200 段
+            )
+
+        # 恢复度（你当前使用的 W1 距离）
+        r_w = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs).item()
+        ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0 if base_ppl == base_ppl else float("inf")
+
+        # 超过 PPL 预算 → 视作不可行
+        if ppl_increase_pct > ppl_budget_pct:
+            r_w = float("-inf")
+
+        out = (r_w, float(patched_ppl), patched_probs, float(patched_nll), float(ppl_increase_pct))
+        cache[alpha] = out
+        print(f"[Eval alpha={alpha:.4f}] R_W1={r_w:.4f} | PPL={patched_ppl:.3f} (Δ={ppl_increase_pct:.1f}%)")
+        return out
+
+    return evaluate_alpha
+
+
+def search_alpha_grid_refine(
+    evaluate_alpha,
+    a_min: float = 0.0,
+    a_max: float = 3.0,
+    rounds: tuple[int, ...] = (25, 11, 7),
+):
+    """
+    分段网格细化：每一轮在 [lo,hi] 等间距取 n 点，选出最优点的相邻区间作为下一轮的 [lo,hi]。
+    rounds 控制每一轮评估点数。总评估次数约为 sum(rounds)。
+    返回: (best_alpha, best_score, best_probs, best_ppl, best_nll, best_delta_pct)
+    """
+    lo, hi = float(a_min), float(a_max)
+    best_pack = None
+
+    for n in rounds:
+        grid = np.linspace(lo, hi, n)
+        vals = []
+        for a in grid:
+            score, ppl, probs, nll, d_pct = evaluate_alpha(float(a))
+            vals.append(score)
+
+        # 找到当前网格的最佳点，并把区间夹紧为其左右邻居
+        # 注：若最优在边界，下一轮会继续包含边界，直到 rounds 用完
+        arr = np.array(vals, dtype=float)
+        idx = int(np.nanargmax(arr))
+        a_star = float(grid[idx])
+
+        left_idx  = max(0, idx - 1)
+        right_idx = min(len(grid) - 1, idx + 1)
+        lo, hi = float(grid[left_idx]), float(grid[right_idx])
+
+        # 记录最佳
+        best_pack = (a_star, *evaluate_alpha(a_star))
+
+    a_best, r_best, _, ppl_best, probs_best, nll_best, d_pct_best = best_pack[0], best_pack[1], None, best_pack[2], best_pack[3], best_pack[4], best_pack[5]
+    return a_best, r_best, probs_best, ppl_best, nll_best, d_pct_best
+
+
+def search_alpha_golden(
+    evaluate_alpha,
+    a_min: float = 0.0,
+    a_max: float = 3.0,
+    tol: float = 1e-2,
+    max_iter: int = 20,
+):
+    """
+    黄金分割搜索：假设可行区内目标（R_W1）近似单峰。
+    违反 PPL 约束的点评为 -inf，算法会自动避开。
+    返回: (best_alpha, best_score, best_probs, best_ppl, best_nll, best_delta_pct)
+    """
+    import math
+    phi = (1 + 5 ** 0.5) / 2  # 黄金比
+    invphi = 1 / phi
+
+    lo, hi = float(a_min), float(a_max)
+    c = hi - invphi * (hi - lo)
+    d = lo + invphi * (hi - lo)
+
+    fc = evaluate_alpha(c)[0]
+    fd = evaluate_alpha(d)[0]
+
+    for _ in range(max_iter):
+        if abs(hi - lo) <= tol:
+            break
+        if fc < fd:
+            lo = c
+            c = d
+            fc = fd
+            d = lo + invphi * (hi - lo)
+            fd = evaluate_alpha(d)[0]
+        else:
+            hi = d
+            d = c
+            fd = fc
+            c = hi - invphi * (hi - lo)
+            fc = evaluate_alpha(c)[0]
+
+    # 取区间端点及中点里最好的一个，拿到完整指标
+    candidates = [lo, (lo + hi) / 2.0, hi]
+    best = None
+    for a in candidates:
+        pack = (a, *evaluate_alpha(a))
+        if (best is None) or (pack[1] > best[1]):
+            best = pack
+
+    a_best, r_best, ppl_best, probs_best, nll_best, d_pct_best = best[0], best[1], best[2], best[3], best[4], best[5]
+    return a_best, r_best, probs_best, ppl_best, nll_best, d_pct_best
+
+# 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0
 
 def run_model_surgery_once(
     base_texts: List[str],         # “正类”（比如 non-toxic 或 agree）的句子集合
     variant_texts: List[str],      # “负类”（比如 toxic 或 disagree）的句子集合
     eval_pair: Tuple[str, str],    # (clean, corrupt)
-    probe_layer_idx: int = 32,     # 你也可以试 -2 / 31 等（论文在多个层试过）
-    alpha_grid = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0),
+    probe_layer_idx: int = 21,     # 你也可以试 -2 / 31 等（论文在多个层试过）
+    alpha_grid = (0.1, 0.2),
     k_per_layer: int = 128,        # 每层选多少个行向量（Gemma-3-4B默认128比较稳）
     also_sweep_per_layer_alpha: bool = True,
     use_raw_text_for_probe: bool = False,   # << 新增：训练探头是否用原始文本
@@ -1840,8 +2110,8 @@ def run_model_surgery_once(
     ).eval()
 
     # ---- (A) 文本级切分（先切分，再训练探针）----
-    pos_tr, pos_va, pos_te, neg_tr, neg_va, neg_te = split_texts_balanced(
-        base_texts, variant_texts, train_ratio=0.8, val_ratio=0.1, test_ratio=0.1, seed=0
+    pos_tr, pos_te, neg_tr, neg_te = split_texts_balanced(
+        base_texts, variant_texts, train_ratio=0.8, seed=0
     )
     # num_pairs = min(len(base_texts), len(variant_texts))
     # idx = torch.randperm(num_pairs, generator=torch.Generator().manual_seed(0)).tolist()
@@ -1866,7 +2136,7 @@ def run_model_surgery_once(
         probe_layer_idx=probe_layer_idx,
         save_dir="probe_ckpts",     # 可自定义
         tag="stance_invariance",    # 区分不同数据/任务
-        epochs=30, lr=1e-4, batch_size=16, weight_decay=0.0, seed=0,
+        epochs=30, lr=1e-4, batch_size=32, weight_decay=0.0, seed=0,
         input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe,
     )
@@ -1878,14 +2148,6 @@ def run_model_surgery_once(
     )
     X_neg_tr = extract_feature_matrix_for_texts_cached(
         model, processor, SYSTEM_PROMPT, neg_tr, probe_layer_idx, "probe_ckpts", "stance_invariance", "train_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
-    X_pos_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, pos_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_pos", input_mode=("raw" if use_raw_text_for_probe else "chat"),
-        raw_max_len=raw_max_len_for_probe
-    )
-    X_neg_va = extract_feature_matrix_for_texts_cached(
-        model, processor, SYSTEM_PROMPT, neg_va, probe_layer_idx, "probe_ckpts", "stance_invariance", "val_neg", input_mode=("raw" if use_raw_text_for_probe else "chat"),
         raw_max_len=raw_max_len_for_probe
     )
     X_pos_te = extract_feature_matrix_for_texts_cached(
@@ -1906,18 +2168,17 @@ def run_model_surgery_once(
         return X[perm], y[perm]
 
     Xtr, ytr = _pack(X_pos_tr, X_neg_tr)
-    Xva, yva = _pack(X_pos_va, X_neg_va)
     Xte, yte = _pack(X_pos_te, X_neg_te)
 
     eval_res = evaluate_probe_on_splits(
         W2.float(), b2.float(), mu.float(), sigma.float(),
-        Xtr, ytr, Xva, yva, Xte, yte,
+        Xtr, ytr, Xte, yte,
         compute_auroc=(roc_auc_score is not None),
         save_json=os.path.join("probe_ckpts", f"probe_eval_stance_invariance_L{probe_layer_idx}.json")
     )
-    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  val={eval_res.acc_val:.3f}  test={eval_res.acc_test:.3f}")
+    print(f"[Probe ACC] train={eval_res.acc_train:.3f}  test={eval_res.acc_test:.3f}")
     if eval_res.auroc_test is not None:
-        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  val={eval_res.auroc_val:.3f}  test={eval_res.auroc_test:.3f}")
+        print(f"[Probe AUROC] train={eval_res.auroc_train:.3f}  test={eval_res.auroc_test:.3f}")
 
     # 2) 选择“通常在不良状态下不激活”的行向量（和 Δw 余弦最小）
     selections = select_inactive_gate_rows(model, delta_w, k_total=17408, k_per_layer=k_per_layer)
@@ -1954,7 +2215,39 @@ def run_model_surgery_once(
     obj_clean   = objective_from_logits_full(logits_clean,   enc_clean,   clean_probs, TEMP_FOR_PROBS).item()
     obj_corrupt = objective_from_logits_full(logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS).item()
 
-    # 3a) 全层合并编辑下的最佳 alpha
+    # 3a) 全层合并编辑下的最佳 alpha —— 连续搜索版本（支持 PPL 约束 + 缓存）
+    # ppl_budget_pct = 20.0   # 你也可以改成 5/10 等更严格的阈值
+    # a_min, a_max = 0.0, 3.0 # 搜索区间
+    # evaluate_alpha = _alpha_search_eval_factory(
+    #     model, processor,
+    #     selections, delta_w,
+    #     enc_clean, enc_corrupt,
+    #     clean_probs, corrupt_probs,
+    #     base_ppl=base_ppl,
+    #     ppl_budget_pct=ppl_budget_pct,
+    # )
+
+    # # 方案一：分段网格逐步细化（稳健，默认）
+    # a_all, r_all, best_probs, best_ppl, best_nll, best_delta_pct = search_alpha_grid_refine(
+    #     evaluate_alpha,
+    #     a_min=a_min, a_max=a_max,
+    #     rounds=(25, 11, 7)  # 评估次数 ≈ 43 次；可改小提速或改大提精度
+    # )
+
+    # # 如果你想用方案二（黄金分割），把上面的调用注释掉，启用下面这行：
+    # # a_all, r_all, best_probs, best_ppl, best_nll, best_delta_pct = search_alpha_golden(
+    # #     evaluate_alpha, a_min=a_min, a_max=a_max, tol=1e-2, max_iter=20
+    # # )
+
+    # print(f"[ModelSurgery] best alpha = {a_all:.4f}, restoration(R_W1) = {r_all:.3f}")
+    # print(f"[WikiText] baseline PPL={base_ppl:.3f} → patched PPL={best_ppl:.3f} (Δ={best_delta_pct:.1f}%), NLL={best_nll:.3f}")
+
+    # if not (best_probs is None):
+    #     print(f"[Clean probs]   {clean_probs}")
+    #     print(f"[Corrupt probs] {corrupt_probs}")
+    #     print(f"[Patched probs @ alpha*] {best_probs}")
+
+
     best = None
     best_probs = None
     best_ppl = None
@@ -2002,6 +2295,8 @@ def run_model_surgery_once(
     if best_ppl is not None:
         delta_pct = (best_ppl / base_ppl - 1.0) * 100.0
         print(f"[WikiText] baseline PPL={base_ppl:.3f} → patched PPL={best_ppl:.3f} (Δ={delta_pct:.1f}%)")
+
+    
     
     # with model_surgery_context(selections, delta_w, alpha=a_all):
     #     mmlu_acc_after, ok2, tot2 = evaluate_mmlu_zero_shot(
@@ -2070,11 +2365,14 @@ if __name__ == "__main__":
     # print("\n=== Paper-faithful model surgery (activate typically inactive vectors) ===")
     # # For real experiments, expand these lists to dozens/hundreds of pairs.
     # BASE_CSV_PATH    = "data/original_statements.csv"
-    # VARIANT_CSV_PATH = "data/negation_variants.csv"
-    # FLIP_CSV_PATH = "data/flip rate/negation_flip_4B.csv"
+    # VARIANT_CSV_PATH = "data/it-clefts_variants.csv"
+    # FLIP_CSV_PATH = "data/flip rate/it-clefts_flip_4B.csv"
+    # BASE_NON_SIGNIFICANT_CSV_PATH = "data/significance/original_4B_not_significant.csv"
+    # V_NON_SIGNIFICANT_CSV_PATH = "data/significance/it-clefts_4B_not_significant.csv"
 
     # train_base, train_variant, rep = build_train_lists_from_csv(
     #     BASE_CSV_PATH, VARIANT_CSV_PATH, FLIP_CSV_PATH,
+    #     BASE_NON_SIGNIFICANT_CSV_PATH, V_NON_SIGNIFICANT_CSV_PATH,
     #     keep_order_by_base=False,  # 或 True：按 base CSV 顺序
     #     verbose=True
     # )
