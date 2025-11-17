@@ -38,8 +38,8 @@ MMLU_SYSTEM_PROMPT = (
 # CUDA_VISIBLE_DEVICES=1,2 python Intervention/active-passive_edit.py
 
 # Example pair for base vs variant (you can change these)
-# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
 
 # BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
 # VARIANT_TEXT = "As much as secondary school teachers earn should be earned by primary school teachers."
@@ -56,8 +56,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
 # VARIANT_TEXT = "Relative authorities should continue to permit donations from companies to political parties."
 
-BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
+# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
+# VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
 
 # BASE_TEXT = "A tax is to be levied again on high assets."
 # VARIANT_TEXT = "The government is to levy a tax on high assets again."
@@ -1101,7 +1101,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Patched Probs] {patched_probs}")
 
 
-    with attn_head_scaling_up_23_multiple_heads(model, enc_corrupt, ratio=2.0, all_positions=False):
+    with attn_head_scaling_up_23_multiple_heads(model, enc_corrupt, ratio=7.0, all_positions=False):
         logits_patched = forward_logits_only(model, enc_corrupt)
         patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
@@ -1110,7 +1110,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Patched Probs] {patched_probs}")
 
 
-    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, all_positions=False):
+    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, scaling_ratio=2.5, all_positions=False):
         logits_patched = forward_logits_only(model, enc_corrupt)
         patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
