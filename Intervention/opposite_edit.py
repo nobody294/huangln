@@ -33,8 +33,8 @@ MMLU_SYSTEM_PROMPT = (
 # CUDA_VISIBLE_DEVICES=1,2 python Intervention/opposite_edit.py
 
 # Example pair for base vs variant (you can change these)
-BASE_TEXT = "Childcare should be free for all parents for at least three days a week."
-VARIANT_TEXT = "Child care should remain paying for all parents at least three days a week."
+# BASE_TEXT = "Childcare should be free for all parents for at least three days a week."
+# VARIANT_TEXT = "Child care should remain paying for all parents at least three days a week."
 
 # BASE_TEXT = "There should be an additional tax on purchasing meat."
 # VARIANT_TEXT = "There should be less tax on buying meat."
@@ -79,8 +79,8 @@ VARIANT_TEXT = "Child care should remain paying for all parents at least three d
 # BASE_TEXT = "Climate change is solely attributable to human action."
 # VARIANT_TEXT = "Climate change is only attributable to natural action."
 
-# BASE_TEXT = "The future Spanish government should increase irrigated agricultural areas by means of large water transfers."
-# VARIANT_TEXT = "The future Spanish government should reduce agricultural irrigated areas through large water transfers."
+BASE_TEXT = "The future Spanish government should increase irrigated agricultural areas by means of large water transfers."
+VARIANT_TEXT = "The future Spanish government should reduce agricultural irrigated areas through large water transfers."
 
 # BASE_TEXT = "Negotiating with pro-independence supporters weakens the State."
 # VARIANT_TEXT = "Negotiating with the independentistas strengthens the State."
@@ -122,6 +122,7 @@ VARIANT_TEXT = "Child care should remain paying for all parents at least three d
 # BASE_TEXT = "Poland should adopt the migrant relocation solutions adopted by the European Union."
 # VARIANT_TEXT = "Poland should reject the migrant relocation solutions adopted by the European Union."
 
+# No. 30
 # BASE_TEXT = "The EU's rule of law mechanism threatens Hungary's sovereignty."
 # VARIANT_TEXT = "The EU's rule of law mechanism protects Hungary's sovereignty."
 
@@ -134,56 +135,89 @@ VARIANT_TEXT = "Child care should remain paying for all parents at least three d
 # BASE_TEXT = "The age of compulsory schooling should be raised back to 18."
 # VARIANT_TEXT = "The age of compulsory education should remain 16."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
+# VARIANT_TEXT = "Political influence has increased with the change in the university model (reorganisation into a trust)."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "One effective way to reduce rents is to conclude favourable gas supply contracts with Russia."
+# VARIANT_TEXT = "The conclusion of favourable gas supply contracts with Russia is an inappropriate way of reducing overheads."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Increase the contribution of the wealthier to the public purse (abolition of the one-band tax)."
+# VARIANT_TEXT = "The more wealthy should contribute less to the public burden (abolition of the one-band tax)."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation."
+# VARIANT_TEXT = "A price freeze on some basic foodstuffs (e.g. chicken tails, milk) is ineffective in combating inflation."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "The President of the Hungarian Republic should be directly elected."
+# VARIANT_TEXT = "The President of the Hungarian Republic should be elected by the Parliament."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "A legal framework for primary elections should be provided."
+# VARIANT_TEXT = "A civilian regulatory framework for primaries should be provided."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# No. 40
+# BASE_TEXT = "Voting age for elections should be 16."
+# VARIANT_TEXT = "Voting age for elections should be 18."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "A heritage tax one's wealth should be introduced."
+# VARIANT_TEXT = "A wealth tax on great wealth should be cut."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Health care should be managed only by the state and not by private individuals."
+# VARIANT_TEXT = "Health care should be managed only by private individuals and not by the state."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "The citizenship allowance is a measure that should be cancelled."
+# VARIANT_TEXT = "The citizenship income is a measure that should be continued."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Beach concessions to private individuals should be time-limited."
+# VARIANT_TEXT = "Beach concessions to private individuals should be of continuous duration over time."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Italy should build more incinerators/thermal power plants."
+# VARIANT_TEXT = "Italy should stop building incinerators/thermal power plants."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Drilling is necessary to find more energy resources."
+# VARIANT_TEXT = "Drilling is irrelevant to finding more energy resources."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Sanctions against Russia should be tougher."
+# VARIANT_TEXT = "Sanctions against Russia should be eased."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "Taxes collected at the regional level should be fully retained in the region itself."
+# VARIANT_TEXT = "Taxes collected at the regional level should be fully redistributed among the regions."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# BASE_TEXT = "There should be an increase in the retirement age."
+# VARIANT_TEXT = "There should be a decrease in the retirement age."
 
-# BASE_TEXT = ""
-# VARIANT_TEXT = ""
+# No. 50
+# BASE_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited."
+# VARIANT_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should be expanded."
+
+# BASE_TEXT = "The federal government should raise the requirements for the high school."
+# VARIANT_TEXT = "The federal government should decrease the requirements for the high school."
+
+# BASE_TEXT = "A third official gender should be introduced alongside ""female"" and ""male""."
+# VARIANT_TEXT = "A third official gender should be disregarded alongside ""female"" and ""male""."
+
+# BASE_TEXT = "Same-sex couples should have the same rights as heterosexual couples in all areas."
+# VARIANT_TEXT = "Same-sex couples should have more rights as heterosexual couples in all areas."
+
+# BASE_TEXT = "The differences between cantons with high and low financial capacity should be further reduced through fiscal equalization."
+# VARIANT_TEXT = "The differences between cantons with high and low financial capacity should be further increased through fiscal equalization."
+
+# BASE_TEXT = "Direct payments should only be granted to farmers with proof of ecological performance."
+# VARIANT_TEXT = "Direct payments should be granted to all farmers without requiring proof of ecological performance."
+
+# BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
+# VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
+
+# BASE_TEXT = "The army's target number of soldiers should expand to at least 120,000."
+# VARIANT_TEXT = "The army's target number of soldiers should be decreased."
+
+# BASE_TEXT = "The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine)."
+# VARIANT_TEXT = "The Federal Council should be forbidden to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine)."
+
+# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
+# VARIANT_TEXT = "Automatic facial recognition should be allowed in public spaces."
+
+# No. 60
+# BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
+# VARIANT_TEXT = "Switzerland should keep the Schengen agreement with the EU. There's no need for more security checks directly on the border."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 20  # how many top layers to print
@@ -1060,6 +1094,12 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-ATTN ratio=2.0] top layers", ablate_results)
+
+    neg_scaling_results, best_probs_2, best_ppl_1= sweep_attn_ablate(ratio=-1.0)
+    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs_2}")
+    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
+    print("-" * 60)
+    print_top("[Neg-Scaling-ATTN ratio=-1.0] top layers", neg_scaling_results)
 
 
     def sweep_mlp_ablate(ratio: float = 0.0):
