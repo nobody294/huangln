@@ -1,11 +1,11 @@
 ID,statement
-nl_1_0110000,It is a vaccination certificate that organizers of events should not require upon entry.
+nl_1_0110000,It is a vaccination certificate that organizers of events should not be able to request upon entry.
 nl_2_0110000,It is more money on defense that the Netherlands should not spend.
 nl_3_0110000,It is for all parents that childcare should not become free for at least three days a week.
 nl_4_0110000,It is the European Union (EU) that the Netherlands should not leave.
 nl_5_0110000,It is a tax per kilometer driven for motorists that there should not be instead of the tax on car ownership.
 nl_6_0110000,It is decorative fireworks that it should not be allowed to set off again during the upcoming New Year's Eve.
-nl_7_0110000,
+nl_7_0110000,It is an additional tax on purchasing meat that there should not be.
 nl_8_0110000,It is public broadcasting that less funding should not go to.
 nl_9_0110000,It is a national health care fund for everyone that there should not be instead of the existing health insurance companies.
 nl_10_0110000,It is the ban on face-covering clothing that the government should not abolish.
@@ -15,28 +15,28 @@ nl_13_0110000,It is a new nuclear power plant that the Netherlands should not bu
 nl_14_0110000,It is on land currently used for agriculture that Houses should not be built.
 nl_15_0110000,"It is the same tax benefits as households with two working partners that households with two partners, one of whom works, should not receive."
 nl_16_0110000,It is the historical slave trade that the Dutch government should not apologize for.
-nl_17_0110000,It is the opportunity to block laws passed by parliament through a referendum that citizens should not be allowed to stop.
-nl_18_0110000,It is as much as secondary school teachers that teachers in elementary schools should not start earning as much as teachers in secondary schools.
+nl_17_0110000,It is the opportunity to block laws passed by parliament through a referendum that citizens should not have.
+nl_18_0110000,It is as much as secondary school teachers that primary school teachers should not earn.
 nl_19_0110000,It is fewer options for community service sentences instead of prison sentences that there should not be.
 nl_20_0110000,It is an additional flight tax for short-distance flights that the Netherlands should not introduce.
-nl_21_0110000,It is integration that asylum seekers with provisional residence permits should not have to integrate before they are given rental housing.
+nl_21_0110000,It is integration that asylum seekers with provisional residence permits should not have to complete before they are given rental housing.
 nl_22_0110000,It is both the purchase and sale of soft drugs by coffee shops that should not become legal.
 nl_23_0110000,It is Dutch-language education that the government should no longer make compulsory at universities and colleges.
-nl_24_0110000,It is assistance with suicide that people who consider their lives complete should not be able to get help with suicide.
-nl_25_0110000,It is an increase in welfare benefits that an increase in minimum wages should still automatically increase.
+nl_24_0110000,It is assistance with suicide that people who consider their lives complete should not be able to receive.
+nl_25_0110000,It is an increase in welfare benefits that an increase in minimum wages should automatically result in.
 nl_26_0110000,It is at least 40 percent social housing that new housing developments should not consist of.
-nl_27_0110000,It is no new restrictions on the activities of farming businesses that there should be new restrictions on farm activities.
+nl_27_0110000,It is new restrictions on the activities of farming businesses that there should be.
 nl_28_0110000,"It is a middle school that should not be established so that pupils do not have to choose between vmbo, havo or vwo at a later age."
 nl_29_0110000,It is more refugees than it currently does that the Netherlands should not accept.
-nl_30_0110000,
-es_1_0110000,It is organized crime that it is not necessary to limit rights and freedoms to combat.
+nl_30_0110000,It is the choice of whether to wear a face mask that people should not always have.
+es_1_0110000,It is organized crime that limiting rights and freedoms is not necessary to combat.
 es_2_0110000,It is Spain's security that the growth of Islam is not a threat to.
 es_3_0110000,It is men that current gender policies are not against.
 es_4_0110000,It is the efficiency of public services that does not improve when they are privatized.
-es_5_0110000,
+es_5_0110000,It is workers that it should not be easier for companies to fire.
 es_6_0110000,It is measures that the state should not take to redistribute wealth from the rich to the poor.
 es_7_0110000,"It is spending on public health care that the government should not increase, even if this means increasing taxes."
-es_8_0110000,
+es_8_0110000,It is a permanent tax on large fortunes and assets that is not necessary.
 es_9_0110000,It is the working day that should not be reduced without reducing workers' wages.
 es_10_0110000,It is the economy that governments should not intervene as little as possible in.
 es_11_0110000,It is the Green Transition that taxes on fossil fuels should not be raised to finance.
@@ -44,10 +44,10 @@ es_12_0110000,It is human action that climate change is not solely attributable 
 es_13_0110000,It is irrigated agricultural areas that the future Spanish government should not increase by means of large water transfers.
 es_14_0110000,It is more sovereignty that we should not recover to better defend Spain's interests in Europe.
 es_15_0110000,It is the strengthening of NATO in Europe that the Spanish government should not promote.
-es_16_0110000,
-es_17_0110000,
+es_16_0110000,It is for its citizens not to be able to vote on their future in a referendum that the best way to solve the conflict in Catalonia is.
+es_17_0110000,It is the State that negotiating with pro-independence supporters does not weaken.
 es_18_0110000,It is Spain's territorial decentralization that there is no need to deepen.
-es_19_0110000,
+es_19_0110000,It is the right to self-determination that should not be recognized by the Constitution.
 es_20_0110000,It is Spanish that the policies of linguistic immersion in the native language of bilingual Autonomous Communities do not endanger.
 es_21_0110000,It is the Law of Democratic Memory passed during this legislature that it is not necessary to repeal.
 es_22_0110000,It is illegal migration that Spain should not be more tolerant with.
@@ -55,12 +55,12 @@ es_23_0110000,It is immigrants' own health services that immigrants should not h
 es_24_0110000,It is access to all people that housing prices should not be regulated to guarantee.
 de_1_0110000,It is on all highways that a general speed limit should not apply.
 de_2_0110000,It is German defense spending that Germany should not increase.
-de_3_0110000,
+de_3_0110000,It is Bundestag elections that Young people over the age of 16 are not to be allowed to vote in.
 de_4_0110000,It is subsidies for wind energy that should not be ended.
 de_5_0110000,It is the ability of landlords to increase housing rents that should not be more strictly limited by law.
 de_6_0110000,It is Covid-19 vaccines that should not continue to be protected by patents.
 de_7_0110000,It is the phase-out of coal-fired power generation planned for 2038 that should not be brought forward.
-de_8_0110000,
+de_8_0110000,It is the statutory pension scheme that all employed persons should not necessarily have to be insured under.
 de_9_0110000,It is the right of recognized refugees to join their families that should not be abolished.
 de_10_0110000,It is revenue generated in Germany from digital services that a national tax should not be levied on.
 de_11_0110000,"It is the traditional family of father, mother and children that should not be promoted more than other cohabiting couples."
@@ -82,7 +82,7 @@ de_26_0110000,It is the state lists of the parties for the elections to the Germ
 de_27_0110000,It is inpatient treatment in hospitals that should not be charged at a flat rate per case.
 de_28_0110000,It is high assets that no tax should be levied on.
 de_29_0110000,It is video surveillance in public places that facial recognition software should not be used for.
-de_30_0110000,It is tax breaks that Married couples without children should not continue to receive.
+de_30_0110000,It is tax breaks that married couples without children should not continue to receive.
 de_31_0110000,It is organic agriculture that should not be promoted more than conventional farming.
 de_32_0110000,It is Islamic associations that should not be able to be recognized by the state as religious communities.
 de_33_0110000,It is the government-set price for CO2 emissions from heating and driving that should not increase more than planned.
