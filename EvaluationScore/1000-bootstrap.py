@@ -44,23 +44,41 @@ def run(input_csv: str, output_csv: str, decimals: int = 2) -> None:
     print(f"Done. Wrote {len(out_df)} rows to: {output_csv}")
 
 if __name__ == "__main__":
-    run(input_csv="data/original_responses_4B.csv", output_csv="data/original_CI_4B.csv")
-    run(input_csv="data/original_responses_12B.csv", output_csv="data/original_CI_12B.csv")
+    # run(input_csv="data/original_responses_4B_1.csv", output_csv="data/original_CI_4B_1.csv")
+    # run(input_csv="data/original_responses_12B.csv", output_csv="data/original_CI_12B.csv")
+    # run(input_csv="data/original_responses_14B.csv", output_csv="data/original_CI_14B.csv")
 
-    run(input_csv="data/negation_responses_4B.csv", output_csv="data/negation_CI_4B.csv")
-    run(input_csv="data/negation_responses_12B.csv", output_csv="data/negation_CI_12B.csv")
+    # run(input_csv="data/negation_responses_4B_1.csv", output_csv="data/negation_CI_4B_1.csv")
+    # run(input_csv="data/negation_responses_12B.csv", output_csv="data/negation_CI_12B.csv")
+    # run(input_csv="data/negation_responses_14B.csv", output_csv="data/negation_CI_14B.csv")
 
-    run(input_csv="data/opposite_responses_4B.csv", output_csv="data/opposite_CI_4B.csv")
-    run(input_csv="data/opposite_responses_12B.csv", output_csv="data/opposite_CI_12B.csv")
+    # run(input_csv="data/opposite_responses_4B.csv", output_csv="data/opposite_CI_4B.csv")
+    # run(input_csv="data/opposite_responses_12B.csv", output_csv="data/opposite_CI_12B.csv")
 
-    run(input_csv="data/active_passive_responses_4B.csv", output_csv="data/active_passive_CI_4B.csv")
-    run(input_csv="data/active_passive_responses_12B.csv", output_csv="data/active_passive_CI_12B.csv")
+    # run(input_csv="data/active_passive_responses_4B.csv", output_csv="data/active_passive_CI_4B.csv")
+    # run(input_csv="data/active_passive_responses_12B.csv", output_csv="data/active_passive_CI_12B.csv")
 
-    run(input_csv="data/it-clefts_responses_4B.csv", output_csv="data/it-clefts_CI_4B.csv")
-    run(input_csv="data/it-clefts_responses_12B.csv", output_csv="data/it-clefts_CI_12B.csv")
+    # run(input_csv="data/it-clefts_responses_4B.csv", output_csv="data/it-clefts_CI_4B_1.csv")
+    # run(input_csv="data/it-clefts_responses_12B.csv", output_csv="data/it-clefts_CI_12B_1.csv")
 
-    run(input_csv="data/wh-clefts_responses_4B.csv", output_csv="data/wh-clefts_CI_4B.csv")
-    run(input_csv="data/wh-clefts_responses_12B.csv", output_csv="data/wh-clefts_CI_12B.csv")
+    # run(input_csv="data/wh-clefts_responses_4B.csv", output_csv="data/wh-clefts_CI_4B.csv")
+    # run(input_csv="data/wh-clefts_responses_12B.csv", output_csv="data/wh-clefts_CI_12B.csv")
 
-    run(input_csv="data/SVC_responses_4B.csv", output_csv="data/SVC_CI_4B.csv")
-    run(input_csv="data/SVC_responses_12B.csv", output_csv="data/SVC_CI_12B.csv")
+    # run(input_csv="data/SVC_responses_4B.csv", output_csv="data/SVC_CI_4B.csv")
+    # run(input_csv="data/SVC_responses_12B.csv", output_csv="data/SVC_CI_12B.csv")
+
+
+
+    # run(input_csv="data/combine_negation_opposite_responses_4B.csv", output_csv="data/combine_negation_opposite_CI_4B.csv")
+
+    # run(input_csv="data/combine_negation_active_passive_responses_4B.csv", output_csv="data/combine_negation_active_passive_CI_4B.csv")
+
+    # run(input_csv="data/combine_negation_it-clefts_responses_4B.csv", output_csv="data/combine_negation_it-clefts_CI_4B.csv")
+
+    # run(input_csv="data/combine_negation_wh-clefts_responses_4B.csv", output_csv="data/combine_negation_wh-clefts_CI_4B.csv")
+
+    # run(input_csv="data/combine_opposite_active_passive_responses_4B.csv", output_csv="data/combine_opposite_active_passive_CI_4B.csv")
+
+    run(input_csv="data/combine_opposite_it-clefts_responses_4B.csv", output_csv="data/combine_opposite_it-clefts_CI_4B.csv")
+
+    run(input_csv="data/combine_opposite_wh-clefts_responses_4B.csv", output_csv="data/combine_opposite_wh-clefts_CI_4B.csv")
