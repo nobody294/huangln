@@ -4,7 +4,7 @@ import torch
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
 input_csv_dir = "data/it-clefts_variants.csv"
-output_csv_dir = "data/it-clefts_responses_12B.csv"
+output_csv_dir = "data/it-clefts_responses_12B_1.csv"
 
 model_name = "google/gemma-3-12b-it"
 

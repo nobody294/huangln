@@ -3,10 +3,10 @@ import pandas as pd
 import torch
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
-input_csv_dir = "data/negation_variants.csv"
-output_csv_dir = "data/negation_responses_12B_1.csv"
+input_csv_dir = "data/combine_negation_opposite_variants.csv"
+output_csv_dir = "data/combine_negation_opposite_responses_4B.csv"
 
-model_name = "google/gemma-3-12b-it"
+model_name = "google/gemma-3-4b-it"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
