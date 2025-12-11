@@ -70,15 +70,30 @@ if __name__ == "__main__":
 
 
     # run(input_csv="data/combine_negation_opposite_responses_4B.csv", output_csv="data/combine_negation_opposite_CI_4B.csv")
+    # run(input_csv="data/combine_negation_opposite_responses_12B.csv", output_csv="data/combine_negation_opposite_CI_12B.csv")
 
     # run(input_csv="data/combine_negation_active_passive_responses_4B.csv", output_csv="data/combine_negation_active_passive_CI_4B.csv")
+    # run(input_csv="data/combine_negation_active_passive_responses_12B.csv", output_csv="data/combine_negation_active_passive_CI_12B.csv")
 
     # run(input_csv="data/combine_negation_it-clefts_responses_4B.csv", output_csv="data/combine_negation_it-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_negation_it-clefts_responses_12B.csv", output_csv="data/combine_negation_it-clefts_CI_12B.csv")
 
     # run(input_csv="data/combine_negation_wh-clefts_responses_4B.csv", output_csv="data/combine_negation_wh-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_negation_wh-clefts_responses_12B.csv", output_csv="data/combine_negation_wh-clefts_CI_12B.csv")
 
     # run(input_csv="data/combine_opposite_active_passive_responses_4B.csv", output_csv="data/combine_opposite_active_passive_CI_4B.csv")
+    # run(input_csv="data/combine_opposite_active_passive_responses_12B.csv", output_csv="data/combine_opposite_active_passive_CI_12B.csv")
 
-    run(input_csv="data/combine_opposite_it-clefts_responses_4B.csv", output_csv="data/combine_opposite_it-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_opposite_it-clefts_responses_4B.csv", output_csv="data/combine_opposite_it-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_opposite_it-clefts_responses_12B.csv", output_csv="data/combine_opposite_it-clefts_CI_12B.csv")
 
-    run(input_csv="data/combine_opposite_wh-clefts_responses_4B.csv", output_csv="data/combine_opposite_wh-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_opposite_wh-clefts_responses_4B.csv", output_csv="data/combine_opposite_wh-clefts_CI_4B.csv")
+    # run(input_csv="data/combine_opposite_wh-clefts_responses_12B.csv", output_csv="data/combine_opposite_wh-clefts_CI_12B.csv")
+
+    # run(input_csv="data/combine_it-clefts_active_passive_responses_4B.csv", output_csv="data/combine_it-clefts_active_passive_CI_4B.csv")
+    # run(input_csv="data/combine_it-clefts_active_passive_responses_12B.csv", output_csv="data/combine_it-clefts_active_passive_CI_12B.csv")
+
+    # run(input_csv="data/combine_wh-clefts_active_passive_responses_4B.csv", output_csv="data/combine_wh-clefts_active_passive_CI_4B.csv")
+    run(input_csv="data/combine_wh-clefts_active_passive_responses_12B.csv", output_csv="data/combine_wh-clefts_active_passive_CI_12B.csv")
+
+# python EvaluationScore/1000-bootstrap.py
