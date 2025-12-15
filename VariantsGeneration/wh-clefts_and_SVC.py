@@ -4,60 +4,60 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 base_csv_path      = "data/original_statements.csv"
-it_clefts_csv_path  = "data/it-clefts_variants.csv"
-active_passive_csv_path  = "data/active_passive_variants.csv"
-output_csv_path    = "data/combine_it-clefts_active_passive_variants.csv"
+wh_clefts_csv_path  = "data/wh-clefts_variants.csv"
+SVC_csv_path  = "data/SVC_variants.csv"
+output_csv_path    = "data/combine_wh-clefts_SVC_variants.csv"
 
 model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
     "You are a controlled text rewriter for logical variants of short English statements. "
-    "You will be given a BASE statement, its IT-CLEFTS variant, and its ACTIVE/PASSIVE CONVERSION variant. "
+    "You will be given a BASE statement, its WH-CLEFTS variant, and its SUPPORT VERB CONSTRUCTION variant. "
     "Your only job is to construct a COMBINE variant that integrates BOTH types of changes. "
     "Intended meanings: "
-    "- The IT-CLEFTS variant is formed by converting the base into the canonical it-cleft pattern: It is/was [FOCUS] that [CLAUSE] while preserving polarity and truth conditions. "
-    "- The ACTIVE/PASSIVE CONVERSION variant is formed by implementing only a voice transformation (Active<->Passive). "
+    "- The WH-CLEFTS variant is formed by converting the base into the canonical wh-cleft pattern: What/Who/Where/When + [CLause with a gap] + is/are/was/were + [FOCUS] while preserving polarity and truth conditions. "
+    "- The SUPPORT VERB CONSTRUCTION variant is formed by transform the base statement into this structure: [SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). "
     "- The COMBINE variant should: "
-    "keep the IT-CLEFTS changes of the IT-CLEFTS variant, and "
-    "keep the voice transformation of the ACTIVE/PASSIVE CONVERSION variant."
+    "keep the WH-CLEFTS changes of the WH-CLEFTS variant, and "
+    "keep the SUPPORT VERB CONSTRUCTION changes of the SUPPORT VERB CONSTRUCTION variant."
 )
 
 BUILTIN_FEWSHOTS = [
     {
         "base": "The state should provide stronger financial support to unemployed workers.",
-        "it-clefts variant": "It is stronger financial support that the state should provide to unemployed workers.",
-        "active/passive variant": "Stronger financial support should be provided to unemployed workers by the state.",
-        "combine variant": "It is stronger financial support that should be provided to unemployed workers by the state.",
+        "wh-clefts variant": "What the state should provide to unemployed workers is stronger financial support.",
+        "support verb construction variant": "The state should make provision for stronger financial support to unemployed workers.",
+        "combine variant": "What the state should make provision for to unemployed workers is stronger financial support.",
     },
     {
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
-        "it-clefts variant": "It is Member States that violate the EU deficit rules that the EU should rigorously punish.",
-        "active/passive variant": "Member States that violate the EU deficit rules should be rigorously punished by the EU.",
-        "combine variant": "It is Member States that violate the EU deficit rules that should be rigorously punished by the EU.",
+        "wh-clefts variant": "What the EU should rigorously punish are Member States that violate the EU deficit rules.",
+        "support verb construction variant": "The EU should rigorously impose punishment on Member States that violate the EU deficit rules.",
+        "combine variant": "What the EU should rigorously impose punishment on are Member States that violate the EU deficit rules.",
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
-        "it-clefts variant": "It is bank and stock market gains that should be taxed more heavily.",
-        "active/passive variant": "The government should tax bank and stock market gains more heavily.",
-        "combine variant": "It is bank and stock market gains that the government should tax more heavily.",
+        "wh-clefts variant": "What should be taxed more heavily are bank and stock market gains.",
+        "support verb construction variant": "Bank and stock market gains should be given heavier taxation.",
+        "combine variant": "What should be given heavier taxation are bank and stock market gains.",
     },
     {
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
-        "it-clefts variant": "It is a vote for a party or candidate from any other Member State that EU citizens should be allowed to cast in European Parliament elections.",
-        "active/passive variant": "In European Parliament elections, a vote should be allowed to be cast by EU citizens for a party or candidate from any other Member State.",
-        "combine variant": "It is a vote for a party or candidate from any other Member State that should be allowed to be cast by EU citizens in European Parliament elections.",
+        "wh-clefts variant": "What EU citizens should be allowed to cast in European Parliament elections is a vote for a party or candidate from any other Member State.",
+        "support verb construction variant": "In European Parliament elections, EU citizens should be given permission to cast a vote for a party or candidate from any other Member State.",
+        "combine variant": "What EU citizens should be given permission to cast in European Parliament elections is a vote for a party or candidate from any other Member State.",
     },
     {
         "base": "The legalisation of same sex marriages is a good thing.",
-        "it-clefts variant": "It is the legalisation of same sex marriages that is a good thing.",
-        "active/passive variant": "null",
+        "wh-clefts variant": "What is a good thing is the legalisation of same sex marriages.",
+        "support verb construction variant": "null",
         "combine variant": "null",
     },
     {
         "base": "The legalisation of the personal use of soft drugs is to be welcomed.",
-        "it-clefts variant": "It is the legalisation of the personal use of soft drugs that is to be welcomed.",
-        "active/passive variant": "The government is to welcome the legalisation of the personal use of soft drugs.",
-        "combine variant": "It is the legalisation of the personal use of soft drugs that the government is to welcome.",
+        "wh-clefts variant": "What is to be welcomed is the legalisation of the personal use of soft drugs.",
+        "support verb construction variant": "null",
+        "combine variant": "null",
     },
 ]
 
@@ -66,27 +66,27 @@ def render_fewshots_block(shots):
     for s in shots:
         lines.append(
             f"- Base: {s['base']}\n"
-            f"- It-clefts variant: {s['it-clefts variant']}\n"
-            f"- Active/Passive Conversion variant: {s['active/passive variant']}\n"
+            f"- Wh-clefts variant: {s['wh-clefts variant']}\n"
+            f"- Support Verb Construction variant: {s['support verb construction variant']}\n"
             f"- Combine variant: {s['combine variant']}"
         )
     return "\n".join(lines)
 
-def build_user_prompt(base: str, it: str, actpas: str, fewshots_text: str) -> str:
+def build_user_prompt(base: str, wh: str, svc: str, fewshots_text: str) -> str:
     schema = """{
     "base": "<copy the base text exactly>",
-    "it-clefts_variant": "<copy the it-clefts variant exactly>",
-    "active/passive_variant": "<copy the active/passive variant exactly>",
+    "wh-clefts_variant": "<copy the wh-clefts variant exactly>",
+    "support_verb_construction_variant": "<copy the support verb construction variant exactly>",
     "combine_variant": {
         "text": "...",
         "not_applicable": false,
         "reason": null
     }
     }"""
-    return f"""Task: Construct a COMBINE variant from a base, a it-clefts variant, and an active/passive variant.
+    return f"""Task: Construct a COMBINE variant from a base, a wh-clefts variant, and a support verb construction variant.
 
     Hard constraints (follow strictly):
-    1) Do NOT add new content, explanations, or paraphrases.
+    1) Do NOT add new content, explanations, or paraphrases beyond support verb construction and wh-clefts.
     2) The COMBINE variant must be a single grammatical English sentence.
     3) If a well-formed combine variant cannot be constructed, set not_applicable = true with a short reason.
     4) Output must be a SINGLE JSON object exactly matching the requested schema, with no extra text.
@@ -98,9 +98,9 @@ def build_user_prompt(base: str, it: str, actpas: str, fewshots_text: str) -> st
 
     Base statement: {base}
 
-    It-clefts variant: {it}
+    Wh-clefts variant: {wh}
 
-    Active/Passive Conversion variant: {actpas}
+    Support Verb Construction variant: {svc}
 """
 
 JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -199,23 +199,23 @@ def run():
 
     # === 读取三份 csv，并抽取 prefix ===
     df_base = pd.read_csv(base_csv_path)
-    df_it  = pd.read_csv(it_clefts_csv_path)
-    df_actpas  = pd.read_csv(active_passive_csv_path)
+    df_wh  = pd.read_csv(wh_clefts_csv_path)
+    df_svc  = pd.read_csv(SVC_csv_path)
 
     df_base = add_prefix_column(df_base, "base")
-    df_it  = add_prefix_column(df_it,  "it-clefts")
-    df_actpas  = add_prefix_column(df_actpas,  "active/passive")
+    df_wh  = add_prefix_column(df_wh,  "wh-clefts")
+    df_svc  = add_prefix_column(df_svc,  "support verb construction")
 
     # 只保留我们需要的列，并改名方便后面使用
     base_small = df_base[["prefix", "statement"]].rename(columns={"statement": "base_stmt"})
-    it_small  = df_it[["prefix", "statement"]].rename(columns={"statement": "it_stmt"})
-    actpas_small  = df_actpas[["prefix", "statement"]].rename(columns={"statement": "actpas_stmt"})
+    wh_small  = df_wh[["prefix", "statement"]].rename(columns={"statement": "wh_stmt"})
+    svc_small  = df_svc[["prefix", "statement"]].rename(columns={"statement": "svc_stmt"})
 
     # === 在 prefix 上 inner join：只保留三份文件里都出现的前缀（即完整句子组） ===
     merged = (
         base_small
-        .merge(it_small, on="prefix", how="inner")
-        .merge(actpas_small, on="prefix", how="inner")
+        .merge(wh_small, on="prefix", how="inner")
+        .merge(svc_small, on="prefix", how="inner")
     )
 
     if merged.empty:
@@ -238,10 +238,10 @@ def run():
     for i, row in merged.iterrows():
         prefix   = str(row["prefix"])
         base_str = str(row["base_stmt"])
-        it_str  = str(row["it_stmt"])
-        actpas_str  = str(row["actpas_stmt"])
+        wh_str  = str(row["wh_stmt"])
+        svc_str  = str(row["svc_stmt"])
 
-        user_prompt = build_user_prompt(base_str, it_str, actpas_str, fewshots_text)
+        user_prompt = build_user_prompt(base_str, wh_str, svc_str, fewshots_text)
         raw = chat_complete(model, tokenizer, SYSTEM_PROMPT, user_prompt)
         obj = extract_first_json(raw)
         variant = pick_variant_text(obj)
