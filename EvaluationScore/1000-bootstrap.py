@@ -94,6 +94,10 @@ if __name__ == "__main__":
     # run(input_csv="data/combine_it-clefts_active_passive_responses_12B.csv", output_csv="data/combine_it-clefts_active_passive_CI_12B.csv")
 
     # run(input_csv="data/combine_wh-clefts_active_passive_responses_4B.csv", output_csv="data/combine_wh-clefts_active_passive_CI_4B.csv")
-    run(input_csv="data/combine_wh-clefts_active_passive_responses_12B.csv", output_csv="data/combine_wh-clefts_active_passive_CI_12B.csv")
+    # run(input_csv="data/combine_wh-clefts_active_passive_responses_12B.csv", output_csv="data/combine_wh-clefts_active_passive_CI_12B.csv")
+
+    # run(input_csv="data/combine_negation_SVC_responses_4B.csv", output_csv="data/combine_negation_SVC_CI_4B.csv")
+
+    run(input_csv="data/combine_opposite_SVC_responses_4B.csv", output_csv="data/combine_opposite_SVC_CI_4B.csv")
 
 # python EvaluationScore/1000-bootstrap.py
