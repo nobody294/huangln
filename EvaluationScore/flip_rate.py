@@ -21,7 +21,10 @@ variant_csvs = {
     # "combine_it-clefts_active_passive": "data/combine_it-clefts_active_passive_CI_12B.csv",
     # "combine_wh-clefts_active_passive": "data/combine_wh-clefts_active_passive_CI_12B.csv",
     # "combine_negation_SVC": "data/combine_negation_SVC_CI_4B.csv",
-    "combine_opposite_SVC": "data/combine_opposite_SVC_CI_4B.csv",
+    # "combine_opposite_SVC": "data/combine_opposite_SVC_CI_4B.csv",
+    # "combine_active_passive_SVC": "data/combine_active_passive_SVC_CI_4B.csv",
+    "combine_it-clefts_SVC": "data/combine_it-clefts_SVC_CI_4B.csv",
+    "combine_wh-clefts_SVC": "data/combine_wh-clefts_SVC_CI_4B.csv",
 }
 
 out_dir = "data/flip rate"
