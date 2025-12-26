@@ -33,8 +33,8 @@ MMLU_SYSTEM_PROMPT = (
 # CUDA_VISIBLE_DEVICES=1,2 python Intervention/parameter_edit.py
 
 # Example pair for base vs variant (you can change these)
-BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-VARIANT_TEXT = "It is the ban on face-covering clothing that the government should abolish."
+# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
+# VARIANT_TEXT = "It is the ban on face-covering clothing that the government should abolish."
 
 # BASE_TEXT = "Houses should be built on land currently used for agriculture."
 # VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
@@ -126,14 +126,14 @@ VARIANT_TEXT = "It is the ban on face-covering clothing that the government shou
 # BASE_TEXT = "The Swiss Armed Forces should expand their cooperation with NATO."
 # VARIANT_TEXT = "It is their cooperation with NATO that the Swiss Armed Forces should expand."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "It is the Bilateral Agreements with the EU that Switzerland should terminate and it is a free trade agreement without the free movement of persons that Switzerland should seek."
+BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+VARIANT_TEXT = "It is the Bilateral Agreements with the EU that Switzerland should terminate and it is a free trade agreement without the free movement of persons that Switzerland should seek."
 
 # BASE_TEXT = "Switzerland should return to a strict interpretation of neutrality (renounce economic sanctions to a large extent)."
 # VARIANT_TEXT = "It is a strict interpretation of neutrality that Switzerland should return to (renounce economic sanctions to a large extent)."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
-print_top_layers = 20  # how many top layers to print
+print_top_layers = 34  # how many top layers to print
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
 
@@ -461,6 +461,48 @@ def patch_context(
 #         return float("nan")
 
 #     return (logit_patched_target - logit_corrupt_target) / denom
+
+
+@contextlib.contextmanager
+def block_ablation_context(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layers_to_edit: List[int],
+    ratio: float = 0.0,
+    pos_strategy: str = "last",
+):
+    hooks = []
+
+    def make_hook(layer_idx: int):
+        def _hook(module, inputs, out):
+            if layer_idx not in layers_to_edit:
+                return out
+
+            hidden = out[0] if isinstance(out, tuple) else out  # [B, T, H]
+            new_hidden = hidden.clone()
+
+            if pos_strategy == "fixed":
+                new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
+            elif pos_strategy == "last":
+                new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
+            elif pos_strategy == "all":
+                new_hidden = new_hidden * ratio
+            else:
+                return out
+
+            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
+
+        return _hook
+
+    for i, name, layer in get_decoder_layers(model):
+        if i in layers_to_edit:
+            hooks.append(layer.register_forward_hook(make_hook(i)))
+
+    try:
+        yield
+    finally:
+        for h in hooks:
+            h.remove()
 
 
 @contextlib.contextmanager
@@ -948,6 +990,34 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - MLP - top layers]", mlp_results)
 
 
+    def sweep_layer_ablate(ratio: float = 0.0):
+        results = []
+        best_r = 0.0
+        best_patched_probs = None
+        best_ppl = None
+        for l in range(n_layers):
+            with block_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio, pos_strategy="last"):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+                r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+                if r > best_r:
+                    best_r = r
+                    best_patched_probs = patched_probs
+
+            obj_patched = objective_from_logits_full(
+                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
+            ).item()
+            results.append((l, r))
+        return results, best_patched_probs, best_ppl
+
+    layer_ablate_results, layer_best_probs, best_ppl= sweep_layer_ablate(ratio=0.0)
+    print(f"[Ablate-BLOCK Best-Patched-Probs] {layer_best_probs}")
+    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
+    print("-" * 60)
+    print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
+
+
     def sweep_attn_ablate(ratio: float = 0.0):
         results = []
         best_r = 0.0
@@ -1123,12 +1193,12 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Only Scaling up ATTN-23 Head-1-3-6-7 R-Score] {r}")
     print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4], all_positions=False):
+    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4, 5], all_positions=False):
         logits_patched = forward_logits_only(model, enc_corrupt)
         patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
     r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-0-2-4 R-Score] {r}")
+    print(f"[Only Ablate ATTN-23 Head-0-2-4-5 R-Score] {r}")
     print(f"[Patched Probs] {patched_probs}")
 
     with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[0, 2, 4], all_positions=False):

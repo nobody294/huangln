@@ -166,8 +166,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Italy should build more incinerators/thermal power plants."
 # VARIANT_TEXT = "Italy should not build more incinerators/thermal power plants."
 
-BASE_TEXT = "Drilling is necessary to find more energy resources."
-VARIANT_TEXT = "Drilling is not necessary to find more energy resources."
+# BASE_TEXT = "Drilling is necessary to find more energy resources."
+# VARIANT_TEXT = "Drilling is not necessary to find more energy resources."
 
 # BASE_TEXT = "Taxes collected at the regional level should be fully retained in the region itself."
 # VARIANT_TEXT = "Taxes collected at the regional level should not be fully retained in the region itself."
@@ -197,8 +197,8 @@ VARIANT_TEXT = "Drilling is not necessary to find more energy resources."
 # BASE_TEXT = "The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine)."
 # VARIANT_TEXT = "The Federal Council should not be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine)."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "Switzerland should not terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+VARIANT_TEXT = "Switzerland should not terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
 
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
