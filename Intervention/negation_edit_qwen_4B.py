@@ -7,18 +7,18 @@ import torch
 from torch import nn
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
-from transformers import AutoProcessor, Gemma3ForConditionalGeneration
-from transformers.models.gemma3.modeling_gemma3 import (
-    Gemma3DecoderLayer,
-    Gemma3Attention,
-    Gemma3MLP
+from transformers import AutoTokenizer, Qwen3ForCausalLM
+from transformers.models.qwen3.modeling_qwen3 import (
+    Qwen3DecoderLayer,
+    Qwen3Attention,
+    Qwen3MLP,
 )
 
 # ---------------------------
 # Config
 # ---------------------------
 
-model_name = "google/gemma-3-4b-it"
+model_name = "Qwen/Qwen3-4B"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
@@ -30,82 +30,45 @@ MMLU_SYSTEM_PROMPT = (
     "Answer correctly and output exactly one capital letter: A, B, C, or D."
 )
 
-# CUDA_VISIBLE_DEVICES=1,2 python Intervention/active-passive_edit.py
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/negation_edit.py
 
 # Example pair for base vs variant (you can change these)
-# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+# BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
+# VARIANT_TEXT = "There should not be a tax per kilometer driven for motorists instead of the tax on car ownership."
 
-# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
-# VARIANT_TEXT = "As much as secondary school teachers earn should be earned by primary school teachers."
+# BASE_TEXT = "Instead of the existing health insurance companies, there should be a national healthcare fund for everyone."
+# VARIANT_TEXT = "There should not be a national health care fund for everyone instead of the existing health insurance companies."
 
-# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+# BASE_TEXT = "Houses should be built on land currently used for agriculture."
+# VARIANT_TEXT = "No housing should be built on land now used for agriculture."
 
-# BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
-# VARIANT_TEXT = "An increase in welfare benefits should no longer automatically be the result of an increase in minimum wages."
+BASE_TEXT = "People who consider their lives complete should be able to receive assistance with suicide."
+VARIANT_TEXT = "People who consider their lives complete should not be able to get help with suicide."
 
-# BASE_TEXT = "All employed persons are to be required to be insured in the statutory pension scheme."
-# VARIANT_TEXT = "The government is to require all employed persons to be insured in the statutory pension scheme."
+# BASE_TEXT = "Limiting rights and freedoms is necessary to combat organized crime."
+# VARIANT_TEXT = "It is not necessary to limit rights and freedoms to combat organized crime."
 
-# BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
-# VARIANT_TEXT = "Relative authorities should continue to permit donations from companies to political parties."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-# VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-# BASE_TEXT = "A tax is to be levied again on high assets."
-# VARIANT_TEXT = "The government is to levy a tax on high assets again."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-# BASE_TEXT = "Married couples without children should continue to receive tax breaks."
-# VARIANT_TEXT = "Tax breaks should continue to be received by married couples without children."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-# No. 10
-# BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "The government is to tax air traffic more heavily."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-# BASE_TEXT = "The state should build low-rent apartments for rent."
-# VARIANT_TEXT = "Low-rent apartments should be built by the state for rent."
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
-BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
-
-# BASE_TEXT = "Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities)."
-# VARIANT_TEXT = "Environmental influences (e.g. media content, sensitising activities) can influence gender identity."
-
-# BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
-# VARIANT_TEXT = "The European Public Prosecutor's Office should be joined by Hungary."
-
-# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
-# VARIANT_TEXT = "Changing the university model (reorganisation into a trust) has reduced political influence."
-
-# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "A closer ratio of men to women should be striven for by parties when lists are drawn up."
-
-# BASE_TEXT = "A law is needed to prevent companies from relocating their production abroad."
-# VARIANT_TEXT = "Relative authorities need to pass a law to prevent companies from relocating their production abroad."
-
-# BASE_TEXT = "A heritage tax one's wealth should be introduced."
-# VARIANT_TEXT = "Relative authorities should introduce a heritage tax one's wealth."
-
-# BASE_TEXT = "Compulsory vaccination of children should be introduced based on the Swiss vaccination plan."
-# VARIANT_TEXT = "The government should introduce compulsory vaccination of children based on the Swiss vaccination plan."
-
-# No. 20
-# BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "A national inheritance tax on all inheritances over one million Swiss francs should be introduced."
-
-# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
-# VARIANT_TEXT = "The government should ban automatic facial recognition in public spaces."
-
-# BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
-# VARIANT_TEXT = "The Schengen agreement with the EU should be terminated by Switzerland and more security checks directly on the border should be reintroduced."
-
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
-print_top_layers = 34  # how many top layers to print
+print_top_layers = 20  # how many top layers to print
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
 
@@ -113,21 +76,29 @@ EPS = 1e-9
 # Utilities / Model Introspection
 # ---------------------------
 
-def get_input_device(model: Gemma3ForConditionalGeneration):
+def flip_probs_1_to_7(p: torch.Tensor) -> torch.Tensor:
+    """
+    p: [..., 7]，最后一维是 1..7 的概率。
+    返回左右翻转后的分布（以 4 为中心镜像）。
+    """
+    idx = torch.tensor([6, 5, 4, 3, 2, 1, 0], device=p.device)
+    return p.index_select(dim=-1, index=idx)
+
+def get_input_device(model: Qwen3ForCausalLM):
     # More robust than model.device under device_map="auto"
     try:
         return model.model.embed_tokens.weight.device
     except Exception:
         return next(model.parameters()).device
 
-def get_decoder_layers(model: Gemma3ForConditionalGeneration):
+def get_decoder_layers(model: Qwen3ForCausalLM):
     layers = []
     for name, mod in model.named_modules():
-        if isinstance(mod, Gemma3DecoderLayer):
+        if isinstance(mod, Qwen3DecoderLayer):
             layers.append((len(layers), name, mod))
     if not layers:
         raise RuntimeError(
-            "No Gemma3DecoderLayer found via named_modules(). "
+            "No Qwen3DecoderLayer found via named_modules(). "
             "Check transformers version or model class."
         )
     # print(f"{len(layers)}")
@@ -152,22 +123,23 @@ def build_user_prompt(statement: str) -> str:
     )
 
 def encode_for_next_token(
-        processor: AutoProcessor,
-        model: Gemma3ForConditionalGeneration,
+        tokenizer: AutoTokenizer,
+        model: Qwen3ForCausalLM,
         system_prompt: str,
         user_prompt: str
 ) -> EncodedChat:
     messages = [
-        {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
-        {"role": "user", "content": [{"type": "text", "text": user_prompt}]}
+        {"role": "system", "content": system_prompt},
+        {"role": "user",   "content": user_prompt},
     ]
 
-    enc = processor.apply_chat_template(
+    enc = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
         tokenize=True,
         return_tensors="pt",
-        return_dict=True
+        return_dict=True,
+        enable_thinking=False
     )
     dev = get_input_device(model)
     enc = {k: v.to(dev) for k, v in enc.items()}
@@ -178,7 +150,7 @@ def encode_for_next_token(
     answer_pos = seq_len - 1
 
     digit_ids = []
-    tok = processor.tokenizer
+    tok = tokenizer
     for d in range(1, 8):
         ids = tok.encode(str(d), add_special_tokens=False)
         if len(ids) != 1:
@@ -196,7 +168,7 @@ def encode_for_next_token(
 
 @torch.no_grad()
 def forward_logits_only(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat
 ) -> torch.Tensor:
     out = model(
@@ -238,7 +210,7 @@ def objective_from_logits_full(
 # ---------------------------
 
 def attribution_scores_first_order(
-        model: Gemma3ForConditionalGeneration,
+        model: Qwen3ForCausalLM,
         enc_clean: EncodedChat,
         enc_corrupt: EncodedChat,
         clean_probs: Optional[torch.Tensor]
@@ -314,7 +286,7 @@ class CleanCache:
 
 
 def collect_clean_cache(
-        model: Gemma3ForConditionalGeneration,
+        model: Qwen3ForCausalLM,
         enc_clean: EncodedChat
 ) -> CleanCache:
     cache = CleanCache()
@@ -347,9 +319,9 @@ def collect_clean_cache(
     for i, name, layer in get_decoder_layers(model):
         hooks.append(layer.register_forward_hook(layer_hook(i)))
         for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention):
+            if isinstance(sub, Qwen3Attention):
                 hooks.append(sub.register_forward_hook(attn_hook(i)))
-            elif isinstance(sub, Gemma3MLP):
+            elif isinstance(sub, Qwen3MLP):
                 hooks.append(sub.register_forward_hook(mlp_hook(i)))
 
     with torch.no_grad():
@@ -366,7 +338,7 @@ def collect_clean_cache(
 
 @contextlib.contextmanager
 def patch_context(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc_corrupt: EncodedChat,
     cache: CleanCache,
     patch_spec: Dict[str, List[int]]
@@ -412,9 +384,9 @@ def patch_context(
     for i, name, layer in get_decoder_layers(model):
         hooks.append(layer.register_forward_hook(layer_patch_hook(i)))
         for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention):
+            if isinstance(sub, Qwen3Attention):
                 hooks.append(sub.register_forward_hook(attn_patch_hook(i)))
-            elif isinstance(sub, Gemma3MLP):
+            elif isinstance(sub, Qwen3MLP):
                 hooks.append(sub.register_forward_hook(mlp_patch_hook(i)))
 
     try:
@@ -436,50 +408,8 @@ def patch_context(
 
 
 @contextlib.contextmanager
-def block_ablation_context(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    layers_to_edit: List[int],
-    ratio: float = 0.0,
-    pos_strategy: str = "last",
-):
-    hooks = []
-
-    def make_hook(layer_idx: int):
-        def _hook(module, inputs, out):
-            if layer_idx not in layers_to_edit:
-                return out
-
-            hidden = out[0] if isinstance(out, tuple) else out  # [B, T, H]
-            new_hidden = hidden.clone()
-
-            if pos_strategy == "fixed":
-                new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
-            elif pos_strategy == "last":
-                new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
-            elif pos_strategy == "all":
-                new_hidden = new_hidden * ratio
-            else:
-                return out
-
-            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
-
-        return _hook
-
-    for i, name, layer in get_decoder_layers(model):
-        if i in layers_to_edit:
-            hooks.append(layer.register_forward_hook(make_hook(i)))
-
-    try:
-        yield
-    finally:
-        for h in hooks:
-            h.remove()
-
-
-@contextlib.contextmanager
 def attn_ablation_context(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     layers_to_edit: List[int],
     ratio: float = 0.0,
@@ -507,7 +437,7 @@ def attn_ablation_context(
 
     for i, name, layer in get_decoder_layers(model):
         for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention):
+            if isinstance(sub, Qwen3Attention):
                 hooks.append(sub.register_forward_hook(make_hook(i)))
 
     try:
@@ -518,7 +448,7 @@ def attn_ablation_context(
 
 @contextlib.contextmanager
 def mlp_ablation_context(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     layers_to_edit: List[int],
     ratio: float = 0.0,
@@ -544,7 +474,7 @@ def mlp_ablation_context(
 
     for i, name, layer in get_decoder_layers(model):
         for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3MLP):
+            if isinstance(sub, Qwen3MLP):
                 hooks.append(sub.register_forward_hook(make_hook(i)))
 
     try:
@@ -555,7 +485,7 @@ def mlp_ablation_context(
 
 @contextlib.contextmanager
 def attn_ablation_23(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     layer_to_edit: int = 23,
     ratio: float = 0.0
@@ -570,7 +500,7 @@ def attn_ablation_23(
 
 @contextlib.contextmanager
 def attn_ablation_23_16(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     ratio: float = 0.0
 ):
@@ -584,7 +514,7 @@ def attn_ablation_23_16(
 
 @contextlib.contextmanager
 def attn_head_ablation_context(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     layers_to_edit: List[int],
     heads_to_edit: List[int],
@@ -600,11 +530,11 @@ def attn_head_ablation_context(
     hooks = []
 
     # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
-    num_heads = model.config.text_config.num_attention_heads
+    num_heads = model.config.num_attention_heads
 
     def make_o_proj_hook(layer_idx: int):
         def _hook(module: nn.Linear, inputs, output):
-            # module 是 Gemma3Attention 里的 o_proj
+            # module 是 Qwen3Attention 里的 o_proj
             if layer_idx not in layers_to_edit:
                 return output
 
@@ -645,89 +575,7 @@ def attn_head_ablation_context(
         if i not in layers_to_edit:
             continue
         for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention) and hasattr(sub, "o_proj"):
-                hooks.append(sub.o_proj.register_forward_hook(make_o_proj_hook(i)))
-
-    try:
-        yield
-    finally:
-        for h in hooks:
-            h.remove()
-
-@contextlib.contextmanager
-def attn_head_ablation_scaling_context(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    layers_to_edit: List[int],
-    heads_to_ablate: List[int],
-    heads_to_scaling: List[int],
-    ablate_ratio: float = 0.0,
-    scaling_ratio: float = 2.0,
-    all_positions: bool = False,
-):
-    """
-    在给定的层里，把若干 attention head 的输出缩放为 ratio。
-    - ratio=0.0 就是“把这个 head 设为 0”。
-    - all_positions=True: 所有 token 位置都 ablate
-      all_positions=False: 只在 enc.answer_pos 这个位置 ablate（更接近你现在的做法）
-    """
-    hooks = []
-
-    # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
-    num_heads = model.config.text_config.num_attention_heads
-
-    def make_o_proj_hook(layer_idx: int):
-        def _hook(module: nn.Linear, inputs, output):
-            # module 是 Gemma3Attention 里的 o_proj
-            if layer_idx not in layers_to_edit:
-                return output
-
-            # inputs[0] 是 o_proj 的输入：形状 [batch, seq, hidden_size]，
-            # 实际上就是 concat 后的所有 head
-            x = inputs[0]
-            B, T, H = x.shape
-            head_dim = H // num_heads
-
-            # [B, T, H] -> [B, T, num_heads, head_dim]
-            x = x.view(B, T, num_heads, head_dim)
-
-            # 做一个 clone 避免就地修改带来奇怪的梯度 / 共享引用问题
-            # x = x.clone()
-
-            if all_positions:
-                for h_idx in heads_to_ablate:
-                    if 0 <= h_idx < num_heads:
-                        x[:, :, h_idx, :] = x[:, :, h_idx, :] * ablate_ratio
-                
-                for idx in heads_to_scaling:
-                    if 0 <= idx < num_heads:
-                        x[:, :, idx, :] = x[:, :, idx, :] * scaling_ratio
-            else:
-                pos = enc.answer_pos
-                for h_idx in heads_to_ablate:
-                    if 0 <= h_idx < num_heads:
-                        x[:, pos, h_idx, :] = x[:, pos, h_idx, :] * ablate_ratio
-                
-                for idx in heads_to_scaling:
-                    if 0 <= idx < num_heads:
-                        x[:, pos, idx, :] = x[:, pos, idx, :] * scaling_ratio
-
-            # 再 reshape 回去
-            x = x.view(B, T, H)
-
-            # 手动走一次线性层，相当于 o_proj(x)
-            W = module.weight
-            b = module.bias
-            out = torch.nn.functional.linear(x, W, b)
-
-            return out
-        return _hook
-
-    for i, name, layer in get_decoder_layers(model):
-        if i not in layers_to_edit:
-            continue
-        for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention) and hasattr(sub, "o_proj"):
+            if isinstance(sub, Qwen3Attention) and hasattr(sub, "o_proj"):
                 hooks.append(sub.o_proj.register_forward_hook(make_o_proj_hook(i)))
 
     try:
@@ -738,7 +586,7 @@ def attn_head_ablation_scaling_context(
 
 @contextlib.contextmanager
 def attn_head_ablation_23(
-    model: Gemma3ForConditionalGeneration,
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
     ratio: float = 0.0,
     all_positions: bool = False,
@@ -759,10 +607,9 @@ def attn_head_ablation_23(
         yield
 
 @contextlib.contextmanager
-def attn_head_edit_23_multiple_heads(
-    model: Gemma3ForConditionalGeneration,
+def attn_head_ablation_23_multiple_heads(
+    model: Qwen3ForCausalLM,
     enc: EncodedChat,
-    heads: List[int],
     ratio: float = 0.0,
     all_positions: bool = False
 ):
@@ -774,29 +621,9 @@ def attn_head_edit_23_multiple_heads(
         model,
         enc,
         layers_to_edit=[23],
-        heads_to_edit=heads,
+        heads_to_edit=[7, 6, 3, 1],
         ratio=ratio,
         all_positions=all_positions,
-    ):
-        yield
-
-@contextlib.contextmanager
-def attn_head_ablation_scaling_multiple_23(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    ablate_ratio: float = 0.0,
-    scaling_ratio: float = 2.0,
-    all_positions: bool = False
-):
-    with attn_head_ablation_scaling_context(
-        model,
-        enc,
-        layers_to_edit=[23],
-        heads_to_ablate=[1, 3, 6, 7],
-        heads_to_scaling = [0, 2, 4],
-        ablate_ratio=ablate_ratio,
-        scaling_ratio=scaling_ratio,
-        all_positions=all_positions
     ):
         yield
 
@@ -821,21 +648,22 @@ def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
 #     return R
 
 def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
-    d0 = dist_fn(p_clean, p_corrupt)
-    dp = dist_fn(p_clean, p_patched)
+    p_target = flip_probs_1_to_7(p_clean)
+    d0 = dist_fn(p_target, p_corrupt)
+    dp = dist_fn(p_target, p_patched)
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
 def run_activation_patching(base_text: str, variant_text: str):
-    processor = AutoProcessor.from_pretrained(model_name)
-    model = Gemma3ForConditionalGeneration.from_pretrained(
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = Qwen3ForCausalLM.from_pretrained(
         model_name,
         device_map = "auto",
         torch_dtype = "auto"
     ).eval()
 
-    enc_clean = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(base_text))
-    enc_corrupt = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(variant_text))
+    enc_clean = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(base_text))
+    enc_corrupt = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(variant_text))
 
     with torch.no_grad():
         logits_clean = forward_logits_only(model, enc_clean)
@@ -849,12 +677,12 @@ def run_activation_patching(base_text: str, variant_text: str):
 
     c_id = pick_target_digit_id(logits_corrupt_digits, enc_corrupt.digit_ids)
 
-    print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})")
+    print(f"[Target digit id] {target_digit_id}  ({tokenizer.decode([target_digit_id])})")
     # print(f"[Clean target logit]   {clean_target_logit:.3f}")
     print(f"[Clean logits] {logits_clean_digits}")
     # print(f"[Corrupt target logit] {corrupt_target_logit:.3f}")
     print(f"[Corrupt logits] {logits_corrupt_digits}")
-    print(f"[c_id] {c_id}  ({processor.tokenizer.decode([c_id])})")
+    print(f"[c_id] {c_id}  ({tokenizer.decode([c_id])})")
     print("-" * 60)
 
     clean_probs   = digit_probs_from_logits_full(logits_clean,   enc_clean,   TEMP_FOR_PROBS)
@@ -867,7 +695,7 @@ def run_activation_patching(base_text: str, variant_text: str):
         logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS
     ).item()
 
-    print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})  (for reference)")
+    print(f"[Target digit id] {target_digit_id}  ({tokenizer.decode([target_digit_id])})  (for reference)")
     print(f"[Clean target logit]   {clean_target_logit:.3f}  (ref)")
     print(f"[Corrupt target logit] {corrupt_target_logit:.3f}  (ref)")
     print(f"[Clean logits] {logits_clean_digits}")
@@ -927,7 +755,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     #                 best_patched_probs = patched_probs
     #                 best_r = r
     #                 patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-    #                     model, processor,
+    #                     model, tokenizer,
     #                     dataset_config="wikitext-2-raw-v1", split="test",
     #                     block_size=None, stride=None, max_texts=200
     #                 )
@@ -962,34 +790,6 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - MLP - top layers]", mlp_results)
 
 
-    def sweep_layer_ablate(ratio: float = 0.0):
-        results = []
-        best_r = 0.0
-        best_patched_probs = None
-        best_ppl = None
-        for l in range(n_layers):
-            with block_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio, pos_strategy="last"):
-                logits_patched = forward_logits_only(model, enc_corrupt)
-                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-
-                r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-                if r > best_r:
-                    best_r = r
-                    best_patched_probs = patched_probs
-
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            results.append((l, r))
-        return results, best_patched_probs, best_ppl
-
-    layer_ablate_results, layer_best_probs, best_ppl= sweep_layer_ablate(ratio=0.0)
-    print(f"[Ablate-BLOCK Best-Patched-Probs] {layer_best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
-    print("-" * 60)
-    print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
-
-
     def sweep_attn_ablate(ratio: float = 0.0):
         results = []
         best_r = 0.0
@@ -1005,7 +805,7 @@ def run_activation_patching(base_text: str, variant_text: str):
                     best_r = r
                     best_patched_probs = patched_probs
                     # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-                    #     model, processor,
+                    #     model, tokenizer,
                     #     dataset_config="wikitext-2-raw-v1", split="test",
                     #     block_size=None, stride=None, max_texts=200
                     # )
@@ -1057,7 +857,7 @@ def run_activation_patching(base_text: str, variant_text: str):
                     best_r = r
                     best_patched_probs = patched_probs
                     # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-                    #     model, processor,
+                    #     model, tokenizer,
                     #     dataset_config="wikitext-2-raw-v1", split="test",
                     #     block_size=None, stride=None, max_texts=200
                     # )
@@ -1111,7 +911,7 @@ def run_activation_patching(base_text: str, variant_text: str):
         results = []
         best_r = 0.0
         best_patched_probs = None
-        num_heads = model.config.text_config.num_attention_heads
+        num_heads = model.config.num_attention_heads
 
         for h in range(num_heads):
             with attn_head_ablation_23(
@@ -1149,53 +949,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     
     print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[1, 3, 6, 7], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_ablation_23_multiple_heads(model, enc_corrupt, ratio=0.0, all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[1, 3, 6, 7], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling up ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4, 5], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-0-2-4-5 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling-up ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=-3.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Neg-Scaling ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, scaling_ratio=2.5, all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[ATTN-23 Ablate-Head-1-3-6-7 Scaling-Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
 # ---------------------------
 # Paper-faithful pipeline (multi-GPU safe) — CE probe + Δw + min-cos rows + gate_proj add

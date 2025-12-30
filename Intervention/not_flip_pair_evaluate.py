@@ -229,6 +229,8 @@ def attn_ablation_context(
                 new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
             elif pos_strategy == "last":
                 new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
+            elif pos_strategy == "all":
+                new_hidden = new_hidden * ratio
             else:
                 return out
             return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
@@ -251,7 +253,8 @@ def attn_ablation_23(
     model: Gemma3ForConditionalGeneration,
     enc: EncodedChat,
     layer_to_edit: int = 23,
-    ratio: float = 0.0
+    ratio: float = 0.0,
+    pos_strategy: str = "fixed"
 ):
     """
     只在第 23 层把 attention 输出乘上 ratio（默认 0：完全 ablate）。
@@ -261,6 +264,7 @@ def attn_ablation_23(
         enc,
         layers_to_edit=[layer_to_edit],
         ratio=ratio,
+        pos_strategy=pos_strategy
     ):
         yield
 
@@ -634,25 +638,10 @@ def main():
             corrupt_probs = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
 
         # 对 corrupt 句子做第 23 层 attention ablation
-        # with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0):
-        #     logits_patched = forward_logits_only(model, enc_corrupt)
-        #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-
-        # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-        # r_value = float(r.item())
-        # r_scores.append(r_value)
-
-        # print(f"[Progress] 已处理 {idx}/{num_pairs} 个句子对，当前 R={r_value:.4f}")
-        # print(f"[Clean Probs] {clean_probs}")
-        # print(f"[Corrupt Probs] {corrupt_probs}")
-        # print(f"[Patched Probs] {patched_probs}")
-        # print("-" * 60)
-
-        # 对corrupt句子对做第23层的attention scaling
-        with attn_head_scaling_up_23_multiple_heads(model, enc_corrupt, ratio=7.0, all_positions=False):
+        with attn_ablation_23(model, enc_corrupt, layer_to_edit=0, ratio=0.0, pos_strategy="all"):
             logits_patched = forward_logits_only(model, enc_corrupt)
             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-        
+
         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
         r_value = float(r.item())
         r_scores.append(r_value)
@@ -662,6 +651,21 @@ def main():
         print(f"[Corrupt Probs] {corrupt_probs}")
         print(f"[Patched Probs] {patched_probs}")
         print("-" * 60)
+
+        # 对corrupt句子对做第23层的attention scaling
+        # with attn_head_scaling_up_23_multiple_heads(model, enc_corrupt, ratio=7.0, all_positions=False):
+        #     logits_patched = forward_logits_only(model, enc_corrupt)
+        #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+        
+        # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+        # r_value = float(r.item())
+        # r_scores.append(r_value)
+
+        # print(f"[Progress] 已处理 {idx}/{num_pairs} 个句子对，当前 R={r_value:.4f}")
+        # print(f"[Clean Probs] {clean_probs}")
+        # print(f"[Corrupt Probs] {corrupt_probs}")
+        # print(f"[Patched Probs] {patched_probs}")
+        # print("-" * 60)
 
     # ---------- 6. 写出带 R 分数的 CSV ----------
     with open(PAIRS_WITH_R_CSV_PATH, "w", newline='', encoding="utf-8") as f:

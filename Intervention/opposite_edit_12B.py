@@ -18,7 +18,7 @@ from transformers.models.gemma3.modeling_gemma3 import (
 # Config
 # ---------------------------
 
-model_name = "google/gemma-3-4b-it"
+model_name = "google/gemma-3-12b-it"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
@@ -30,88 +30,95 @@ MMLU_SYSTEM_PROMPT = (
     "Answer correctly and output exactly one capital letter: A, B, C, or D."
 )
 
-# CUDA_VISIBLE_DEVICES=1,2 python Intervention/active-passive_edit.py
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/opposite_edit_12B.py
 
 # Example pair for base vs variant (you can change these)
-# BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-# VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+# BASE_TEXT = "Childcare should be free for all parents for at least three days a week."
+# VARIANT_TEXT = "Child care should remain paying for all parents at least three days a week."
 
-# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
-# VARIANT_TEXT = "As much as secondary school teachers earn should be earned by primary school teachers."
+# BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
+# VARIANT_TEXT = "A tax per kilometer driven should not replace the existing tax on car ownership for motorists."
+
+# BASE_TEXT = "During the upcoming New Year's Eve, it should be allowed to set off decorative fireworks again."
+# VARIANT_TEXT = "Next turn of the year, it should remain illegal to set off decorative fireworks."
 
 # BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+# VARIANT_TEXT = "The Netherlands should introduce fewer flight taxes for short-haul flights."
 
-# BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
-# VARIANT_TEXT = "An increase in welfare benefits should no longer automatically be the result of an increase in minimum wages."
+# BASE_TEXT = "Climate change is solely attributable to human action."
+# VARIANT_TEXT = "Climate change is only attributable to natural action."
 
 # BASE_TEXT = "All employed persons are to be required to be insured in the statutory pension scheme."
-# VARIANT_TEXT = "The government is to require all employed persons to be insured in the statutory pension scheme."
+# VARIANT_TEXT = "All workers should be optionally insured in the statutory pension scheme."
 
-# BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
-# VARIANT_TEXT = "Relative authorities should continue to permit donations from companies to political parties."
+# BASE_TEXT = "The registration of new cars with combustion engines should also be possible in the long term."
+# VARIANT_TEXT = "The registration of new cars with combustion engines should be banned in the long term."
 
-# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-# VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
+# BASE_TEXT = "Companies are to decide for themselves whether to allow their employees to work from home."
+# VARIANT_TEXT = "Working from home should be allowed everywhere, regardless of the company, if possible."
 
-# BASE_TEXT = "A tax is to be levied again on high assets."
-# VARIANT_TEXT = "The government is to levy a tax on high assets again."
-
-# BASE_TEXT = "Married couples without children should continue to receive tax breaks."
-# VARIANT_TEXT = "Tax breaks should continue to be received by married couples without children."
+# BASE_TEXT = "The current three-month unemployment benefit should be extended."
+# VARIANT_TEXT = "Cutting the current three-month unemployment benefit is unnecessary."
 
 # No. 10
-# BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "The government is to tax air traffic more heavily."
+# BASE_TEXT = "A legal framework for primary elections should be provided."
+# VARIANT_TEXT = "A civilian regulatory framework for primaries should be provided."
 
-# BASE_TEXT = "The state should build low-rent apartments for rent."
-# VARIANT_TEXT = "Low-rent apartments should be built by the state for rent."
+# BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
+# VARIANT_TEXT = "Doctors should be fobidden to administer direct active euthanasia."
 
-BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
+# BASE_TEXT = "Same-sex couples should have the same rights as heterosexual couples in all areas."
+# VARIANT_TEXT = "Same-sex couples should have more rights as heterosexual couples in all areas."
 
-# BASE_TEXT = "Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities)."
-# VARIANT_TEXT = "Environmental influences (e.g. media content, sensitising activities) can influence gender identity."
-
-# BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
-# VARIANT_TEXT = "The European Public Prosecutor's Office should be joined by Hungary."
-
-# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
-# VARIANT_TEXT = "Changing the university model (reorganisation into a trust) has reduced political influence."
-
-# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "A closer ratio of men to women should be striven for by parties when lists are drawn up."
-
-# BASE_TEXT = "A law is needed to prevent companies from relocating their production abroad."
-# VARIANT_TEXT = "Relative authorities need to pass a law to prevent companies from relocating their production abroad."
-
-# BASE_TEXT = "A heritage tax one's wealth should be introduced."
-# VARIANT_TEXT = "Relative authorities should introduce a heritage tax one's wealth."
-
-# BASE_TEXT = "Compulsory vaccination of children should be introduced based on the Swiss vaccination plan."
-# VARIANT_TEXT = "The government should introduce compulsory vaccination of children based on the Swiss vaccination plan."
-
-# No. 20
 # BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "A national inheritance tax on all inheritances over one million Swiss francs should be introduced."
+# VARIANT_TEXT = "There should be a disregard of a national inheritance tax on all inheritances over one million Swiss francs."
 
-# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
-# VARIANT_TEXT = "The government should ban automatic facial recognition in public spaces."
+# BASE_TEXT = "There should be stricter controls on equal pay for women and men."
+# VARIANT_TEXT = "There should be laxer controls on equal pay for women and men."
 
-# BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
-# VARIANT_TEXT = "The Schengen agreement with the EU should be terminated by Switzerland and more security checks directly on the border should be reintroduced."
+BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
+VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
+# BASE_TEXT = "There should be closer relations with the European Union (EU)."
+# VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
+
+# BASE_TEXT = ""
+# VARIANT_TEXT = ""
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
-print_top_layers = 34  # how many top layers to print
+print_top_layers = 20  # how many top layers to print
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
 
 # ---------------------------
 # Utilities / Model Introspection
 # ---------------------------
+
+def flip_probs_1_to_7(p: torch.Tensor) -> torch.Tensor:
+    """
+    p: [..., 7]，最后一维是 1..7 的概率。
+    返回左右翻转后的分布（以 4 为中心镜像）。
+    """
+    idx = torch.tensor([6, 5, 4, 3, 2, 1, 0], device=p.device)
+    return p.index_select(dim=-1, index=idx)
 
 def get_input_device(model: Gemma3ForConditionalGeneration):
     # More robust than model.device under device_map="auto"
@@ -433,48 +440,6 @@ def patch_context(
 #         return float("nan")
 
 #     return (logit_patched_target - logit_corrupt_target) / denom
-
-
-@contextlib.contextmanager
-def block_ablation_context(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    layers_to_edit: List[int],
-    ratio: float = 0.0,
-    pos_strategy: str = "last",
-):
-    hooks = []
-
-    def make_hook(layer_idx: int):
-        def _hook(module, inputs, out):
-            if layer_idx not in layers_to_edit:
-                return out
-
-            hidden = out[0] if isinstance(out, tuple) else out  # [B, T, H]
-            new_hidden = hidden.clone()
-
-            if pos_strategy == "fixed":
-                new_hidden[:, enc.answer_pos, :] = new_hidden[:, enc.answer_pos, :] * ratio
-            elif pos_strategy == "last":
-                new_hidden[:, -1, :] = new_hidden[:, -1, :] * ratio
-            elif pos_strategy == "all":
-                new_hidden = new_hidden * ratio
-            else:
-                return out
-
-            return (new_hidden, *out[1:]) if isinstance(out, tuple) else new_hidden
-
-        return _hook
-
-    for i, name, layer in get_decoder_layers(model):
-        if i in layers_to_edit:
-            hooks.append(layer.register_forward_hook(make_hook(i)))
-
-    try:
-        yield
-    finally:
-        for h in hooks:
-            h.remove()
 
 
 @contextlib.contextmanager
@@ -821,8 +786,9 @@ def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
 #     return R
 
 def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
-    d0 = dist_fn(p_clean, p_corrupt)
-    dp = dist_fn(p_clean, p_patched)
+    p_target = flip_probs_1_to_7(p_clean)
+    d0 = dist_fn(p_target, p_corrupt)
+    dp = dist_fn(p_target, p_patched)
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
@@ -962,34 +928,6 @@ def run_activation_patching(base_text: str, variant_text: str):
     print_top("[Patch - MLP - top layers]", mlp_results)
 
 
-    def sweep_layer_ablate(ratio: float = 0.0):
-        results = []
-        best_r = 0.0
-        best_patched_probs = None
-        best_ppl = None
-        for l in range(n_layers):
-            with block_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio, pos_strategy="last"):
-                logits_patched = forward_logits_only(model, enc_corrupt)
-                patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-
-                r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-                if r > best_r:
-                    best_r = r
-                    best_patched_probs = patched_probs
-
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            results.append((l, r))
-        return results, best_patched_probs, best_ppl
-
-    layer_ablate_results, layer_best_probs, best_ppl= sweep_layer_ablate(ratio=0.0)
-    print(f"[Ablate-BLOCK Best-Patched-Probs] {layer_best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
-    print("-" * 60)
-    print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
-
-
     def sweep_attn_ablate(ratio: float = 0.0):
         results = []
         best_r = 0.0
@@ -1040,6 +978,12 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-ATTN ratio=2.0] top layers", ablate_results)
+
+    neg_scaling_results, best_probs_2, best_ppl_1= sweep_attn_ablate(ratio=-1.0)
+    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs_2}")
+    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
+    print("-" * 60)
+    print_top("[Neg-Scaling-ATTN ratio=-1.0] top layers", neg_scaling_results)
 
 
     def sweep_mlp_ablate(ratio: float = 0.0):
@@ -1104,98 +1048,98 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Patched Probs] {patched_probs}")
 
     # 对注意力头进行patch
-    def sweep_head_ablate(
-        ratio: float = 0.0,
-        all_positions: bool = False,
-    ):
-        results = []
-        best_r = 0.0
-        best_patched_probs = None
-        num_heads = model.config.text_config.num_attention_heads
+    # def sweep_head_ablate(
+    #     ratio: float = 0.0,
+    #     all_positions: bool = False,
+    # ):
+    #     results = []
+    #     best_r = 0.0
+    #     best_patched_probs = None
+    #     num_heads = model.config.text_config.num_attention_heads
 
-        for h in range(num_heads):
-            with attn_head_ablation_23(
-                model,
-                enc_corrupt,
-                ratio=ratio,
-                all_positions=all_positions,
-                head=h
-            ):
-                logits_patched = forward_logits_only(model, enc_corrupt)
-                patched_probs = digit_probs_from_logits_full(
-                    logits_patched, enc_clean, TEMP_FOR_PROBS
-                )
+    #     for h in range(num_heads):
+    #         with attn_head_ablation_23(
+    #             model,
+    #             enc_corrupt,
+    #             ratio=ratio,
+    #             all_positions=all_positions,
+    #             head=h
+    #         ):
+    #             logits_patched = forward_logits_only(model, enc_corrupt)
+    #             patched_probs = digit_probs_from_logits_full(
+    #                 logits_patched, enc_clean, TEMP_FOR_PROBS
+    #             )
 
-            r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    #         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
 
-            if r > best_r:
-                best_r = r
-                best_patched_probs = patched_probs
+    #         if r > best_r:
+    #             best_r = r
+    #             best_patched_probs = patched_probs
 
-            results.append((h, r))
+    #         results.append((h, r))
 
-        return results, best_patched_probs
+    #     return results, best_patched_probs
     
-    head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
-    print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
+    # head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
+    # print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
 
-    def print_top_head(title, arr):
-        arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-        print(title)
-        for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
-            txt = "nan" if math.isnan(r) else f"{r:.3f}"
-            print(f" #{i:02d} head={h:02d} restoration={txt}")
-        print("-" * 60)
+    # def print_top_head(title, arr):
+    #     arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+    #     print(title)
+    #     for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
+    #         txt = "nan" if math.isnan(r) else f"{r:.3f}"
+    #         print(f" #{i:02d} head={h:02d} restoration={txt}")
+    #     print("-" * 60)
     
-    print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
+    # print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[1, 3, 6, 7], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[1, 3, 6, 7], all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[1, 3, 6, 7], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[1, 3, 6, 7], all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling up ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Scaling up ATTN-23 Head-1-3-6-7 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4, 5], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4], all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-0-2-4-5 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Ablate ATTN-23 Head-0-2-4 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[0, 2, 4], all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling-up ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Scaling-up ATTN-23 Head-0-2-4 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=-3.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=-3.0, heads=[0, 2, 4], all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Neg-Scaling ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[Only Neg-Scaling ATTN-23 Head-0-2-4 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, scaling_ratio=2.5, all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    # with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, scaling_ratio=2.5, all_positions=False):
+    #     logits_patched = forward_logits_only(model, enc_corrupt)
+    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[ATTN-23 Ablate-Head-1-3-6-7 Scaling-Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
+    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    # print(f"[ATTN-23 Ablate-Head-1-3-6-7 Scaling-Head-0-2-4 R-Score] {r}")
+    # print(f"[Patched Probs] {patched_probs}")
 
 # ---------------------------
 # Paper-faithful pipeline (multi-GPU safe) — CE probe + Δw + min-cos rows + gate_proj add
