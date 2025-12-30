@@ -67,8 +67,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "The state should build low-rent apartments for rent."
 # VARIANT_TEXT = "Low-rent apartments should be built by the state for rent."
 
-BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
+# BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
+# VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
 
 # BASE_TEXT = "Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities)."
 # VARIANT_TEXT = "Environmental influences (e.g. media content, sensitising activities) can influence gender identity."
@@ -92,17 +92,14 @@ VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by
 # VARIANT_TEXT = "The government should introduce compulsory vaccination of children based on the Swiss vaccination plan."
 
 # No. 20
-# BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "A national inheritance tax on all inheritances over one million Swiss francs should be introduced."
-
 # BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
 # VARIANT_TEXT = "The government should ban automatic facial recognition in public spaces."
 
 # BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
 # VARIANT_TEXT = "The Schengen agreement with the EU should be terminated by Switzerland and more security checks directly on the border should be reintroduced."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
+BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
 print_top_layers = 34  # how many top layers to print
@@ -552,6 +549,21 @@ def mlp_ablation_context(
     finally:
         for h in hooks:
             h.remove()
+
+@contextlib.contextmanager
+def block_ablation_single(
+    model: Gemma3ForConditionalGeneration,
+    enc: EncodedChat,
+    layer_to_edit: int,
+    ratio: float = 0.0
+):
+    with block_ablation_context(
+        model,
+        enc,
+        layers_to_edit=[layer_to_edit],
+        ratio=ratio,
+    ):
+        yield
 
 @contextlib.contextmanager
 def attn_ablation_23(
@@ -1087,6 +1099,15 @@ def run_activation_patching(base_text: str, variant_text: str):
     print("-" * 60)
     print_top("[Ablate-MLP ratio=0.0] top layers", mlp_ablate0_results)
 
+    with block_ablation_single(model, enc_corrupt, layer_to_edit=29, ratio=0.0):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[Only Ablate Block-29 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
+    print("-" * 60)
+    
     # with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0):
     #     logits_patched = forward_logits_only(model, enc_corrupt)
     #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
