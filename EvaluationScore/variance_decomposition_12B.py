@@ -6,8 +6,8 @@ from typing import Dict, Tuple, List
 
 files = {
     "original": "data/original_responses_12B.csv",
-    "negation": "data/negation_responses_12B.csv",
-    "opposite": "data/opposite_responses_12B.csv",
+    # "negation": "data/negation_responses_12B.csv",
+    # "opposite": "data/opposite_responses_12B.csv",
     "active_passive": "data/active_passive_responses_12B.csv",
     "it_cleft": "data/it-clefts_responses_12B.csv",
     "wh_cleft": "data/wh-clefts_responses_12B.csv",
@@ -81,7 +81,6 @@ def compute_variance_decomposition(df_all: pd.DataFrame, df_original: pd.DataFra
     as_df_raw = as_s.merge(nvar, on="base_id", how="outer")
     base_ids = df_original[["base_id"]].drop_duplicates()
     as_df = base_ids.merge(as_df_raw, on="base_id", how="left")
-    as_df.rename(columns={"base_id": "ID"})
     as_df["AS"] = as_df["AS"].fillna(0.0)
     as_df["n_variants"] = as_df["n_variants"].fillna(0).astype(int)
 

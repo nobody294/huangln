@@ -1,73 +1,51 @@
-# CUDA_VISIBLE_DEVICES=1,2 python Intervention/active-passive_edit.py
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/opposite_edit_12B.py
 
 # Example pair for base vs variant (you can change these)
-BASE_TEXT = "The government should abolish the ban on face-covering clothing."
-VARIANT_TEXT = "The ban on face-covering clothing should be abolished by the government."
+# BASE_TEXT = "Childcare should be free for all parents for at least three days a week."
+# VARIANT_TEXT = "Child care should remain paying for all parents at least three days a week."
 
-# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
-# VARIANT_TEXT = "As much as secondary school teachers earn should be earned by primary school teachers."
+# BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
+# VARIANT_TEXT = "A tax per kilometer driven should not replace the existing tax on car ownership for motorists."
+
+# BASE_TEXT = "During the upcoming New Year's Eve, it should be allowed to set off decorative fireworks again."
+# VARIANT_TEXT = "Next turn of the year, it should remain illegal to set off decorative fireworks."
 
 # BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# VARIANT_TEXT = "An additional flight tax for short-distance flights should be introduced by the Netherlands."
+# VARIANT_TEXT = "The Netherlands should introduce fewer flight taxes for short-haul flights."
 
-# BASE_TEXT = "An increase in minimum wages should no longer automatically result in an increase in welfare benefits."
-# VARIANT_TEXT = "An increase in welfare benefits should no longer automatically be the result of an increase in minimum wages."
+# BASE_TEXT = "Climate change is solely attributable to human action."
+# VARIANT_TEXT = "Climate change is only attributable to natural action."
 
 # BASE_TEXT = "All employed persons are to be required to be insured in the statutory pension scheme."
-# VARIANT_TEXT = "The government is to require all employed persons to be insured in the statutory pension scheme."
+# VARIANT_TEXT = "All workers should be optionally insured in the statutory pension scheme."
 
-# BASE_TEXT = "Donations from companies to political parties should continue to be permitted."
-# VARIANT_TEXT = "Relative authorities should continue to permit donations from companies to political parties."
+# BASE_TEXT = "The registration of new cars with combustion engines should also be possible in the long term."
+# VARIANT_TEXT = "The registration of new cars with combustion engines should be banned in the long term."
 
-# BASE_TEXT = "Chinese companies should not be allowed to receive contracts for the expansion of the communications infrastructure in Germany."
-# VARIANT_TEXT = "Contracts for the expansion of the communications infrastructure in Germany should not be allowed to be received by Chinese companies."
+# BASE_TEXT = "Companies are to decide for themselves whether to allow their employees to work from home."
+# VARIANT_TEXT = "Working from home should be allowed everywhere, regardless of the company, if possible."
 
-# BASE_TEXT = "A tax is to be levied again on high assets."
-# VARIANT_TEXT = "The government is to levy a tax on high assets again."
-
-# BASE_TEXT = "Married couples without children should continue to receive tax breaks."
-# VARIANT_TEXT = "Tax breaks should continue to be received by married couples without children."
+# BASE_TEXT = "The current three-month unemployment benefit should be extended."
+# VARIANT_TEXT = "Cutting the current three-month unemployment benefit is unnecessary."
 
 # No. 10
-# BASE_TEXT = "Air traffic is to be taxed more heavily."
-# VARIANT_TEXT = "The government is to tax air traffic more heavily."
+# BASE_TEXT = "A legal framework for primary elections should be provided."
+# VARIANT_TEXT = "A civilian regulatory framework for primaries should be provided."
 
-# BASE_TEXT = "The state should build low-rent apartments for rent."
-# VARIANT_TEXT = "Low-rent apartments should be built by the state for rent."
+# BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
+# VARIANT_TEXT = "Doctors should be fobidden to administer direct active euthanasia."
 
-# BASE_TEXT = "Hungary should decide by referendum whether to remain part of the EU."
-# VARIANT_TEXT = "Whether to remain part of the EU should be decided by Hungary by referendum."
+# BASE_TEXT = "Same-sex couples should have the same rights as heterosexual couples in all areas."
+# VARIANT_TEXT = "Same-sex couples should have more rights as heterosexual couples in all areas."
 
-# BASE_TEXT = "Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities)."
-# VARIANT_TEXT = "Environmental influences (e.g. media content, sensitising activities) can influence gender identity."
-
-# BASE_TEXT = "Hungary should join the European Public Prosecutor's Office."
-# VARIANT_TEXT = "The European Public Prosecutor's Office should be joined by Hungary."
-
-# BASE_TEXT = "Political influence has been reduced by changing the university model (reorganisation into a trust)."
-# VARIANT_TEXT = "Changing the university model (reorganisation into a trust) has reduced political influence."
-
-# BASE_TEXT = "Parties should strive for a closer ratio of men to women when drawing up lists."
-# VARIANT_TEXT = "A closer ratio of men to women should be striven for by parties when lists are drawn up."
-
-# BASE_TEXT = "A law is needed to prevent companies from relocating their production abroad."
-# VARIANT_TEXT = "Relative authorities need to pass a law to prevent companies from relocating their production abroad."
-
-# BASE_TEXT = "A heritage tax one's wealth should be introduced."
-# VARIANT_TEXT = "Relative authorities should introduce a heritage tax one's wealth."
-
-# BASE_TEXT = "Compulsory vaccination of children should be introduced based on the Swiss vaccination plan."
-# VARIANT_TEXT = "The government should introduce compulsory vaccination of children based on the Swiss vaccination plan."
-
-# No. 20
 # BASE_TEXT = "There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."
-# VARIANT_TEXT = "A national inheritance tax on all inheritances over one million Swiss francs should be introduced."
+# VARIANT_TEXT = "There should be a disregard of a national inheritance tax on all inheritances over one million Swiss francs."
 
-# BASE_TEXT = "Automatic facial recognition should be banned in public spaces."
-# VARIANT_TEXT = "The government should ban automatic facial recognition in public spaces."
+# BASE_TEXT = "There should be stricter controls on equal pay for women and men."
+# VARIANT_TEXT = "There should be laxer controls on equal pay for women and men."
 
-# BASE_TEXT = "Switzerland should terminate the Schengen agreement with the EU and reintroduce more security checks directly on the border."
-# VARIANT_TEXT = "The Schengen agreement with the EU should be terminated by Switzerland and more security checks directly on the border should be reintroduced."
+BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
+VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
 
-# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-# VARIANT_TEXT = "The Bilateral Agreements with the EU should be terminated by Switzerland and a free trade agreement without the free movement of persons should be sought."
+# BASE_TEXT = "There should be closer relations with the European Union (EU)."
+# VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."
