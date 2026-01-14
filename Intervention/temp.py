@@ -44,8 +44,8 @@
 # BASE_TEXT = "There should be stricter controls on equal pay for women and men."
 # VARIANT_TEXT = "There should be laxer controls on equal pay for women and men."
 
-BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
-VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
+# BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
+# VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
 
-# BASE_TEXT = "There should be closer relations with the European Union (EU)."
-# VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."
+BASE_TEXT = "There should be closer relations with the European Union (EU)."
+VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."

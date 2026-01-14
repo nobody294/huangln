@@ -724,7 +724,7 @@ def attn_head_ablation_scaling_context(
             h.remove()
 
 @contextlib.contextmanager
-def attn_head_ablation_23(
+def attn_head_ablation_26(
     model: Gemma3ForConditionalGeneration,
     enc: EncodedChat,
     ratio: float = 0.0,
@@ -738,7 +738,7 @@ def attn_head_ablation_23(
     with attn_head_ablation_context(
         model,
         enc,
-        layers_to_edit=[23],
+        layers_to_edit=[26],
         heads_to_edit=[head],
         ratio=ratio,
         all_positions=all_positions,
@@ -746,7 +746,7 @@ def attn_head_ablation_23(
         yield
 
 @contextlib.contextmanager
-def attn_head_edit_23_multiple_heads(
+def attn_head_edit_26_multiple_heads(
     model: Gemma3ForConditionalGeneration,
     enc: EncodedChat,
     heads: List[int],
@@ -760,7 +760,7 @@ def attn_head_edit_23_multiple_heads(
     with attn_head_ablation_context(
         model,
         enc,
-        layers_to_edit=[23],
+        layers_to_edit=[26],
         heads_to_edit=heads,
         ratio=ratio,
         all_positions=all_positions,
@@ -875,6 +875,7 @@ def run_activation_patching(base_text: str, variant_text: str):
     clean_cache = collect_clean_cache(model, enc_clean)
     layers = get_decoder_layers(model)
     n_layers = len(layers)
+
 
     def sweep_patch(kind: str) -> List[Tuple[int, float]]:
         results = []
@@ -1092,58 +1093,58 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Patched Probs] {patched_probs}")
 
     # 对注意力头进行patch
-    # def sweep_head_ablate(
-    #     ratio: float = 0.0,
-    #     all_positions: bool = False,
-    # ):
-    #     results = []
-    #     best_r = 0.0
-    #     best_patched_probs = None
-    #     num_heads = model.config.text_config.num_attention_heads
+    def sweep_head_ablate(
+        ratio: float = 0.0,
+        all_positions: bool = False,
+    ):
+        results = []
+        best_r = 0.0
+        best_patched_probs = None
+        num_heads = model.config.text_config.num_attention_heads
 
-    #     for h in range(num_heads):
-    #         with attn_head_ablation_23(
-    #             model,
-    #             enc_corrupt,
-    #             ratio=ratio,
-    #             all_positions=all_positions,
-    #             head=h
-    #         ):
-    #             logits_patched = forward_logits_only(model, enc_corrupt)
-    #             patched_probs = digit_probs_from_logits_full(
-    #                 logits_patched, enc_clean, TEMP_FOR_PROBS
-    #             )
+        for h in range(num_heads):
+            with attn_head_ablation_26(
+                model,
+                enc_corrupt,
+                ratio=ratio,
+                all_positions=all_positions,
+                head=h
+            ):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs = digit_probs_from_logits_full(
+                    logits_patched, enc_clean, TEMP_FOR_PROBS
+                )
 
-    #         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+            r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
 
-    #         if r > best_r:
-    #             best_r = r
-    #             best_patched_probs = patched_probs
+            if r > best_r:
+                best_r = r
+                best_patched_probs = patched_probs
 
-    #         results.append((h, r))
+            results.append((h, r))
 
-    #     return results, best_patched_probs
+        return results, best_patched_probs
     
-    # head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
-    # print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
+    head_results, best_head_probs = sweep_head_ablate(ratio=0.0, all_positions=False)
+    print(f"[Abalte-ATTN-Head Best Probs] {best_head_probs}")
 
-    # def print_top_head(title, arr):
-    #     arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
-    #     print(title)
-    #     for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
-    #         txt = "nan" if math.isnan(r) else f"{r:.3f}"
-    #         print(f" #{i:02d} head={h:02d} restoration={txt}")
-    #     print("-" * 60)
+    def print_top_head(title, arr):
+        arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
+        print(title)
+        for i, (h, r) in enumerate(arr_sorted[:print_top_layers], 1):
+            txt = "nan" if math.isnan(r) else f"{r:.3f}"
+            print(f" #{i:02d} head={h:02d} restoration={txt}")
+        print("-" * 60)
     
-    # print_top_head(f"[Ablate-ATTN-23-HEADS]", head_results)
+    print_top_head(f"[Ablate-ATTN-26-HEADS]", head_results)
 
-    # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[1, 3, 6, 7], all_positions=False):
-    #     logits_patched = forward_logits_only(model, enc_corrupt)
-    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+    with attn_head_edit_26_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 1, 4], all_positions=False):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    # print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    # print(f"[Patched Probs] {patched_probs}")
+    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    print(f"[Only Ablate ATTN-26 Head-0-1-4 R-Score] {r}")
+    print(f"[Patched Probs] {patched_probs}")
 
     # with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[1, 3, 6, 7], all_positions=False):
     #     logits_patched = forward_logits_only(model, enc_corrupt)

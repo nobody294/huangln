@@ -25,11 +25,6 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-# MMLU_SYSTEM_PROMPT = (
-#     "You are taking a multiple-choice exam. "
-#     "Answer correctly and output exactly one capital letter: A, B, C, or D."
-# )
-
 # CUDA_VISIBLE_DEVICES=1,2 python Intervention/parameter_edit.py
 
 # Example pair for base vs variant (you can change these)
