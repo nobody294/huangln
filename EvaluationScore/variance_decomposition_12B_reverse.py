@@ -1,38 +1,41 @@
 import re
 import os
+import math
 import pandas as pd
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 files = {
-    "original": "data/original_responses_4B.csv",
-    "active_passive": "data/active_passive_responses_4B.csv",
-    "it_cleft": "data/it-clefts_responses_4B.csv",
-    "wh_cleft": "data/wh-clefts_responses_4B.csv",
-    "SVC": "data/SVC_responses_4B.csv"
+    "original": "data/original_responses_12B.csv",
+    "negation": "data/negation_responses_12B.csv",
+    "opposite": "data/opposite_responses_12B.csv"
 }
 
 BASE_ID_RE = re.compile(r"^[a-z]{2}_[0-9]{1,2}")
 
-def extract_base_id(id_: str) -> str:
-    """Extract base statement id (e.g., 'ab_12') from a longer ID string."""
-    id_ = str(id_).strip()
-    m = BASE_ID_RE.match(id_)
-    if m:
-        return m.group()
+def extract_base_id(id: str) -> str:
+    id = id.strip()
+    base_id = BASE_ID_RE.match(id)
+    if base_id:
+        return base_id.group()
     else:
-        print(f"[warn] {id_} caused an error when extracting base id")
-        return None
+        print(f"[warn] {id} caused an error when extracting base id")
+
+def mirror_likert_1_to_7(x: float) -> float:
+    # 1<->7, 2<->6, 3<->5, 4 stays 4  ==>  x' = 8 - x
+    return 8 - x
 
 def load_one(variant: str, path: str) -> pd.DataFrame:
-    """Load one CSV into a normalized dataframe: ID, base_id, variant, score."""
     df = pd.read_csv(path)
     df = df[["ID", "score"]].copy()
     df["ID"] = df["ID"].astype(str).str.strip()
     df["score"] = pd.to_numeric(df["score"], errors="coerce")
+
+    if variant == "original":
+        mask = df["score"].notna()
+        df.loc[mask, "score"] = df.loc[mask, "score"].apply(mirror_likert_1_to_7)
+
     df["base_id"] = df["ID"].map(extract_base_id)
     df["variant"] = variant
-
-    # Drop invalid rows early
     df = df.dropna(subset=["score", "base_id", "ID"])
     return df[["ID", "base_id", "variant", "score"]]
 

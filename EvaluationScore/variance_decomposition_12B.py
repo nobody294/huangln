@@ -6,107 +6,141 @@ from typing import Dict, Tuple, List
 
 files = {
     "original": "data/original_responses_12B.csv",
-    # "negation": "data/negation_responses_12B.csv",
-    # "opposite": "data/opposite_responses_12B.csv",
     "active_passive": "data/active_passive_responses_12B.csv",
     "it_cleft": "data/it-clefts_responses_12B.csv",
     "wh_cleft": "data/wh-clefts_responses_12B.csv",
     "SVC": "data/SVC_responses_12B.csv"
 }
 
-out_dir = "data/variance decomposition"
-
 BASE_ID_RE = re.compile(r"^[a-z]{2}_[0-9]{1,2}")
 
-def extract_base_id(id: str) -> str:
-    id = id.strip()
-    base_id = BASE_ID_RE.match(id)
-    if base_id:
-        return base_id.group()
+def extract_base_id(id_: str) -> str:
+    """Extract base statement id (e.g., 'ab_12') from a longer ID string."""
+    id_ = str(id_).strip()
+    m = BASE_ID_RE.match(id_)
+    if m:
+        return m.group()
     else:
-        print(f"[warn] {id} caused an error when extracting base id")
+        print(f"[warn] {id_} caused an error when extracting base id")
+        return None
 
 def load_one(variant: str, path: str) -> pd.DataFrame:
+    """Load one CSV into a normalized dataframe: ID, base_id, variant, score."""
     df = pd.read_csv(path)
     df = df[["ID", "score"]].copy()
     df["ID"] = df["ID"].astype(str).str.strip()
     df["score"] = pd.to_numeric(df["score"], errors="coerce")
     df["base_id"] = df["ID"].map(extract_base_id)
     df["variant"] = variant
+
+    # Drop invalid rows early
+    df = df.dropna(subset=["score", "base_id", "ID"])
     return df[["ID", "base_id", "variant", "score"]]
 
-def load_all(files: Dict) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_all(files: Dict[str, str]) -> pd.DataFrame:
+    """Load all variants and concat into one dataframe."""
     frames = []
-    for v,p in files.items():
+    for v, p in files.items():
         if not os.path.exists(p):
             print(f"[warn] {p} does not exist")
             continue
-        df_v = load_one(v, p)
-        frames.append(df_v)
-        if v == "original":
-            df_original = df_v.copy()
-    
-    df_all = pd.concat(frames, ignore_index=True)
-    return df_all, df_original
+        frames.append(load_one(v, p))
+    if not frames:
+        raise RuntimeError("No input files were loaded. Please check paths.")
+    return pd.concat(frames, ignore_index=True)
 
-def compute_variance_decomposition(df_all: pd.DataFrame, df_original: pd.DataFrame):
-    g_v_id = (
+def compute_mu_per_variant(df_all: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute one MU scalar per variant:
+      1) group by (variant, ID): var(score over repeated samples)
+      2) average those variances over IDs to get MU(variant)
+    Returns a dataframe with columns: variant, MU, n_prompts
+    """
+    # within-prompt variance (over repeated samples)
+    mu_prompt = (
         df_all.groupby(["variant", "ID"], sort=False)["score"]
-        .agg(R="size",
-             MU=lambda x: float(x.var(ddof=1)) if x.size > 1 else 0.0)
+        .agg(MU_prompt=lambda x: float(x.var(ddof=1)) if x.size > 1 else 0.0)
         .reset_index()
     )
-    mu_by_variant = {
-        v: sub[["ID", "MU"]]
-        for v, sub in g_v_id.groupby("variant", sort=False)
-    }
 
-    g_sv = (
-        df_all.groupby(["base_id", "variant"], sort=False)["score"]
-        .mean()
-        .rename("ybar_sv")
+    # aggregate to one scalar per variant
+    mu_variant = (
+        mu_prompt.groupby("variant", sort=False)["MU_prompt"]
+        .agg(MU="mean", n_prompts="size")
         .reset_index()
     )
-    as_s = (
-        g_sv.groupby("base_id", sort=False)["ybar_sv"]
-        .agg(AS=lambda x: float(x.var(ddof=1)) if x.size > 1 else 0.0)
-        .reset_index()
-    )
-    nvar = (
-        g_sv.groupby("base_id", sort=False)["variant"]
-        .nunique()
-        .rename("n_variants")
-        .reset_index()
-    )
-    as_df_raw = as_s.merge(nvar, on="base_id", how="outer")
-    base_ids = df_original[["base_id"]].drop_duplicates()
-    as_df = base_ids.merge(as_df_raw, on="base_id", how="left")
-    as_df["AS"] = as_df["AS"].fillna(0.0)
-    as_df["n_variants"] = as_df["n_variants"].fillna(0).astype(int)
+    return mu_variant
 
-    g_s = (
-        g_sv.groupby("base_id", sort=False)["ybar_sv"]
-        .mean()
-        .rename("ybar_s")
-        .reset_index()
-    )
-    ps_value = float(g_s["ybar_s"].var(ddof=1)) if g_s.shape[0] > 1 else 0.0
+def compute_pairwise_as_ps(df_all: pd.DataFrame, base_variant: str = "original") -> pd.DataFrame:
+    """
+    For each rule variant r != base_variant, compute:
+      - AS(r): mean_s Var_over_variants( ybar_{s,base}, ybar_{s,r} )
+              with 2 variants => (diff^2)/2 averaged over statements
+      - PS(base+r): Var_s( ybar_s ), where ybar_s is the mean over the two variants
+                   i.e., ybar_s = (ybar_{s,base} + ybar_{s,r})/2
+    We restrict to statements that have BOTH variants (base + rule).
+    Returns a dataframe with columns: rule, AS, PS, n_statements
+    """
+    variants = [v for v in df_all["variant"].dropna().unique().tolist() if v != base_variant]
+    rows = []
 
-    return mu_by_variant, as_df, ps_value
+    for rule in variants:
+        df_sub = df_all[df_all["variant"].isin([base_variant, rule])].copy()
 
-def save_to_outputs(mu_by_variants: Dict, as_df: pd.DataFrame, ps_value: float, out_dir: str):
-    for v, df_v in mu_by_variants.items():
-        p = os.path.join(out_dir, f"{v}_MU_12B.csv")
-        df_v.to_csv(p, index=False)
-        print(f"Done for output {p}")
-    
-    p_as = os.path.join(out_dir, f"AS_12B.csv")
-    as_df.to_csv(p_as, index=False)
-    print(f"Done for output {p_as}")
+        # mean across samples r for each (s, v): ybar_{s,v}
+        g_sv = (
+            df_sub.groupby(["base_id", "variant"], sort=False)["score"]
+            .mean()
+            .rename("ybar_sv")
+            .reset_index()
+        )
 
-    print(f"PS value: {ps_value:.6f}")
+        # wide table: each statement s has columns [base_variant, rule]
+        wide = g_sv.pivot(index="base_id", columns="variant", values="ybar_sv")
+
+        # Require both columns to exist
+        if base_variant not in wide.columns or rule not in wide.columns:
+            rows.append({"rule": rule, "AS": float("nan"), "PS": float("nan"), "n_statements": 0})
+            continue
+
+        pair = wide[[base_variant, rule]].dropna()
+        n_statements = int(pair.shape[0])
+        if n_statements == 0:
+            rows.append({"rule": rule, "AS": float("nan"), "PS": float("nan"), "n_statements": 0})
+            continue
+
+        # --- AS(rule) ---
+        # With 2 variants, sample variance over the two means equals (diff^2)/2
+        diff = pair[base_variant] - pair[rule]
+        as_rule = float(((diff * diff) / 2.0).mean())
+
+        # --- PS(base + rule) ---
+        # ybar_s = mean over variants (two variants here)
+        ybar_s = pair.mean(axis=1)
+        ps_pair = float(ybar_s.var(ddof=1)) if n_statements > 1 else 0.0
+
+        rows.append({"rule": rule, "AS": as_rule, "PS": ps_pair, "n_statements": n_statements})
+
+    return pd.DataFrame(rows)
 
 if __name__ == "__main__":
-    df_all, df_original = load_all(files)
-    mu_by_variant, as_df, ps_value = compute_variance_decomposition(df_all, df_original)
-    save_to_outputs(mu_by_variant, as_df, ps_value, out_dir)
+    df_all = load_all(files)
+
+    # 1) MU per wording rule (per variant)
+    mu_variant = compute_mu_per_variant(df_all)
+    print("=== MU per variant (one scalar per wording rule / variant) ===")
+    for _, r in mu_variant.iterrows():
+        print(f"MU({r['variant']}): {float(r['MU']):.6f}  (n_prompts={int(r['n_prompts'])})")
+
+    print()
+
+    # 2) Pairwise AS and PS for each rule vs original
+    pair_metrics = compute_pairwise_as_ps(df_all, base_variant="original")
+    print("=== Pairwise metrics vs original (per rule) ===")
+    for _, r in pair_metrics.iterrows():
+        print(
+            f"rule={r['rule']:<15}  "
+            f"AS={float(r['AS']):.6f}  "
+            f"PS(original+rule)={float(r['PS']):.6f}  "
+            f"(n_statements={int(r['n_statements'])})"
+        )
