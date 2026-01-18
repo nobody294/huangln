@@ -49,8 +49,8 @@ SYSTEM_PROMPT = (
 # BASE_TEXT = "People who consider their lives complete should be able to receive assistance with suicide."
 # VARIANT_TEXT = "People who consider their lives complete should not be able to get help with suicide."
 
-# BASE_TEXT = "Limiting rights and freedoms is necessary to combat organized crime."
-# VARIANT_TEXT = "It is not necessary to limit rights and freedoms to combat organized crime."
+BASE_TEXT = "Limiting rights and freedoms is necessary to combat organized crime."
+VARIANT_TEXT = "It is not necessary to limit rights and freedoms to combat organized crime."
 
 # BASE_TEXT = "Climate change is solely attributable to human action."
 # VARIANT_TEXT = "Climate change is not solely attributable to human action."
@@ -108,8 +108,8 @@ SYSTEM_PROMPT = (
 # BASE_TEXT = "A minimum wage of CHF 4,000 for all full-time employees should be introduced."
 # VARIANT_TEXT = "A minimum wage of CHF 4,000 for all full-time employees should not be introduced."
 
-BASE_TEXT = "Direct payments should only be granted to farmers with proof of ecological performance."
-VARIANT_TEXT = "Direct payments should not only be granted to farmers with proof of ecological performance."
+# BASE_TEXT = "Direct payments should only be granted to farmers with proof of ecological performance."
+# VARIANT_TEXT = "Direct payments should not only be granted to farmers with proof of ecological performance."
 
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
@@ -917,13 +917,13 @@ def run_activation_patching(base_text: str, variant_text: str):
     print("-" * 60)
     print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
 
-    with block_ablation_context(model, enc_corrupt, layers_to_edit=[31], ratio=0.0, pos_strategy="last"):
+    with block_ablation_context(model, enc_corrupt, layers_to_edit=[34], ratio=0.0, pos_strategy="last"):
         logits_patched = forward_logits_only(model, enc_corrupt)
         patched_probs = digit_probs_from_logits_full(logits_patched, enc_corrupt, TEMP_FOR_PROBS)
         r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
         r_value = float(r)
     
-    print(f"[Ablate-BLOCK-31 Patched-Probs] {patched_probs}")
+    print(f"[Ablate-BLOCK-34 Patched-Probs] {patched_probs}")
     print(f"Restoration Score: {r_value}")
     print("-" * 60)
 

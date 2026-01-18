@@ -182,6 +182,14 @@ def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
     return torch.sum(torch.abs(cdf_p - cdf_q), dim=-1)
 
 
+def flip_probs_1_to_7(p: torch.Tensor) -> torch.Tensor:
+    """
+    p: [..., 7]，最后一维是 1..7 的概率。
+    返回左右翻转后的分布（以 4 为中心镜像）。
+    """
+    idx = torch.tensor([6, 5, 4, 3, 2, 1, 0], device=p.device)
+    return p.index_select(dim=-1, index=idx)
+
 def normalized_restoration(
     dist_fn,
     p_clean: torch.Tensor,
@@ -193,8 +201,13 @@ def normalized_restoration(
     R = 1 - dist(clean, patched) / dist(clean, corrupt)
     dist(clean, corrupt) 很小时返回 NaN。
     """
-    d0 = dist_fn(p_clean, p_corrupt)
-    dp = dist_fn(p_clean, p_patched)
+    # d0 = dist_fn(p_clean, p_corrupt)
+    # dp = dist_fn(p_clean, p_patched)
+    # R = 1.0 - dp / (d0 + eps)
+    # return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
+    p_target = flip_probs_1_to_7(p_clean)
+    d0 = dist_fn(p_target, p_corrupt)
+    dp = dist_fn(p_target, p_patched)
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
@@ -638,7 +651,7 @@ def main():
             corrupt_probs = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
 
         # 对 corrupt 句子做第 23 层 attention ablation
-        with attn_ablation_23(model, enc_corrupt, layer_to_edit=0, ratio=0.0, pos_strategy="all"):
+        with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0, pos_strategy="all"):
             logits_patched = forward_logits_only(model, enc_corrupt)
             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
 
@@ -687,3 +700,5 @@ if __name__ == "__main__":
     # 根据需要可以关掉 deterministic（设成 False）
     set_global_determinism(0, single_thread=True)
     main()
+
+# CUDA_VISIBLE_DEVICES=1,2 python Intervention/not_flip_pair_evaluate.py

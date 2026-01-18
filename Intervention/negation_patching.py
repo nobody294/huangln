@@ -1172,6 +1172,135 @@ def main():
     # figA.savefig("negation_head_bars_by_index.png", dpi=200)
     # print("Saved: appendix_figA_head_bars_by_index.png")
 
+    def polarity_from_probs(p: np.ndarray, tie_eps: float = 1e-6) -> str:
+        """
+        p: shape [7], digits 1..7 probs
+        neg = sum(p[0:3])  # 1,2,3
+        pos = sum(p[4:7])  # 5,6,7
+        neutral digit=4 is ignored for polarity, but ties/very small margins -> 'amb'
+        """
+        neg = float(p[0] + p[1] + p[2])
+        pos = float(p[4] + p[5] + p[6])
+        if abs(neg - pos) <= tie_eps:
+            return "amb"
+        return "neg" if neg > pos else "pos"
+
+
+    def count_unflips_for_single_patch(
+        model,
+        processor,
+        pairs: List[Tuple[str, str]],
+        kind: str,          # "attn" or "mlp"
+        layer_idx: int,     # e.g. 23 or 22
+        restoration_thresh: float = 0.0,
+        tie_eps: float = 1e-6,
+        verbose: bool = True,
+    ):
+        assert kind in ("attn", "mlp", "block")
+
+        unflip_count = 0
+        eligible_flip_count = 0  # how many actually flipped (clean pol != corrupt pol)
+        details = []             # per-pair record
+
+        for i, (b, v) in enumerate(pairs, 1):
+            if verbose and (i % 10 == 1 or i == len(pairs)):
+                print(f"[{kind} L{layer_idx}] pair {i}/{len(pairs)}")
+
+            enc_clean = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(b))
+            enc_corrupt = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(v))
+
+            logits_clean = forward_logits_only(model, enc_clean)
+            logits_corrupt = forward_logits_only(model, enc_corrupt)
+
+            clean_probs_t = digit_probs_from_logits_full(logits_clean, enc_clean, TEMP_FOR_PROBS)
+            corrupt_probs_t = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
+
+            clean_probs = clean_probs_t.detach().float().cpu().numpy()
+            corrupt_probs = corrupt_probs_t.detach().float().cpu().numpy()
+
+            pol_clean = polarity_from_probs(clean_probs, tie_eps=tie_eps)
+            pol_corrupt = polarity_from_probs(corrupt_probs, tie_eps=tie_eps)
+
+            # 只统计“确实 flip 了”的
+            flipped = (pol_clean in ("neg", "pos")) and (pol_corrupt in ("neg", "pos")) and (pol_clean != pol_corrupt)
+            if flipped:
+                eligible_flip_count += 1
+
+            clean_cache = collect_clean_cache(model, enc_clean)
+
+            spec = {"block": [], "attn": [], "mlp": []}
+            spec[kind] = [layer_idx]
+
+            with patch_context(model, enc_corrupt, clean_cache, spec):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs_t = digit_probs_from_logits_full(logits_patched, enc_corrupt, TEMP_FOR_PROBS)
+
+            patched_probs = patched_probs_t.detach().float().cpu().numpy()
+            pol_patched = polarity_from_probs(patched_probs, tie_eps=tie_eps)
+
+            r = normalized_restoration(w_1d, clean_probs_t, corrupt_probs_t, patched_probs_t)
+            restoration = float(r.item())
+
+            # unflip 成功：patched 极性回到 clean；且原本是 flipped；且 restoration 超过门槛
+            unflipped = flipped and (pol_patched == pol_clean) and (restoration > restoration_thresh)
+
+            if unflipped:
+                unflip_count += 1
+
+            details.append({
+                "idx": i,
+                "clean_pol": pol_clean,
+                "corrupt_pol": pol_corrupt,
+                "patched_pol": pol_patched,
+                "flipped": flipped,
+                "unflipped": unflipped,
+                "restoration": restoration,
+            })
+
+        return unflip_count, eligible_flip_count, details
+
+
+    # ---- 在 main() 里加载完 model/processor 后，直接调用： ----
+    # 你要的两个统计：
+    attn23_unflip, attn23_flipped, attn23_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=23,
+        restoration_thresh=0.0,   # 想更严格可改 0.3 / 0.5
+        verbose=True,
+    )
+
+    mlp22_unflip, mlp22_flipped, mlp22_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="mlp",
+        layer_idx=22,
+        restoration_thresh=0.0,
+        verbose=True,
+    )
+
+    print("\n================ RESULTS ================")
+    print(f"ATTN layer 23: unflip {attn23_unflip} / flipped-eligible {attn23_flipped} (total pairs={len(PAIRS)})")
+    print(f"MLP  layer 22: unflip {mlp22_unflip} / flipped-eligible {mlp22_flipped} (total pairs={len(PAIRS)})")
+
+    # 可选：把细节导出成 csv，方便你之后筛选看哪些句子被 unflip 了
+    import csv
+    with open("unflip_attn23_details.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(attn23_details[0].keys()))
+        w.writeheader()
+        w.writerows(attn23_details)
+
+    with open("unflip_mlp22_details.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(mlp22_details[0].keys()))
+        w.writeheader()
+        w.writerows(mlp22_details)
+
+    print("Saved: unflip_attn23_details.csv, unflip_mlp22_details.csv")
+
+
     # ---------------------------
     # Figure 1 (one subplot): Activation patching curves
     # ---------------------------

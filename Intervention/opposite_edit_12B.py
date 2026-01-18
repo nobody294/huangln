@@ -42,8 +42,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "During the upcoming New Year's Eve, it should be allowed to set off decorative fireworks again."
 # VARIANT_TEXT = "Next turn of the year, it should remain illegal to set off decorative fireworks."
 
-# BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
-# VARIANT_TEXT = "The Netherlands should introduce fewer flight taxes for short-haul flights."
+BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
+VARIANT_TEXT = "The Netherlands should introduce fewer flight taxes for short-haul flights."
 
 # BASE_TEXT = "Climate change is solely attributable to human action."
 # VARIANT_TEXT = "Climate change is only attributable to natural action."
@@ -79,8 +79,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard)."
 # VARIANT_TEXT = "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."
 
-BASE_TEXT = "There should be closer relations with the European Union (EU)."
-VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."
+# BASE_TEXT = "There should be closer relations with the European Union (EU)."
+# VARIANT_TEXT = "There should be more limited relations with the European Union (EU)."
 
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics

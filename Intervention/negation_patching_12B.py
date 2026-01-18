@@ -20,291 +20,89 @@ from transformers.models.gemma3.modeling_gemma3 import (
 # ---------------------------
 # Config
 # ---------------------------
-MODEL_NAME = "google/gemma-3-12b-it"
+MODEL_NAME = "google/gemma-3-4b-it"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-# Put all flip pairs of ONE wording rule here (for aggregation)
-# PAIRS: List[Tuple[str, str]] = [
-#     ("Childcare should be free for all parents for at least three days a week.",
-#      "Child care should remain paying for all parents at least three days a week."),
-
-#     ("Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists.",
-#      "A tax per kilometer driven should not replace the existing tax on car ownership for motorists."),
-
-#     ("During the upcoming New Year's Eve, it should be allowed to set off decorative fireworks again.",
-#      "Next turn of the year, it should remain illegal to set off decorative fireworks."),
-
-#     ("The Netherlands should introduce an additional flight tax for short-distance flights.",
-#      "The Netherlands should introduce fewer flight taxes for short-haul flights."),
-
-#     ("Climate change is solely attributable to human action.",
-#      "Climate change is only attributable to natural action."),
-
-#     ("All employed persons are to be required to be insured in the statutory pension scheme.",
-#      "All workers should be optionally insured in the statutory pension scheme."),
-
-#     ("The registration of new cars with combustion engines should also be possible in the long term.",
-#      "The registration of new cars with combustion engines should be banned in the long term."),
-
-#     ("Companies are to decide for themselves whether to allow their employees to work from home.",
-#      "Working from home should be allowed everywhere, regardless of the company, if possible."),
-
-#     ("The current three-month unemployment benefit should be extended.",
-#      "Cutting the current three-month unemployment benefit is unnecessary."),
-
-#     ("A legal framework for primary elections should be provided.",
-#      "A civilian regulatory framework for primaries should be provided."),
-
-#     ("Doctors should be allowed to administer direct active euthanasia.",
-#      "Doctors should be fobidden to administer direct active euthanasia."),
-
-#     ("Same-sex couples should have the same rights as heterosexual couples in all areas.",
-#      "Same-sex couples should have more rights as heterosexual couples in all areas."),
-
-#     ("There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs.",
-#      "There should be a disregard of a national inheritance tax on all inheritances over one million Swiss francs."),
-
-#     ("There should be stricter controls on equal pay for women and men.",
-#      "There should be laxer controls on equal pay for women and men."),
-
-#     ("The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard).",
-#      "The Swiss mobile network should be kept the same throughout the country with the latest technology (currently 5G standard)."),
-
-#     ("There should be closer relations with the European Union (EU).",
-#      "There should be more limited relations with the European Union (EU)."),
-# ]
-
 PAIRS: List[Tuple[str, str]] = [
-    ("Less funding should go to public broadcasting.",
-     "More money must go to public broadcasting."),
-
-    ("The Dutch government should apologize for the historical slave trade.",
-     "The slave trade of the past is not the responsibility of the current Dutch government."),
-
-    ("There should be fewer options for community service sentences instead of prison sentences.",
-     "There should be more opportunities to impose community service instead of prison sentences."),
-
-    ("People should always have the choice of whether to wear a face mask.",
-     "Not the people themselves, but other agencies should choose whether or not to wear a mouth guard."),
-
-    ("It should be easier for companies to fire workers.",
-     "It should be harder for companies to lay off workers."),
-
-    ("The government must increase spending on public health care, even if this means increasing taxes.",
-     "The government should decrease spending on public health care so as not to increase taxes."),
-
-    ("The working day should be reduced without reducing workers' wages.",
-     "Working hours should be increased without increasing workers' salaries."),
-
-    ("Taxes on fossil fuels must be raised to finance the Green Transition.",
-     "Taxes on fossil fuels should be reduced and the Ecological Transition should be ignored."),
-
-    ("To better defend Spain's interests in Europe we must recover more sovereignty.",
-     "To better defend Spain's interests in Europe, we must cede sovereignty."),
-
-    ("Spanish government should promote the strengthening of NATO in Europe.",
-     "The Spanish government should promote the weakening of NATO in Europe."),
-
-    ("The best way to solve the conflict in Catalonia is for its citizens to be able to vote on their future in a referendum.",
-     "The worst way to solve the conflict in Catalonia is to allow its citizens to vote on their future in a referendum."),
-
-    ("The right to self-determination must be recognized by the Constitution.",
-     "The right of self-determination must be ignored by the Constitution."),
-
-    ("The ability of landlords to increase housing rents is to be more strictly limited by law.",
-     "Landlords should be allowed to increase rents without legal restrictions."),
-
-    ("The phase-out of coal-fired power generation planned for 2038 is to be brought forward.",
-     "The phase-out of coal-fired power generation planned for 2038 should be reversed."),
-
-    ("The right of recognized refugees to join their families is to be abolished.",
-     "The right of recognized refugees to family reunification is to be extended."),
-
-    ("Female civil servants are to be allowed to wear headscarves while on duty.",
-     "Female civil servants should generally be banned from wearing headscarves on duty."),
-
-    ("The federal government is to provide more financial support for projects to combat anti-Semitism.",
-     "The federal government should provide less financial support for projects to combat anti-Semitism."),
-
-    ("The controlled sale of cannabis is to be generally permitted.",
-     "The controlled sale of cannabis should be prohibited."),
-
-    ("Germany is to leave the European Union.",
-     "Germany should remain a member of the European Union."),
-
-    ("The state lists of the parties for the elections to the German Bundestag are to have to be filled alternately by women and men.",
-     "The state lists of the parties for the elections to the German Bundestag should not take into account an equal distribution of men and women."),
-
-    ("Married couples without children should continue to receive tax breaks.",
-     "Only married couples with children should receive preferential tax treatment."),
-
-    ("Islamic associations are to be able to be recognized by the state as religious communities.",
-     "Islamic associations should be rejected by the state as religious communities."),
-
-    ("The statutory minimum wage is to be increased to at least 12 euros by 2022 at the latest.",
-     "The statutory minimum wage is to be reduced by 2022 at the latest."),
-
-    ("The European Union should have less influence on Polish domestic policy.",
-     "The European Union should have more influence on Polish domestic policy."),
-
-    ("The state should finance private visits to specialists if the waiting time at a public facility exceeds three months.",
-     "The state should refrain from financing private visits to specialists, regardless of the waiting time in a public facility."),
-
-    ("Schools should have more freedom to choose the content covered in the curriculum.",
-     "Schools should have less freedom to choose the content covered in the curriculum."),
-
-    ("The state should build low-rent apartments for rent.",
-     "The state should refrain from building low-income rental housing."),
-
-    ("Poland should adopt the migrant relocation solutions adopted by the European Union.",
-     "Poland should reject the migrant relocation solutions adopted by the European Union."),
-
-    ("The independence of the judiciary from parliament and the government should be strengthened.",
-     "Parliamentary and government control over the judiciary should be strengthened."),
-
-    ("The share of defense spending in Poland's GDP should be further increased.",
-     "The share of defense spending in Poland's GDP should be reduced."),
-
-    ("The powers of local governments should be increased at the expense of the central government.",
-     "The powers of local governments should be reduced at the expense of the central government."),
-
-    ("The powers of the secret services to track the activities of citizens on the Internet should be limited.",
-     "The powers of the secret services to track citizens' activities on the Internet should be increased."),
-
-    ("The EU's rule of law mechanism threatens Hungary's sovereignty.",
-     "The EU's rule of law mechanism protects Hungary's sovereignty."),
-
-    ("Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation).",
-     "Lighter regulation of interception software (e.g. Pegasus) is needed."),
-
-    ("Only men and women should be allowed to marry.",
-     "Same-sex couples should be allowed to marry."),
-
-    ("The state should take targeted measures to promote equal participation of fathers and mothers in child-rearing.",
-     "The state takes targeted measures to prevent fathers and mothers from sharing equally in child-rearing."),
-
-    ("The Hungarian government should ratify the Istanbul Convention, which combats violence against women and domestic violence.",
-     "The Hungarian government should reject the ratification of the Istanbul Convention, which combats violence against women and domestic violence."),
-
-    ("The use of medical cannabis should be legalised in Hungary.",
-     "Make the use of medical cannabis illegal in Hungary."),
-
-    ("In larger cities, car traffic should be limited through various measures (P+R parking, construction of cycle paths, improvement of public transport).",
-     "In larger cities, it is unnecessary to restrict car traffic by various measures (P+R parking, building cycle paths, improving public transport)."),
-
-    ("The redevelopment of urban green spaces (e.g. the Liget project in Budapest) needs a broad social dialogue.",
-     "In the case of the redevelopment of urban green areas (e.g. the Liget project in Budapest), a broad social dialogue is unjustified."),
-
-    ("An independent ministry for the environment is needed.",
-     "A separate environment ministry is unnecessary."),
-
-    ("European integration is all in all a positive process.",
-     "European integration is an all-negative process."),
-
-    ("Children, born in Italy to foreign citizens and who have completed schooling should be granted Italian citizenship (ius scholae).",
-     "Children, born in Italy to foreign nationals and who have completed schooling should have their Italian citizenship (ius scholae) denied."),
-
-    ("More civil rights should be granted to homosexual, bisexual, transgender (LGBT+) people.",
-     "Civil rights should be limited to homosexual, bisexual, transgender (LGBT+) people."),
-
-    ("Citizens should be guaranteed freedom of choice in end-of-life matters (euthanasia).",
-     "Citizens should be restricted from making end-of-life (euthanasia) choices."),
-
-    ("Recreational use of marijuana/cannabis should be allowed.",
-     "Recreational use of marijuana/cannabis should be prohibited."),
-
-    ("Businesses should be able to fire employees more easily.",
-     "It should be more difficult for businesses to lay off employees."),
-
-    ("An hourly minimum wage should be introduced.",
-     "The hourly minimum wage should be ignored."),
-
-    ("Drilling is necessary to find more energy resources.",
-     "Drilling is irrelevant to finding more energy resources."),
-
-    ("Italy should keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO).",
-     "Italy should cancel its foreign policy aligned with the choices of the Atlantic Alliance (NATO)."),
-
-    ("The federal government should allocate more funding for health insurance premium subsidies. ",
-     "The federal government should revoke funding for health insurance premium subsidies."),
-
-    ("As part of the reform of the BVG (occupational pension plan), pensions are to be reduced (lowering the minimum conversion rate from 6.8% to 6%). ",
-     "As part of the reform of the BVG (occupational pension plan), pensions are to be increased (lowering the minimum conversion rate from 6.8% to 6%). "),
-
-    ("Paid parental leave should be increased beyond today's 14 weeks of maternity leave and two weeks of paternity leave. ",
-     "Paid parental leave should be reduced under today's 14 weeks of maternity leave and two weeks of paternity leave."),
-
-    ("The federal government should provide more financial support for public housing construction. ",
-     "The federal government should provide less financial support for public housing construction."),
-
-    ("According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes. ",
-     "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in separate classes. "),
-
-    ("The state should be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). ",
-     "The state should neglect equal educational opportunities (e.g., regarding subsidized remedial courses for students from low-income families). "),
-
-    ("More qualified workers from non-EU/EFTA countries should be allowed to work in Switzerland (increase third-country quota).",
-     "More qualified workers from non-EU/EFTA countries should be forbidden to work in Switzerland (decrease third-country quota)."),
-
-    ("Foreign nationals who have lived in Switzerland for at least ten years should be granted the right to vote and stand for election at the municipal level. ",
-     "Foreign nationals who have lived in Switzerland for at least ten years should be refused the right to vote and stand for election at the municipal level."),
-
-    ("Cannabis use should be legalized. ",
-     "Cannabis use should be kept ilegal."),
-
-    ("There should be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). ",
-     "There should be laxer regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "),
-
-    ("Private households should be free to choose their electricity supplier (complete liberalization of the electricity market). ",
-     "Private households should be limited in choosing their electricity supplier (full regulation of the electricity market)."),
-
-    ("Busy sections of highways should be widened. ",
-     "Busy sections of highways should be narrowed."),
-
-    ("The construction of new nuclear power plants should be allowed again. ",
-     "The construction of new nuclear power plants should be denied again."),
-
-    ("The state should guarantee a comprehensive public service offering also in rural regions. ",
-     "The state should ignore a comprehensive public service offering also in rural regions."),
-
-    ("There should be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas). ",
-     "There should be laxer animal welfare regulations for livestock (e.g. only temporary access to outdoor areas)."),
-
-    ("30% of Switzerland's land area should be dedicated to preserving biodiversity?. ",
-     "Switzerland should ignore the allocation of any specific percentage of its land area to preserving biodiversity."),
-
-    ("There should be a ban on single-use plastic and non-recyclable plastics. ",
-     "There should be an incentive to use single-use plastic and non-recyclable plastics."),
-
-    ("There should be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). ",
-     "The government should ignore measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "),
-
-    ("There should be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation). ",
-     "There should be a laxer regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation). "),
-
-    ("There should be a popular initiative aims to reduce television and radio fees (CHF 200 per household, exemption for businesses).",
-     "There should be a popular initiative aims to increase television and radio fees (CHF 200 per household, exemption for businesses)."),
-
-    ("The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). ",
-     "The Federal Council should be forbidden to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "),
-
-    ("Companies should be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards. ",
-     "Companies should be ignore whether their subsidiaries and suppliers operating abroad comply with social and environmental standards."),
-
+    ("There should be a ban on single-use plastic and non-recyclable plastics. ", "There should not be a ban on single-use plastic and non-recyclable plastics."),
+    ("There should be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). ", "There should not be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "),
+    ("The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard). ", "The Swiss mobile network should not be equipped throughout the country with the latest technology (currently 5G standard)."),
+    ("The Swiss Armed Forces should expand their cooperation with NATO. ", "The Swiss Armed Forces should not expand their cooperation with NATO."),
+    ("The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). ", "The Federal Council should not be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "),
+    ("There should be closer relations with the European Union (EU). ", "There should not be closer relations with the European Union (EU)."),
+    ("Companies should be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards. ", "Companies should not be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards."),
+    ("The federal government should allocate more funding for health insurance premium subsidies. ", "The federal government should not allocate more funding for health insurance premium subsidies."),
+    ("As part of the reform of the BVG (occupational pension plan), pensions are to be reduced (lowering the minimum conversion rate from 6.8% to 6%). ", "As part of the reform of the BVG (occupational pension plan), pensions are not to be reduced (lowering the minimum conversion rate from 6.8% to 6%). "),
+    ("The federal government should provide more financial support for public housing construction. ", "The federal government should not provide more financial support for public housing construction."),
+    ("The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited. ", "The Federal Council's ability to restrict private and economic life in the event of a pandemic should not be more limited."),
+    ("According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes. ", "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should not be taught in regular classes. "),
+    ("The state should be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). ", "The state should not be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). "),
+    ("More qualified workers from non-EU/EFTA countries should be allowed to work in Switzerland (increase third-country quota).", "More qualified workers from non-EU/EFTA countries should not be allowed to work in Switzerland (increase third-country quota)."),
+    ("Cannabis use should be legalized. ", "Cannabis use should not be legalized."),
+    ("Same-sex couples should have the same rights as heterosexual couples in all areas. ", "Same-sex couples should not have the same rights as heterosexual couples in all areas."),
+    ("There should be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). ", "There should not be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "),
+    ("Private households should be free to choose their electricity supplier (complete liberalization of the electricity market). ", "Private households should not be free to choose their electricity supplier (complete liberalization of the electricity market)."),
+    ("The construction of new nuclear power plants should be allowed again. ", "The construction of new nuclear power plants should not be allowed again."),
+    ("The state should guarantee a comprehensive public service offering also in rural regions. ", "The state should not guarantee a comprehensive public service offering also in rural regions."),
+    ("There should be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas). ", "There should not be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas)."),
+    ("30% of Switzerland's land area should be dedicated to preserving biodiversity?. ", "30% of Switzerland's land area should not be dedicated to preserving biodiversity. "),
+    ("Young people over the age of 16 are to be allowed to vote in Bundestag elections.", "Young people aged 16 and over should not be allowed to vote in federal elections."),
+    ("The right of recognized refugees to join their families is to be abolished.", "The right of recognized refugees to family reunification should not be abolished."),
+    ("Female civil servants are to be allowed to wear headscarves while on duty.", "Female civil servants should not be allowed to wear headscarves on duty."),
+    ("The federal government is to provide more financial support for projects to combat anti-Semitism.", "The federal government should not provide more financial support for projects to combat anti-Semitism."),
+    ("The controlled sale of cannabis is to be generally permitted.", "The controlled sale of cannabis should not be permitted."),
+    ("Germany is to leave the European Union.", "Germany should not leave the European Union."),
+    ("Islamic associations are to be able to be recognized by the state as religious communities.", "Islamic associations should not be able to be recognized by the state as religious communities."),
+    ("Companies are to decide for themselves whether to allow their employees to work from home.", "Companies should not decide for themselves whether to allow their employees to work from home."),
+    ("It should be easier for companies to fire workers.", "It should not be easier for companies to lay off workers."),
+    ("The government must increase spending on public health care, even if this means increasing taxes.", "The government should not increase spending on the public health system even if this means increasing taxes."),
+    ("Climate change is solely attributable to human action.", "Climate change is not solely attributable to human action."),
+    ("Spanish government should promote the strengthening of NATO in Europe.", "The Spanish government should not promote the strengthening of NATO in Europe."),
+    ("The best way to solve the conflict in Catalonia is for its citizens to be able to vote on their future in a referendum.", "The best way to solve the conflict in Catalonia is that its citizens cannot vote on their future in a referendum."),
+    ("The right to self-determination must be recognized by the Constitution.", "The right of self-determination should not be recognized by the Constitution."),
+    ("Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation).", "There is no need for stricter regulation of interception software (e.g. Pegasus) (e.g. subject to judicial authorisation)."),
+    ("Only men and women should be allowed to marry.", "Marriages should not be exclusively between men and women."),
+    ("The Hungarian government should ratify the Istanbul Convention, which combats violence against women and domestic violence.", "The Hungarian government should not ratify the Istanbul Convention against violence against women and domestic violence."),
+    ("Comprehensive public procurement reform is needed (e.g. opening up large-scale centralised public procurement to smaller firms).", "There is no need for comprehensive public procurement reform (e.g. opening up large-scale centralised public procurement to smaller firms)."),
+    ("Increase the contribution of the wealthier to the public purse (abolition of the one-band tax).", "The wealthier should not contribute more to the public burden (abolition of the one-band tax)."),
+    ("Public employment helps people re-enter the labour market.", "Public works do not help people to re-enter the labour market."),
+    ("The use of medical cannabis should be legalised in Hungary.", "Medical cannabis should not be legalised in Hungary."),
+    ("In larger cities, car traffic should be limited through various measures (P+R parking, construction of cycle paths, improvement of public transport).", "In larger cities, there is no need to restrict car traffic through various measures (P+R parking, building cycle paths, improving public transport)."),
+    ("The redevelopment of urban green spaces (e.g. the Liget project in Budapest) needs a broad social dialogue.", "The redevelopment of urban green areas (e.g. the Liget project in Budapest) does not require a broad social dialogue."),
+    ("An independent ministry for the environment is needed.", "There is no need for a separate environment ministry."),
+    ("The European Union should have a common foreign policy.", "The European Union should not have a common foreign policy."),
+    ("Children, born in Italy to foreign citizens and who have completed schooling should be granted Italian citizenship (ius scholae).", "Children, born in Italy to foreign nationals and who have completed school, should not be granted Italian citizenship (ius scholae)."),
+    ("More civil rights should be granted to homosexual, bisexual, transgender (LGBT+) people.", "Homosexual, bisexual, transgender (LGBT+) people should not be granted more civil rights."),
+    ("Citizens should be guaranteed freedom of choice in end-of-life matters (euthanasia).", "Citizens should not be guaranteed freedom of choice in end-of-life matters (euthanasia)."),
+    ("Recreational use of marijuana/cannabis should be allowed.", "Recreational use of marijuana/cannabis should not be allowed."),
+    ("Businesses should be able to fire employees more easily.", "Businesses should not be allowed to lay off employees more easily."),
+    ("An hourly minimum wage should be introduced.", "The hourly minimum wage should not be introduced."),
+    ("The use of nuclear power plants for the purpose of producing energy should be promoted.", "The use of nuclear power plants for the purpose of producing energy should not be promoted."),
+    ("The construction of Major Works is a priority for Italy.", "The construction of Major Works is not a priority for Italy."),
+    ("Drilling is necessary to find more energy resources.", "Drilling is not necessary to find more energy resources."),
+    ("The Netherlands should spend more money on defense.", "The Netherlands should not spend more money on defense."),
+    ("Less funding should go to public broadcasting.", "There should not be less money for public broadcasting."),
+    ("The Dutch government should apologize for the historical slave trade.", "The Dutch government should not apologize for the slave trade in the past."),
+    ("Citizens should have the opportunity to block laws passed by parliament through a referendum.", "Citizens should not be allowed to stop laws passed by parliament through a referendum."),
+    ("There should be fewer options for community service sentences instead of prison sentences.", "There should not be fewer opportunities to impose community service instead of prison sentences."),
+    ("New residential areas should consist of at least 40 percent green space.", "New housing developments should not consist of at least 40 percent social housing."),
+    ("Schools should have more freedom to choose the content covered in the curriculum.", "Schools should not have more freedom to choose the content covered in the curriculum."),
+    ("The state should build low-rent apartments for rent.", "The state should not build low-income rental housing."),
+    ("The independence of the judiciary from parliament and the government should be strengthened.", "The independence of the judiciary from parliament and government should not be strengthened."),
 ]
 
-RULE_NAME = "Opposite"
+RULE_NAME = "Negation"
 
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-12
 
 # For Appendix Fig A (head-combo ablation)
-HEAD_COMBO_LAYER = 26
-HEADS_TO_ABLATE = [0, 1, 4]
+HEAD_COMBO_LAYER = 23
+HEADS_TO_ABLATE = [1, 3, 6, 7]
 HEAD_ABLATE_RATIO = 0.0
 
 
@@ -859,7 +657,7 @@ def head_sweep_restoration_for_pair(
     processor,
     base_text: str,
     variant_text: str,
-    layer: int = 26,
+    layer: int = 23,
     ratio: float = 0.0
 ):
     """
@@ -921,7 +719,7 @@ def head_sweep_restoration_mean_over_pairs(
     model,
     processor,
     pairs: List[Tuple[str, str]],
-    layer: int = 26,
+    layer: int = 23,
     ratio: float = 0.0,
 ):
     """
@@ -1098,8 +896,159 @@ def main():
     #     combo_restoration=combo_r,
     #     layer=HEAD_COMBO_LAYER,
     # )
-    # figA.savefig("opposite_head_bars_by_index_12B.png", dpi=200)
+    # figA.savefig("negation_head_bars_by_index.png", dpi=200)
     # print("Saved: appendix_figA_head_bars_by_index.png")
+
+    def polarity_from_probs(p: np.ndarray, tie_eps: float = 1e-6) -> str:
+        """
+        p: shape [7], digits 1..7 probs
+        neg = sum(p[0:3])  # 1,2,3
+        pos = sum(p[4:7])  # 5,6,7
+        neutral digit=4 is ignored for polarity, but ties/very small margins -> 'amb'
+        """
+        neg = float(p[0] + p[1] + p[2])
+        pos = float(p[4] + p[5] + p[6])
+        if abs(neg - pos) <= tie_eps:
+            return "amb"
+        return "neg" if neg > pos else "pos"
+
+
+    def count_unflips_for_single_patch(
+        model,
+        processor,
+        pairs: List[Tuple[str, str]],
+        kind: str,          # "attn" or "mlp"
+        layer_idx: int,     # e.g. 23 or 22
+        restoration_thresh: float = 0.0,
+        tie_eps: float = 1e-6,
+        verbose: bool = True,
+    ):
+        assert kind in ("attn", "mlp", "block")
+
+        unflip_count = 0
+        eligible_flip_count = 0  # how many actually flipped (clean pol != corrupt pol)
+        details = []             # per-pair record
+
+        for i, (b, v) in enumerate(pairs, 1):
+            if verbose and (i % 10 == 1 or i == len(pairs)):
+                print(f"[{kind} L{layer_idx}] pair {i}/{len(pairs)}")
+
+            enc_clean = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(b))
+            enc_corrupt = encode_for_next_token(processor, model, SYSTEM_PROMPT, build_user_prompt(v))
+
+            logits_clean = forward_logits_only(model, enc_clean)
+            logits_corrupt = forward_logits_only(model, enc_corrupt)
+
+            clean_probs_t = digit_probs_from_logits_full(logits_clean, enc_clean, TEMP_FOR_PROBS)
+            corrupt_probs_t = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
+
+            clean_probs = clean_probs_t.detach().float().cpu().numpy()
+            corrupt_probs = corrupt_probs_t.detach().float().cpu().numpy()
+
+            pol_clean = polarity_from_probs(clean_probs, tie_eps=tie_eps)
+            pol_corrupt = polarity_from_probs(corrupt_probs, tie_eps=tie_eps)
+
+            # 只统计“确实 flip 了”的
+            flipped = (pol_clean in ("neg", "pos")) and (pol_corrupt in ("neg", "pos")) and (pol_clean != pol_corrupt)
+            if flipped:
+                eligible_flip_count += 1
+
+            clean_cache = collect_clean_cache(model, enc_clean)
+
+            spec = {"block": [], "attn": [], "mlp": []}
+            spec[kind] = [layer_idx]
+
+            with patch_context(model, enc_corrupt, clean_cache, spec):
+                logits_patched = forward_logits_only(model, enc_corrupt)
+                patched_probs_t = digit_probs_from_logits_full(logits_patched, enc_corrupt, TEMP_FOR_PROBS)
+
+            patched_probs = patched_probs_t.detach().float().cpu().numpy()
+            pol_patched = polarity_from_probs(patched_probs, tie_eps=tie_eps)
+
+            r = normalized_restoration(w_1d, clean_probs_t, corrupt_probs_t, patched_probs_t)
+            restoration = float(r.item())
+
+            # unflip 成功：patched 极性回到 clean；且原本是 flipped；且 restoration 超过门槛
+            unflipped = flipped and (pol_patched == pol_clean) and (restoration > restoration_thresh)
+
+            if unflipped:
+                unflip_count += 1
+
+            details.append({
+                "idx": i,
+                "clean_pol": pol_clean,
+                "corrupt_pol": pol_corrupt,
+                "patched_pol": pol_patched,
+                "flipped": flipped,
+                "unflipped": unflipped,
+                "restoration": restoration,
+            })
+
+        return unflip_count, eligible_flip_count, details
+
+
+    # ---- 在 main() 里加载完 model/processor 后，直接调用： ----
+    # 你要的两个统计：
+    attn29_unflip, attn29_flipped, attn29_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=29,
+        restoration_thresh=0.0,   # 想更严格可改 0.3 / 0.5
+        verbose=True,
+    )
+
+    attn27_unflip, attn27_flipped, attn27_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=27,
+        restoration_thresh=0.0,   # 想更严格可改 0.3 / 0.5
+        verbose=True,
+    )
+
+    mlp27_unflip, mlp27_flipped, mlp27_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="mlp",
+        layer_idx=27,
+        restoration_thresh=0.0,
+        verbose=True,
+    )
+
+    mlp32_unflip, mlp32_flipped, mlp32_details = count_unflips_for_single_patch(
+        model=model,
+        processor=processor,
+        pairs=PAIRS,
+        kind="mlp",
+        layer_idx=32,
+        restoration_thresh=0.0,
+        verbose=True,
+    )
+
+    print("\n================ RESULTS ================")
+    print(f"ATTN layer 29: unflip {attn29_unflip} / flipped-eligible {attn29_flipped} (total pairs={len(PAIRS)})")
+    print(f"ATTN layer 27: unflip {attn27_unflip} / flipped-eligible {attn27_flipped} (total pairs={len(PAIRS)})")
+    print(f"MLP  layer 27: unflip {mlp27_unflip} / flipped-eligible {mlp27_flipped} (total pairs={len(PAIRS)})")
+    print(f"MLP  layer 32: unflip {mlp32_unflip} / flipped-eligible {mlp32_flipped} (total pairs={len(PAIRS)})")
+
+    # 可选：把细节导出成 csv，方便你之后筛选看哪些句子被 unflip 了
+    # import csv
+    # with open("unflip_attn23_details.csv", "w", newline="", encoding="utf-8") as f:
+    #     w = csv.DictWriter(f, fieldnames=list(attn29_details[0].keys()))
+    #     w.writeheader()
+    #     w.writerows(attn29_details)
+
+    # with open("unflip_mlp22_details.csv", "w", newline="", encoding="utf-8") as f:
+    #     w = csv.DictWriter(f, fieldnames=list(mlp22_details[0].keys()))
+    #     w.writeheader()
+    #     w.writerows(mlp22_details)
+
+    # print("Saved: unflip_attn23_details.csv, unflip_mlp22_details.csv")
+
 
     # ---------------------------
     # Figure 1 (one subplot): Activation patching curves
@@ -1116,7 +1065,7 @@ def main():
         stats=patch_stats,
         ylabel="Normalized restoration score",
     )
-    fig1.savefig("opposite_patching_one_rule_12B.png", dpi=200)
+    fig1.savefig("negation_patching_one_rule.png", dpi=200)
     print("Saved: fig1_patching_one_rule.png")
 
     # ---------------------------
@@ -1134,11 +1083,11 @@ def main():
     #     stats=ab_stats,
     #     ylabel="Normalized restoration score",
     # )
-    # fig2.savefig("opposite_ablation_one_rule_12B.png", dpi=200)
+    # fig2.savefig("negation_ablation_one_rule.png", dpi=200)
     # print("Saved: fig2_ablation_one_rule.png")
 
-    # Show all three figures
-    plt.show()
+    # # Show all three figures
+    # plt.show()
 
 
 if __name__ == "__main__":

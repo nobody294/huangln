@@ -36,8 +36,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
 # VARIANT_TEXT = "There should not be a tax per kilometer driven for motorists instead of the tax on car ownership."
 
-# BASE_TEXT = "Houses should be built on land currently used for agriculture."
-# VARIANT_TEXT = "No housing should be built on land now used for agriculture."
+BASE_TEXT = "Houses should be built on land currently used for agriculture."
+VARIANT_TEXT = "No housing should be built on land now used for agriculture."
 
 # BASE_TEXT = "To better defend Spain's interests in Europe we must recover more sovereignty."
 # VARIANT_TEXT = "In order to better defend Spain's interests in Europe, we should not recover more sovereignty."
@@ -76,8 +76,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Direct payments should only be granted to farmers with proof of ecological performance."
 # VARIANT_TEXT = "Direct payments should not only be granted to farmers with proof of ecological performance."
 
-BASE_TEXT = "There should be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation)."
-VARIANT_TEXT = "There should not be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation)."
+# BASE_TEXT = "There should be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation)."
+# VARIANT_TEXT = "There should not be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation)."
 
 
 topk_attr = 6          # how many top layers to print/consider in diagnostics
@@ -970,9 +970,17 @@ def run_activation_patching(base_text: str, variant_text: str):
 
     layer_ablate_results, layer_best_probs, best_ppl= sweep_layer_ablate(ratio=0.0)
     print(f"[Ablate-BLOCK Best-Patched-Probs] {layer_best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
+
+    with block_ablation_context(model, enc_corrupt, layers_to_edit=[23], ratio=0.0, pos_strategy="last"):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+        r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    
+    print(f"[Ablate-BLOCK-23 Patched-Probs] {patched_probs}")
+    print(f"Restoration Score: {r}")
+    print("-" * 60)
 
 
     def sweep_attn_ablate(ratio: float = 0.0):

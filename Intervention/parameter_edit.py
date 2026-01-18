@@ -34,8 +34,8 @@ SYSTEM_PROMPT = (
 # BASE_TEXT = "Houses should be built on land currently used for agriculture."
 # VARIANT_TEXT = "It is on land currently used for agriculture that Houses should be built."
 
-# BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
-# VARIANT_TEXT = "It is as much as secondary school teachers that primary school teachers should earn."
+BASE_TEXT = "Primary school teachers should earn as much as secondary school teachers."
+VARIANT_TEXT = "It is as much as secondary school teachers that primary school teachers should earn."
 
 # BASE_TEXT = "The Netherlands should introduce an additional flight tax for short-distance flights."
 # VARIANT_TEXT = "It is an additional flight tax for short-distance flights that the Netherlands should introduce."
@@ -121,8 +121,8 @@ SYSTEM_PROMPT = (
 # BASE_TEXT = "The Swiss Armed Forces should expand their cooperation with NATO."
 # VARIANT_TEXT = "It is their cooperation with NATO that the Swiss Armed Forces should expand."
 
-BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
-VARIANT_TEXT = "It is the Bilateral Agreements with the EU that Switzerland should terminate and it is a free trade agreement without the free movement of persons that Switzerland should seek."
+# BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
+# VARIANT_TEXT = "It is the Bilateral Agreements with the EU that Switzerland should terminate and it is a free trade agreement without the free movement of persons that Switzerland should seek."
 
 # BASE_TEXT = "Switzerland should return to a strict interpretation of neutrality (renounce economic sanctions to a large extent)."
 # VARIANT_TEXT = "It is a strict interpretation of neutrality that Switzerland should return to (renounce economic sanctions to a large extent)."
@@ -1011,6 +1011,15 @@ def run_activation_patching(base_text: str, variant_text: str):
     # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
+
+    with block_ablation_context(model, enc_corrupt, layers_to_edit=[15], ratio=0.0, pos_strategy="last"):
+        logits_patched = forward_logits_only(model, enc_corrupt)
+        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
+        r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
+    
+    print(f"[Ablate Block-15] {patched_probs}")
+    print(f"Restoration Score: {r}")
+    print("-" * 60)
 
 
     def sweep_attn_ablate(ratio: float = 0.0):

@@ -540,6 +540,94 @@ def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12) ->
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
+def polarity_from_probs(p: np.ndarray, tie_eps: float = 1e-6) -> str:
+    """
+    p: shape [7], 对应 digits 1..7 的概率
+    neg = P(1)+P(2)+P(3)
+    pos = P(5)+P(6)+P(7)
+    digit4 不计入两极
+    """
+    neg = float(p[0] + p[1] + p[2])
+    pos = float(p[4] + p[5] + p[6])
+    if abs(neg - pos) <= tie_eps:
+        return "amb"
+    return "neg" if neg > pos else "pos"
+
+
+def count_unflips_for_single_patch(
+    model,
+    tokenizer,
+    pairs: List[Tuple[str, str]],
+    kind: str,          # "attn" or "mlp" or "block"
+    layer_idx: int,     # e.g. 23 or 22
+    restoration_thresh: float = 0.0,
+    tie_eps: float = 1e-6,
+    verbose: bool = True,
+):
+    assert kind in ("attn", "mlp", "block")
+
+    unflip_count = 0
+    flipped_eligible = 0  # clean/corrupt 极性确实相反的 pair 数
+    details = []
+
+    n_layers = len(get_decoder_layers(model))
+    if layer_idx < 0 or layer_idx >= n_layers:
+        raise ValueError(f"layer_idx={layer_idx} out of range (n_layers={n_layers})")
+
+    for i, (b, v) in enumerate(pairs, 1):
+        if verbose and (i % 10 == 1 or i == len(pairs)):
+            print(f"[{kind} L{layer_idx}] pair {i}/{len(pairs)}")
+
+        enc_clean = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(b))
+        enc_corrupt = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(v))
+
+        logits_clean = forward_logits_only(model, enc_clean)
+        logits_corrupt = forward_logits_only(model, enc_corrupt)
+
+        clean_probs_t = digit_probs_from_logits_full(logits_clean, enc_clean, TEMP_FOR_PROBS)
+        corrupt_probs_t = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
+
+        clean_probs = clean_probs_t.detach().float().cpu().numpy()
+        corrupt_probs = corrupt_probs_t.detach().float().cpu().numpy()
+
+        pol_clean = polarity_from_probs(clean_probs, tie_eps=tie_eps)
+        pol_corrupt = polarity_from_probs(corrupt_probs, tie_eps=tie_eps)
+
+        flipped = (pol_clean in ("neg", "pos")) and (pol_corrupt in ("neg", "pos")) and (pol_clean != pol_corrupt)
+        if flipped:
+            flipped_eligible += 1
+
+        # collect clean cache (只需一次)
+        clean_cache = collect_clean_cache(model, enc_clean)
+
+        spec = {"block": [], "attn": [], "mlp": []}
+        spec[kind] = [layer_idx]
+
+        with patch_context(model, enc_corrupt, clean_cache, spec):
+            logits_patched = forward_logits_only(model, enc_corrupt)
+            patched_probs_t = digit_probs_from_logits_full(logits_patched, enc_corrupt, TEMP_FOR_PROBS)
+
+        patched_probs = patched_probs_t.detach().float().cpu().numpy()
+        pol_patched = polarity_from_probs(patched_probs, tie_eps=tie_eps)
+
+        r = normalized_restoration(w_1d, clean_probs_t, corrupt_probs_t, patched_probs_t)
+        restoration = float(r.item())
+
+        unflipped = flipped and (pol_patched == pol_clean) and (restoration > restoration_thresh)
+        if unflipped:
+            unflip_count += 1
+
+        details.append({
+            "idx": i,
+            "clean_pol": pol_clean,
+            "corrupt_pol": pol_corrupt,
+            "patched_pol": pol_patched,
+            "flipped": flipped,
+            "unflipped": unflipped,
+            "restoration": restoration,
+        })
+
+    return unflip_count, flipped_eligible, details
 
 
 # ---------------------------
@@ -904,6 +992,41 @@ def main():
         torch_dtype="auto",
         trust_remote_code=True,
     ).eval()
+
+    attn22_unflip, attn22_flipped, attn22_details = count_unflips_for_single_patch(
+        model=model,
+        tokenizer=tokenizer,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=22,
+        restoration_thresh=0.0,  # 你想严格一点可以改 0.3 / 0.5
+        verbose=True,
+    )
+
+    attn26_unflip, attn26_flipped, attn26_details = count_unflips_for_single_patch(
+        model=model,
+        tokenizer=tokenizer,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=26,
+        restoration_thresh=0.0,  # 你想严格一点可以改 0.3 / 0.5
+        verbose=True,
+    )
+
+    mlp23_unflip, mlp23_flipped, mlp22_details = count_unflips_for_single_patch(
+        model=model,
+        tokenizer=tokenizer,
+        pairs=PAIRS,
+        kind="mlp",
+        layer_idx=23,
+        restoration_thresh=0.0,
+        verbose=True,
+    )
+
+    print("\n================ RESULTS ================")
+    print(f"ATTN layer 22: unflip {attn22_unflip} / flipped-eligible {attn22_flipped} (total pairs={len(PAIRS)})")
+    print(f"ATTN layer 26: unflip {attn26_unflip} / flipped-eligible {attn26_flipped} (total pairs={len(PAIRS)})")
+    print(f"MLP  layer 23: unflip {mlp23_unflip} / flipped-eligible {mlp23_flipped} (total pairs={len(PAIRS)})")
 
     # ---------------------------
     # Figure 1: Activation patching curves

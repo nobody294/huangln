@@ -32,89 +32,9 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-# PAIRS: List[Tuple[str, str]] = [
-#     ("Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists.",
-#      "There should not be a tax per kilometer driven for motorists instead of the tax on car ownership."),
-
-#     ("Instead of the existing health insurance companies, there should be a national healthcare fund for everyone.",
-#      "There should not be a national health care fund for everyone instead of the existing health insurance companies."),
-
-#     ("Houses should be built on land currently used for agriculture.",
-#      "No housing should be built on land now used for agriculture."),
-
-#     ("People who consider their lives complete should be able to receive assistance with suicide.",
-#      "People who consider their lives complete should not be able to get help with suicide."),
-
-#     ("Limiting rights and freedoms is necessary to combat organized crime.",
-#      "It is not necessary to limit rights and freedoms to combat organized crime."),
-
-#     ("Climate change is solely attributable to human action.",
-#      "Climate change is not solely attributable to human action."),
-
-#     ("The ability of landlords to increase housing rents is to be more strictly limited by law.",
-#      "The ability of landlords to increase rents should not be more strictly limited by law."),
-
-#     ("All employed persons are to be required to be insured in the statutory pension scheme.",
-#      "People in employment should not necessarily have to be insured under the statutory pension scheme."),
-
-#     ("The traditional family of father, mother and children is to be promoted more strongly than other living arrangements.",
-#      "The traditional family of father, mother and children should not be promoted more than other cohabiting couples."),
-
-#     ("Germany is to leave the European Union.",
-#      "Germany should not leave the European Union."),
-
-#     ("Facial recognition software should be allowed to be used for video surveillance in public places.",
-#      "No facial recognition software should be used for video surveillance in public places."),
-
-#     ("The statutory minimum wage is to be increased to at least 12 euros by 2022 at the latest.",
-#      "The statutory minimum wage should not be increased to at least 12 euros by 2022 at the latest."),
-
-#     ("The result of any nationwide referendum should be binding regardless of turnout.",
-#      "The results of certain nationwide referendums should be binding depending on turnout."),
-
-#     ("The share of defense spending in Poland's GDP should be further increased.",
-#      "The share of defense spending in Poland's GDP should not be increased further."),
-
-#     ("Education spending should be increased to at least the OECD average of 5.2 per cent (GDP).",
-#      "Spending on education should not be increased to the OECD average of 5.2 per cent (of GDP)."),
-
-#     ("Only men and women should be allowed to marry.",
-#      "Marriages should not be exclusively between men and women."),
-
-#     ("European integration is all in all a positive process.",
-#      "European integration is not an all-positive process."),
-
-#     ("Separation of careers between judges and prosecutors should be introduced.",
-#      "Separation of careers between judges and prosecutors should not be introduced."),
-
-#     ("For married couples, the pension is currently limited to 150% of the maximum individual AHV pension (capping). This limit should be eliminated.",
-#      "For married couples, the pension is currently limited to 150% of the maximum individual AHV pension (capping). This limit should not be eliminated."),
-
-#     ("The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited.",
-#      "The Federal Council's ability to restrict private and economic life in the event of a pandemic should not be more limited."),
-
-#     ("The federal government should be given the authority to determine the hospital offering (national hospital planning with regard to locations and range of services).",
-#      "The federal government should not be given the authority to determine the hospital offering (national hospital planning with regard to locations and range of services)."),
-
-#     ("There should be the introduction of a national inheritance tax on all inheritances over one million Swiss francs.",
-#      "There should not be the introduction of a national inheritance tax on all inheritances over one million Swiss francs."),
-
-#     ("A minimum wage of CHF 4,000 for all full-time employees should be introduced.",
-#      "A minimum wage of CHF 4,000 for all full-time employees should not be introduced."),
-
-#     ("Direct payments should only be granted to farmers with proof of ecological performance.",
-#      "Direct payments should not only be granted to farmers with proof of ecological performance."),
-# ]
-
 PAIRS: List[Tuple[str, str]] = [
-    ("There should be a ban on single-use plastic and non-recyclable plastics. ",
-     "There should not be a ban on single-use plastic and non-recyclable plastics."),
-
     ("There should be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). ",
      "There should not be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "),
-
-    ("The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard). ",
-     "The Swiss mobile network should not be equipped throughout the country with the latest technology (currently 5G standard)."),
 
     ("The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). ",
      "The Federal Council should not be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "),
@@ -122,53 +42,23 @@ PAIRS: List[Tuple[str, str]] = [
     ("Companies should be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards. ",
      "Companies should not be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards."),
 
-    ("Paid parental leave should be increased beyond today's 14 weeks of maternity leave and two weeks of paternity leave. ",
-     "Paid parental leave should not be increased beyond today's 14 weeks of maternity leave and two weeks of paternity leave."),
-
-    ("According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes. ",
-     "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should not be taught in regular classes. "),
+    ("As part of the reform of the BVG (occupational pension plan), pensions are to be reduced (lowering the minimum conversion rate from 6.8% to 6%). ",
+     "As part of the reform of the BVG (occupational pension plan), pensions are not to be reduced (lowering the minimum conversion rate from 6.8% to 6%). "),
 
     ("The state should be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). ",
      "The state should not be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). "),
 
-    ("More qualified workers from non-EU/EFTA countries should be allowed to work in Switzerland (increase third-country quota).",
-     "More qualified workers from non-EU/EFTA countries should not be allowed to work in Switzerland (increase third-country quota)."),
-
     ("Foreign nationals who have lived in Switzerland for at least ten years should be granted the right to vote and stand for election at the municipal level. ",
      "Foreign nationals who have lived in Switzerland for at least ten years should not be granted the right to vote and stand for election at the municipal level."),
-
-    ("Cannabis use should be legalized. ",
-     "Cannabis use should not be legalized."),
-
-    ("Doctors should be allowed to administer direct active euthanasia. ",
-     "Doctors should not be allowed to administer direct active euthanasia."),
 
     ("Same-sex couples should have the same rights as heterosexual couples in all areas. ",
      "Same-sex couples should not have the same rights as heterosexual couples in all areas."),
 
-    ("There should be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). ",
-     "There should not be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "),
+    ("The state should guarantee a comprehensive public service offering also in rural regions. ",
+     "The state should not guarantee a comprehensive public service offering also in rural regions."),
 
-    ("Private households should be free to choose their electricity supplier (complete liberalization of the electricity market). ",
-     "Private households should not be free to choose their electricity supplier (complete liberalization of the electricity market)."),
-
-    ("There should be stricter controls on equal pay for women and men. ",
-     "There should not be stricter controls on equal pay for women and men."),
-
-    ("The protection regulations for large predators (lynx, wolf, bear) should be relaxed. ",
-     "The protection regulations for large predators (lynx, wolf, bear) should not be relaxed. "),
-
-    ("There should be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas). ",
-     "There should not be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas)."),
-
-    ("Young people over the age of 16 are to be allowed to vote in Bundestag elections.",
-     "Young people aged 16 and over should not be allowed to vote in federal elections."),
-
-    ("The right of recognized refugees to join their families is to be abolished.",
-     "The right of recognized refugees to family reunification should not be abolished."),
-
-    ("Donations from companies to political parties should continue to be permitted.",
-     "Donations from companies to political parties should not be permitted."),
+    ("30% of Switzerland's land area should be dedicated to preserving biodiversity?. ",
+     "30% of Switzerland's land area should not be dedicated to preserving biodiversity. "),
 
     ("Federal authorities are to take linguistic account of different gender identities in their publications.",
      "Federal authorities should not use different gender identities in their publications."),
@@ -176,23 +66,11 @@ PAIRS: List[Tuple[str, str]] = [
     ("Female civil servants are to be allowed to wear headscarves while on duty.",
      "Female civil servants should not be allowed to wear headscarves on duty."),
 
-    ("The federal government is to provide more financial support for projects to combat anti-Semitism.",
-     "The federal government should not provide more financial support for projects to combat anti-Semitism."),
+    ("The state lists of the parties for the elections to the German Bundestag are to have to be filled alternately by women and men.",
+     "The state lists of the parties for the elections to the German Bundestag should not have to be filled alternately by women and men."),
 
-    ("The controlled sale of cannabis is to be generally permitted.",
-     "The controlled sale of cannabis should not be permitted."),
-
-    ("Organic agriculture should be promoted more strongly than conventional agriculture.",
-     "Organic farming should not be promoted more than conventional farming."),
-
-    ("Islamic associations are to be able to be recognized by the state as religious communities.",
-     "Islamic associations should not be able to be recognized by the state as religious communities."),
-
-    ("The state should take measures to redistribute wealth from the rich to the poor.",
-     "The state should not take measures to redistribute wealth from the rich to the poor."),
-
-    ("The government must increase spending on public health care, even if this means increasing taxes.",
-     "The government should not increase spending on the public health system even if this means increasing taxes."),
+    ("The right of recognized refugees to join their families is to be abolished.",
+     "The right of recognized refugees to family reunification should not be abolished."),
 
     ("Taxes on fossil fuels must be raised to finance the Green Transition.",
      "Taxes on fossil fuels should not be raised to finance the Ecological Transition."),
@@ -203,38 +81,14 @@ PAIRS: List[Tuple[str, str]] = [
     ("The best way to solve the conflict in Catalonia is for its citizens to be able to vote on their future in a referendum.",
      "The best way to solve the conflict in Catalonia is that its citizens cannot vote on their future in a referendum."),
 
-    ("Negotiating with pro-independence supporters weakens the State.",
-     "Negotiating with the independentistas does not weaken the State."),
+    ("The government must increase spending on public health care, even if this means increasing taxes.",
+     "The government should not increase spending on the public health system even if this means increasing taxes."),
 
-    ("The right to self-determination must be recognized by the Constitution.",
-     "The right of self-determination should not be recognized by the Constitution."),
+    ("Education spending should be increased to at least the OECD average of 5.2 per cent (GDP).",
+     "Spending on education should not be increased to the OECD average of 5.2 per cent (of GDP)."),
 
-    ("Spain should be more tolerant with illegal migration.",
-     "Spain should not be more tolerant of illegal immigration."),
-
-    ("Housing prices must be regulated to ensure access for all people.",
-     "Housing prices should not be regulated to guarantee access to all people."),
-
-    ("Gender identity can be influenced by environmental influences (e.g. media content, sensitising activities).",
-     "Gender identity should not be influenced by environmental influences (e.g. media content, sensitising activities)."),
-
-    ("Stronger state regulation of the work of NGOs supported by foreign organisations is needed.",
-     "There is no need for stronger state regulation of the work of NGOs supported by foreign organisations."),
-
-    ("Hungary should join the European Public Prosecutor's Office.",
-     "Hungary should not join the European Public Prosecutor's Office."),
-
-    ("Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation).",
-     "There is no need for stricter regulation of interception software (e.g. Pegasus) (e.g. subject to judicial authorisation)."),
-
-    ("The age of compulsory schooling should be raised back to 18.",
-     "The age of compulsory education should not be raised back to 18."),
-
-    ("The Hungarian government should ratify the Istanbul Convention, which combats violence against women and domestic violence.",
-     "The Hungarian government should not ratify the Istanbul Convention against violence against women and domestic violence."),
-
-    ("One effective way to reduce rents is to conclude favourable gas supply contracts with Russia.",
-     "The conclusion of favourable gas supply contracts with Russia is not an effective way of reducing rationing."),
+    ("Only men and women should be allowed to marry.",
+     "Marriages should not be exclusively between men and women."),
 
     ("Comprehensive public procurement reform is needed (e.g. opening up large-scale centralised public procurement to smaller firms).",
      "There is no need for comprehensive public procurement reform (e.g. opening up large-scale centralised public procurement to smaller firms)."),
@@ -242,26 +96,8 @@ PAIRS: List[Tuple[str, str]] = [
     ("Public employment helps people re-enter the labour market.",
      "Public works do not help people to re-enter the labour market."),
 
-    ("A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is the right step to fight inflation.",
-     "A price freeze on some basic foodstuffs (e.g. chicken tail, milk) is not the right way to fight inflation."),
-
-    ("State regulation of the rental housing market is not necessary.",
-     "Public regulation of the rental housing market is needed."),
-
-    ("The use of medical cannabis should be legalised in Hungary.",
-     "Medical cannabis should not be legalised in Hungary."),
-
-    ("The President of the Hungarian Republic should be directly elected.",
-     "The President of the Hungarian Republic should not be directly elected."),
-
-    ("Comprehensive reform of the electoral system (redrawing of district boundaries, abolition of winner-take-all compensation, extension of postal voting) is needed.",
-     "There is no need for a comprehensive reform of the electoral system (redrawing of district boundaries, abolition of winner compensation, extension of postal voting)."),
-
     ("A legal framework for primary elections should be provided.",
      "There is no need to provide a legal framework for primary elections."),
-
-    ("Internet access should be free for all.",
-     "Internet should not be free for all."),
 
     ("Polluting companies should be taxed more heavily.",
      "Polluting companies should not be subject to higher taxes."),
@@ -272,17 +108,14 @@ PAIRS: List[Tuple[str, str]] = [
     ("The redevelopment of urban green spaces (e.g. the Liget project in Budapest) needs a broad social dialogue.",
      "The redevelopment of urban green areas (e.g. the Liget project in Budapest) does not require a broad social dialogue."),
 
-    ("An independent ministry for the environment is needed.",
-     "There is no need for a separate environment ministry."),
+    ("Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation).",
+     "There is no need for stricter regulation of interception software (e.g. Pegasus) (e.g. subject to judicial authorisation)."),
 
-    ("An animal rights commissioner should be introduced.",
-     "No need to introduce an animal rights commissioner."),
+    ("Italy should keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO).",
+     "Italy should not keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO)."),
 
-    ("The European Union should have a common foreign policy.",
-     "The European Union should not have a common foreign policy."),
-
-    ("European economic integration has gone too far: member states should regain more autonomy.",
-     "European economic integration has not gone too far: member states should not regain more autonomy."),
+    ("Restrictions on personal freedom and privacy are acceptable to deal with health emergencies such as Covid-19.",
+     "Restrictions on personal freedom and privacy are not acceptable for dealing with health emergencies such as Covid-19."),
 
     ("Children, born in Italy to foreign citizens and who have completed schooling should be granted Italian citizenship (ius scholae).",
      "Children, born in Italy to foreign nationals and who have completed school, should not be granted Italian citizenship (ius scholae)."),
@@ -290,78 +123,26 @@ PAIRS: List[Tuple[str, str]] = [
     ("More civil rights should be granted to homosexual, bisexual, transgender (LGBT+) people.",
      "Homosexual, bisexual, transgender (LGBT+) people should not be granted more civil rights."),
 
-    ("Citizens should be guaranteed freedom of choice in end-of-life matters (euthanasia).",
-     "Citizens should not be guaranteed freedom of choice in end-of-life matters (euthanasia)."),
-
-    ("Recreational use of marijuana/cannabis should be allowed.",
-     "Recreational use of marijuana/cannabis should not be allowed."),
-
-    ("Health care should be managed only by the state and not by private individuals.",
-     "Health care should not only be managed by the state, but also by private individuals."),
-
-    ("The construction of Major Works is a priority for Italy.",
-     "The construction of Major Works is not a priority for Italy."),
-
-    ("Regasifiers are necessary infrastructure for Italy.",
-     "Regasifiers are not necessary infrastructure for Italy."),
-
-    ("Italy should keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO).",
-     "Italy should not keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO)."),
-
-    ("Organizers of events should be able to request a vaccination certificate upon entry.",
-     "Event organizers should not require vaccination certificates at entry."),
-
-    ("The Netherlands should exit the European Union (EU).",
-     "The Netherlands should not leave the European Union (EU)."),
-
-    ("The Netherlands should build a new nuclear power plant.",
-     "The Netherlands should not build a new nuclear power plant."),
-
-    ("Households with two partners, one of whom works, should receive the same tax benefits as households with two working partners.",
-     "Households with two partners of which one works should not receive the same tax benefit as households with two working partners."),
-
     ("The Dutch government should apologize for the historical slave trade.",
      "The Dutch government should not apologize for the slave trade in the past."),
 
-    ("Citizens should have the opportunity to block laws passed by parliament through a referendum.",
-     "Citizens should not be allowed to stop laws passed by parliament through a referendum."),
-
-    ("There should be fewer options for community service sentences instead of prison sentences.",
-     "There should not be fewer opportunities to impose community service instead of prison sentences."),
-
-    ("The government should make Dutch-language education more frequently mandatory at universities and colleges.",
-     "The government should no longer make education in Dutch compulsory at universities and colleges."),
-
-    ("A middle school should be established so that students make a choice between vocational education, general secondary education, or pre-university education at a later age.",
-     "There should be no middle school, so that pupils do not have to choose between vmbo, havo or vwo at a later age."),
-
-    ("Social transfers should be increased to reduce the effects of inflation on citizens.",
-     "Social transfers should not be increased to limit the effects of inflation on citizens."),
-
-    ("The state should finance private visits to specialists if the waiting time at a public facility exceeds three months.",
-     "The state should not finance private visits to specialists if the waiting time at a public facility exceeds three months."),
-
-    ("The state should provide a free nursery place for every child.",
-     "The state should not provide a free nursery place for every child."),
-
-    ("The state should build low-rent apartments for rent.",
-     "The state should not build low-income rental housing."),
+    ("New residential areas should consist of at least 40 percent green space.",
+     "New housing developments should not consist of at least 40 percent social housing."),
 
     ("The independence of the judiciary from parliament and the government should be strengthened.",
      "The independence of the judiciary from parliament and government should not be strengthened."),
 
-    ("The powers of local governments should be increased at the expense of the central government.",
-     "The powers of local governments should not be increased at the expense of the central government."),
-
-    ("Poland should move away from coal mining no later than 2040.",
-     "Poland should not move away from coal mining by 2040."),
-
     ("Poland should have grain imports from Ukraine blocked.",
      "Poland should not lead to the blocking of grain imports from Ukraine."),
 
-    ("The powers of the secret services to track the activities of citizens on the Internet should be limited.",
-     "The powers of the secret services to track the activities of citizens on the Internet should not be restricted."),
+    ("Social transfers should be increased to reduce the effects of inflation on citizens.",
+     "Social transfers should not be increased to limit the effects of inflation on citizens."),
 
+    ("The state should build low-rent apartments for rent.",
+     "The state should not build low-income rental housing."),
+
+    ("Early retirement should be introduced for those who have worked a certain number of years, regardless of their age.",
+     "There should be no early retirement for those who have worked a certain number of years, regardless of their age."),
 ]
 
 
@@ -540,6 +321,94 @@ def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12) ->
     R = 1.0 - dp / (d0 + eps)
     return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
 
+def polarity_from_probs(p: np.ndarray, tie_eps: float = 1e-6) -> str:
+    """
+    p: shape [7], 对应 digits 1..7 的概率
+    neg = P(1)+P(2)+P(3)
+    pos = P(5)+P(6)+P(7)
+    digit4 不计入两极
+    """
+    neg = float(p[0] + p[1] + p[2])
+    pos = float(p[4] + p[5] + p[6])
+    if abs(neg - pos) <= tie_eps:
+        return "amb"
+    return "neg" if neg > pos else "pos"
+
+
+def count_unflips_for_single_patch(
+    model,
+    tokenizer,
+    pairs: List[Tuple[str, str]],
+    kind: str,          # "attn" or "mlp" or "block"
+    layer_idx: int,     # e.g. 23 or 22
+    restoration_thresh: float = 0.0,
+    tie_eps: float = 1e-6,
+    verbose: bool = True,
+):
+    assert kind in ("attn", "mlp", "block")
+
+    unflip_count = 0
+    flipped_eligible = 0  # clean/corrupt 极性确实相反的 pair 数
+    details = []
+
+    n_layers = len(get_decoder_layers(model))
+    if layer_idx < 0 or layer_idx >= n_layers:
+        raise ValueError(f"layer_idx={layer_idx} out of range (n_layers={n_layers})")
+
+    for i, (b, v) in enumerate(pairs, 1):
+        if verbose and (i % 10 == 1 or i == len(pairs)):
+            print(f"[{kind} L{layer_idx}] pair {i}/{len(pairs)}")
+
+        enc_clean = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(b))
+        enc_corrupt = encode_for_next_token(tokenizer, model, SYSTEM_PROMPT, build_user_prompt(v))
+
+        logits_clean = forward_logits_only(model, enc_clean)
+        logits_corrupt = forward_logits_only(model, enc_corrupt)
+
+        clean_probs_t = digit_probs_from_logits_full(logits_clean, enc_clean, TEMP_FOR_PROBS)
+        corrupt_probs_t = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
+
+        clean_probs = clean_probs_t.detach().float().cpu().numpy()
+        corrupt_probs = corrupt_probs_t.detach().float().cpu().numpy()
+
+        pol_clean = polarity_from_probs(clean_probs, tie_eps=tie_eps)
+        pol_corrupt = polarity_from_probs(corrupt_probs, tie_eps=tie_eps)
+
+        flipped = (pol_clean in ("neg", "pos")) and (pol_corrupt in ("neg", "pos")) and (pol_clean != pol_corrupt)
+        if flipped:
+            flipped_eligible += 1
+
+        # collect clean cache (只需一次)
+        clean_cache = collect_clean_cache(model, enc_clean)
+
+        spec = {"block": [], "attn": [], "mlp": []}
+        spec[kind] = [layer_idx]
+
+        with patch_context(model, enc_corrupt, clean_cache, spec):
+            logits_patched = forward_logits_only(model, enc_corrupt)
+            patched_probs_t = digit_probs_from_logits_full(logits_patched, enc_corrupt, TEMP_FOR_PROBS)
+
+        patched_probs = patched_probs_t.detach().float().cpu().numpy()
+        pol_patched = polarity_from_probs(patched_probs, tie_eps=tie_eps)
+
+        r = normalized_restoration(w_1d, clean_probs_t, corrupt_probs_t, patched_probs_t)
+        restoration = float(r.item())
+
+        unflipped = flipped and (pol_patched == pol_clean) and (restoration > restoration_thresh)
+        if unflipped:
+            unflip_count += 1
+
+        details.append({
+            "idx": i,
+            "clean_pol": pol_clean,
+            "corrupt_pol": pol_corrupt,
+            "patched_pol": pol_patched,
+            "flipped": flipped,
+            "unflipped": unflipped,
+            "restoration": restoration,
+        })
+
+    return unflip_count, flipped_eligible, details
 
 
 # ---------------------------
@@ -904,6 +773,43 @@ def main():
         torch_dtype="auto",
         trust_remote_code=True,
     ).eval()
+
+    attn29_unflip, attn29_flipped, attn29_details = count_unflips_for_single_patch(
+        model=model,
+        tokenizer=tokenizer,
+        pairs=PAIRS,
+        kind="attn",
+        layer_idx=29,
+        restoration_thresh=0.0,  # 你想严格一点可以改 0.3 / 0.5
+        verbose=True,
+    )
+
+    mlp23_unflip, mlp23_flipped, mlp31_details = count_unflips_for_single_patch(
+        model=model,
+        tokenizer=tokenizer,
+        pairs=PAIRS,
+        kind="mlp",
+        layer_idx=31,
+        restoration_thresh=0.0,
+        verbose=True,
+    )
+
+    print("\n================ RESULTS ================")
+    print(f"ATTN layer 29: unflip {attn29_unflip} / flipped-eligible {attn29_flipped} (total pairs={len(PAIRS)})")
+    print(f"MLP  layer 31: unflip {mlp23_unflip} / flipped-eligible {mlp23_flipped} (total pairs={len(PAIRS)})")
+
+    import csv
+    with open("unflip_attn29_details.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(attn29_details[0].keys()))
+        w.writeheader()
+        w.writerows(attn29_details)
+    
+    with open("unflip_mlp31_details.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(mlp31_details[0].keys()))
+        w.writeheader()
+        w.writerows(mlp31_details)
+
+    print("Saved: unflip_attn23_details.csv, unflip_mlp22_details.csv")
 
     # ---------------------------
     # Figure 1: Activation patching curves
