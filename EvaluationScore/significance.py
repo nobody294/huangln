@@ -33,7 +33,7 @@ def run(input_csv: str, output_csv: str, decimals: int = 2) -> None:
     rows = []
     for _, r in grouped.iterrows():
         means, (low, high) = bootstrap_means(arr=r["score_rescaled"])
-        if low >= 0.10 or high <= -0.10:
+        if low > 0.10 or high < -0.10:
             continue
         else:
             rows.append({
@@ -53,10 +53,12 @@ if __name__ == "__main__":
 
     # run(input_csv="data/negation_responses_4B_1.csv", output_csv="data/significance/negation_4B_not_significant_1.csv")
     # run(input_csv="data/negation_responses_12B.csv", output_csv="data/significance/negation_12B_not_significant.csv")
-    run(input_csv="data/negation_responses_14B.csv", output_csv="data/significance/negation_14B_not_significant.csv")
+    # run(input_csv="data/negation_responses_14B.csv", output_csv="data/significance/negation_14B_not_significant.csv")
 
     # run(input_csv="data/opposite_responses_4B.csv", output_csv="data/significance/opposite_4B_not_significant.csv")
     # run(input_csv="data/opposite_responses_12B.csv", output_csv="data/significance/opposite_12B_not_significant.csv")
+    run(input_csv="data/opposite_responses_4B_qwen.csv", output_csv="data/significance/opposite_4B_not_significant_qwen.csv")
+    run(input_csv="data/opposite_responses_14B.csv", output_csv="data/significance/opposite_14B_not_significant.csv")
 
     # run(input_csv="data/active_passive_responses_4B.csv", output_csv="data/significance/active_passive_4B_not_significant.csv")
     # run(input_csv="data/active_passive_responses_12B.csv", output_csv="data/significance/active_passive_12B_not_significant.csv")

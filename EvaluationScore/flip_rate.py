@@ -3,7 +3,7 @@ import os
 import json
 import pandas as pd
 
-original_csv = "data/original_CI_14B.csv"
+original_csv = "data/original_CI_4B_qwen.csv"
 variant_csvs = {
     # "negation": "data/negation_CI_4B_1.csv",
     # "opposite": "data/opposite_CI_12B.csv",
@@ -25,8 +25,8 @@ variant_csvs = {
     # "combine_active_passive_SVC": "data/combine_active_passive_SVC_CI_12B.csv",
     # "combine_it-clefts_SVC": "data/combine_it-clefts_SVC_CI_12B.csv",
     # "combine_wh-clefts_SVC": "data/combine_wh-clefts_SVC_CI_12B.csv",
-    "opposite": "data/opposite_CI_14B.csv",
-    "combine_negation_opposite": "data/combine_negation_opposite_CI_14B.csv"
+    "opposite": "data/opposite_CI_4B_qwen.csv",
+    # "combine_negation_opposite": "data/combine_negation_opposite_CI_14B.csv"
 }
 
 out_dir = "data/flip rate"
@@ -95,7 +95,7 @@ for vname, vpath in variant_csvs.items():
                 })
     
     df_flip = pd.DataFrame(flip_rows, columns=["ID", "score_list", "CI"])
-    out_name = f"{vname}_flip_14B.csv"
+    out_name = f"{vname}_flip_4B_qwen_1.csv"
     out_path = os.path.join(out_dir, out_name)
     df_flip.to_csv(out_path, index=False, encoding="utf-8")
     print(f"[ok] {vname}: pairs={eligible_count}, flips={len(df_flip)} -> {out_path}")

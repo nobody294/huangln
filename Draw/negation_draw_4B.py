@@ -1183,7 +1183,7 @@ def main():
     patch_stats = aggregate_profiles(patch_profiles)
 
     fig1 = plot_layerwise_subplot(
-        title=f"Activation patching\n{RULE_NAME} (flip pairs n={patch_stats['n_pairs']})",
+        title=f"Activation patching\n{RULE_NAME} (unflip pairs n={patch_stats['n_pairs']})",
         stats=patch_stats,
         ylabel="Normalized restoration score",
     )
