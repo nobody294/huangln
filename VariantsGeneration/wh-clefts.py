@@ -12,12 +12,7 @@ SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
     "Your only job is to transform the base statement into a Wh-cleft (pseudo-cleft) construction: "
     "What/Who/Where/When + [CLause with a gap] + is/are/was/were + [FOCUS]. "
-    "Truth conditions must be preserved. Do not introduce or remove content. Do not paraphrase. "
-    "Keep the original determiner type and genericity. "
-    "Preserve scope of negation, modals, quantifiers, tense/aspect, numbers, named entities, and PPs (time/place). "
-    "The [FOCUS] must be a contiguous span copied verbatim from the base (NP/PP preferred; VP allowed if necessary). "
     "Generate in English only. "
-    "Output a single JSON object exactly matching the schema."
 )
 
 BUILTIN_FEWSHOTS = [
@@ -59,21 +54,19 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
   "variants": {
       "text": "...",
       "not_applicable": false,
-      "reason": none
   }
 }"""
     return f"""Task: Convert the base statement into a Wh-cleft variant.
 
-Hard constraints (follow strictly):
+Hard constraints:
 1) Use canonical Wh-cleft form: What/Who/Where/When + [CLause with a gap] + is/are/was/were + [FOCUS]. Match the tense to the base.
-2) WH choice: 'what' for things or VP-gaps (default), 'who' ONLY for people, 'where' for places, 'when' for times. Do not use 'why'.
-3) Do not new content if it is unnecessary.
-4) [FOCUS] must be a contiguous verbatim span from the base. Prefer NP or PP. VP allowed only if it is a contiguous phrase copied verbatim.
-5) [FOCUS] preference order: object NP/PP > adjunct PP (time/place) > subject NP > VP.
-6) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
-7) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
-8) Preserve truth conditions.
-9) If a well-formed Wh-cleft cannot be produced without paraphrasing or content change, set not_applicable = true with a one phrase reason.
+2) WH choice: 'what' for things or VP-gaps (default), 'who' ONLY for people, 'where' for places, 'when' for times.
+3) [FOCUS] must be a contiguous verbatim span from the base. Prefer NP or PP. VP allowed only if it is a contiguous phrase copied verbatim.
+4) [FOCUS] preference order: object NP/PP > adjunct PP (time/place) > subject NP > VP.
+5) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
+6) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+7) Preserve truth conditions.
+8) If a well-formed Wh-cleft cannot be produced without paraphrasing or content change, set not_applicable = true.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}

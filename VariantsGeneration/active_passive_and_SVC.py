@@ -80,7 +80,6 @@ def build_user_prompt(base: str, actpas: str, svc: str, fewshots_text: str) -> s
     "combine_variant": {
         "text": "...",
         "not_applicable": false,
-        "reason": null
     }
     }"""
     return f"""Task: Construct a COMBINE variant from a base, an active/passive variant, and a support verb construction variant.
@@ -88,8 +87,7 @@ def build_user_prompt(base: str, actpas: str, svc: str, fewshots_text: str) -> s
     Hard constraints (follow strictly):
     1) Do NOT add new content, explanations, or paraphrases beyond support verb construction and active/passive conversion.
     2) The COMBINE variant must be a single grammatical English sentence.
-    3) If a well-formed combine variant cannot be constructed, set not_applicable = true with a short reason.
-    4) Output must be a SINGLE JSON object exactly matching the requested schema, with no extra text.
+    3) If a well-formed combine variant cannot be constructed, set not_applicable = true.
 
     Output format (SINGLE JSON only, no extra text):
     {schema}

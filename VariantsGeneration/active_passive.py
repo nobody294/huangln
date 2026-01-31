@@ -10,33 +10,26 @@ model_name = "Qwen/Qwen3-8B"
 
 SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
-    "Your only job is to convert the base statement between active and passive voice, "
-    "preserving truth-conditional meaning, named entities, numbers, qualifiers, scope, modality, tense, aspect, and negation. "
-    "Preserve the entire auxiliary/modal chain exactly, including multiword modals."
+    "Your only job is to convert the base statement between active and passive voice. "
     "Generate in English only. "
-    "Output a single JSON object exactly matching the schema."
 )
 
 BUILTIN_FEWSHOTS = [
     {
         "base": "The state should provide stronger financial support to unemployed workers.",
         "variant": "Stronger financial support should be provided to unemployed workers by the state.",
-        "direction": "active_to_passive",
     },
     {
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
         "variant": "Member States that violate the EU deficit rules should be rigorously punished by the EU.",
-        "direction": "active_to_passive",
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
         "variant": "The government should tax bank and stock market gains more heavily.",
-        "direction": "passive_to_active",
     },
     {
         "base": "In European Parliament elections, EU citizens should be allowed to cast a vote for a party or candidate from any other Member State.",
         "variant": "In European Parliament elections, a vote should be allowed to be cast by EU citizens for a party or candidate from any other Member State.",
-        "direction": "active_to_passive",
     },
     {
         "base": "The legalisation of same sex marriages is a good thing.",
@@ -51,21 +44,15 @@ BUILTIN_FEWSHOTS = [
 def render_fewshots_block(shots):
     lines = ["Few-shot exemplars (follow style strictly):"]
     for s in shots:
-        dir_tag = s.get("direction", "unknown")
-        tag = "active->passive" if dir_tag == "active_to_passive" else (
-              "passive->active" if dir_tag == "passive_to_active" else "voice conversion")
-        lines.append(f"- Base: {s['base']}\n  - {tag}: {s['variant']}")
+        lines.append(f"- Base: {s['base']}\n  - active/passive conversions variant: {s['variant']}")
     return "\n".join(lines)
 
 def build_user_prompt(base: str, fewshots_text: str) -> str:
     schema = """{
   "base": "<copy the base exactly>",
-  "direction": "active_to_passive" | "passive_to_active" | "unknown",
   "variants": {
       "text": "...",
-      "edit_ops": ["voice: active->passive" | "voice: passive->active"],
       "not_applicable": false,
-      "reason": none
   }
 }"""
     return f"""Task: Convert the base statement between active and passive voice.
@@ -73,8 +60,8 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
 Hard constraints:
 1) Do exactly and only a voice transformation (Active<->Passive). Preserve all arguments, named entities, numbers, tense/aspect, modals, quantifiers, negation scope, and PPs.
 2) If an agent exists, keep it (use a by-phrase in passive).
-3) If voice transformation is inapplicable, set "not_applicable"=true and "reason"=a one-phrase reason.
-4) Keep truth-conditional meaning intact. No paraphrasing beyond voice change.
+3) If voice transformation is inapplicable, set "not_applicable"=true.
+4) Preserve truth conditions. No paraphrasing beyond voice change.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}

@@ -12,10 +12,7 @@ SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
     "Your only job is to transform the base statement into a Support Verb Construction (SVC): "
     "[SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). "
-    "Truth conditions must be preserved. Do not remove content. Do not paraphrase. "
-    "Preserve scope of negation, modals, quantifiers, tense/aspect, numbers, named entities, and PPs (time/place). "
     "Generate in English only. "
-    "Output a single JSON object exactly matching the schema."
 )
 
 BUILTIN_FEWSHOTS = [
@@ -57,18 +54,17 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
   "variants": {
       "text": "...",
       "not_applicable": false,
-      "reason": null
   }
 }"""
     return f"""Task: Convert the base statement into an Support Verb Construction (SVC).
 
-Hard constraints (follow strictly):
+Hard constraints:
 1) Make only the SVC substitution: [VERB] -> [SUPPORT_VERB] + [DEVERBAL_NOUN] (+ minimal required preposition) (+ original complements). Do not remove content. Do not make other paraphrasing.
 2) If the verb in the base statement is modified by an adverb, project it as an adjective inside the SVC span if possible.
-3) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+3) Keep all named entities, numerals, negation, modals, and quantifier scope unchanged.
 4) Preserve complements by mapping them to the nominal head in a natural way; do not drop or invent content.
-5) If no SVC exists for the predicate, or if the base is already an SVC, set not_applicable=true and give a brief reason (one phrase).
-6) Aside from the SVC span and any required preposition, keep the rest of the wording identical.
+5) Aside from the SVC span and any required preposition, keep the rest of the wording identical. Preserve truth conditions.
+6) If no SVC exists for the predicate, or if the base is already an SVC, set not_applicable=true.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}

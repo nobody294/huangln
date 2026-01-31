@@ -36,8 +36,8 @@ MMLU_SYSTEM_PROMPT = (
 # BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
 # VARIANT_TEXT = "There should not be a tax per kilometer driven for motorists instead of the tax on car ownership."
 
-BASE_TEXT = "Houses should be built on land currently used for agriculture."
-VARIANT_TEXT = "No housing should be built on land now used for agriculture."
+# BASE_TEXT = "Houses should be built on land currently used for agriculture."
+# VARIANT_TEXT = "No housing should be built on land now used for agriculture."
 
 # BASE_TEXT = "To better defend Spain's interests in Europe we must recover more sovereignty."
 # VARIANT_TEXT = "In order to better defend Spain's interests in Europe, we should not recover more sovereignty."
@@ -64,8 +64,8 @@ VARIANT_TEXT = "No housing should be built on land now used for agriculture."
 # BASE_TEXT = "Migrant landings must be stopped, even by extreme means."
 # VARIANT_TEXT = "Migrant landings must not be stopped, even by extreme means."
 
-# BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
-# VARIANT_TEXT = "Doctors should not be allowed to administer direct active euthanasia."
+BASE_TEXT = "Doctors should be allowed to administer direct active euthanasia."
+VARIANT_TEXT = "Doctors should not be allowed to administer direct active euthanasia."
 
 # BASE_TEXT = "To achieve climate targets, incentives and target agreements should be relied on exclusively, rather than bans and restrictions."
 # VARIANT_TEXT = "To achieve climate targets, incentives and target agreements should not be relied on exclusively, rather than bans and restrictions."

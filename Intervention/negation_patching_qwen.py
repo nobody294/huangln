@@ -1000,6 +1000,7 @@ def main():
         kind="attn",
         layer_idx=22,
         restoration_thresh=0.0,  # 你想严格一点可以改 0.3 / 0.5
+        tie_eps=0.2,
         verbose=True,
     )
 
@@ -1010,6 +1011,7 @@ def main():
         kind="attn",
         layer_idx=26,
         restoration_thresh=0.0,  # 你想严格一点可以改 0.3 / 0.5
+        tie_eps=0.2,
         verbose=True,
     )
 
@@ -1020,6 +1022,7 @@ def main():
         kind="mlp",
         layer_idx=23,
         restoration_thresh=0.0,
+        tie_eps=0.2,
         verbose=True,
     )
 

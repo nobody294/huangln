@@ -12,13 +12,7 @@ SYSTEM_PROMPT = (
     "You are a controlled text rewriter. "
     "Your only job is to transform the base statement into an It-cleft construction: "
     "It is/was [FOCUS] that [CLAUSE]."
-    "Match copula tense to the base (is/was). "
-    "Truth conditions must be preserved. Do not introduce or remove content. Do not paraphrase. "
-    "Keep the original determiner type and genericity. "
-    "Preserve scope of negation, modals, quantifiers, tense/aspect, numbers, named entities, and PPs (time/place). "
-    "The [FOCUS] must be a contiguous span copied verbatim from the base. "
     "Generate in English only. "
-    "Output a single JSON object exactly matching the schema."
 )
 
 BUILTIN_FEWSHOTS = [
@@ -60,20 +54,19 @@ def build_user_prompt(base: str, fewshots_text: str) -> str:
   "variants": {
       "text": "...",
       "not_applicable": false,
-      "reason": none
   }
 }"""
     return f"""Task: Convert the base statement into an It-cleft variant.
 
-Hard constraints (follow strictly):
+Hard constraints:
 1) Use canonical It-cleft form: It is/was [FOCUS] that [CLAUSE]. Match the copula tense to the base.
 2) [FOCUS] must be a contiguous verbatim span from the base. Allowed: NP (subject/object) focus, PP (time/place) focus, or adverbial. Not allowed: VP focus, paraphrase, removing content, insertion of new words.
 3) [FOCUS] priority: object NP > PP > subject NP.
 4) Keep the original article/none: a/an stays a/an; bare plurals/mass stay bare; definites remain definite.
 5) Keep original PPs and word order inside the [CLAUSE] whenever possible.
-7) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
-8) Preserve truth conditions.
-9) If the sentence is not suitable for an It-cleft, set not_applicable=true with a one-phrase reason.
+6) Keep all named entities, numerals, negation, modals, quantifier scope, and PP complements unchanged.
+7) Preserve truth conditions.
+8) If the sentence is not suitable for an It-cleft, set not_applicable=true.
 
 Output format (SINGLE JSON only, no extra text):
 {schema}
