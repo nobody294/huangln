@@ -1,8 +1,10 @@
 ## Coding information for the IDs
 String with the following format:
-<div style="overflow-x:auto; white-space:nowrap; border:1px solid #ddd; padding:8px;">
-  CountryCode + _ + StatementID + _ + Original | Negation | Opposite | Active/Passive conversion | It-cleft | Wh-cleft | Support verb construction (SVC)
-</div>
+
+```text
+CountryCode + _ + StatementID + _ + Original | Negation | Opposite | Active/Passive conversion | It-cleft | Wh-cleft | Support verb construction (SVC)
+```
+
 e.g. nl_1_0001000
 
 - Original, negation, opposite, active/passive conversion, it-cleft, wh-cleft and SVC are binary.
