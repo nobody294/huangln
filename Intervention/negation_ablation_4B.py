@@ -735,8 +735,5 @@ def set_global_determinism(seed: int = 42, single_thread: bool = True):
 
 if __name__ == "__main__":
     torch.set_grad_enabled(True)
-
     set_global_determinism(0, single_thread=True)
-
-    print("=== Baseline diagnostics: activation patching / ablation ===")
     _ = run_activation_ablation(BASE_TEXT, VARIANT_TEXT)
