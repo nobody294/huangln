@@ -1,0 +1,15 @@
+rule,model,total_ids,clear_ids,unclear_ids,clear_rate_pct,csv
+base,gemma-3-4b-it,239,232,7,97.07,data/original_responses_4B.csv
+base,gemma-3-12b-it,239,153,86,64.02,data/original_responses_12B.csv
+negation,gemma-3-4b-it,239,236,3,98.74,data/negation_responses_4B.csv
+negation,gemma-3-12b-it,239,120,119,50.21,data/negation_responses_12B.csv
+opposite,gemma-3-4b-it,239,232,7,97.07,data/opposite_responses_4B.csv
+opposite,gemma-3-12b-it,239,132,107,55.23,data/opposite_responses_12B.csv
+active-passive,gemma-3-4b-it,194,192,2,98.97,data/active_passive_responses_4B.csv
+active-passive,gemma-3-12b-it,194,128,66,65.98,data/active_passive_responses_12B.csv
+it-clefts,gemma-3-4b-it,236,226,10,95.76,data/it-clefts_responses_4B.csv
+it-clefts,gemma-3-12b-it,236,144,92,61.02,data/it-clefts_responses_12B.csv
+wh-clefts,gemma-3-4b-it,238,231,7,97.06,data/wh-clefts_responses_4B.csv
+wh-clefts,gemma-3-12b-it,238,154,84,64.71,data/wh-clefts_responses_12B.csv
+SVC,gemma-3-4b-it,122,119,3,97.54,data/SVC_responses_4B.csv
+SVC,gemma-3-12b-it,122,76,46,62.3,data/SVC_responses_12B.csv

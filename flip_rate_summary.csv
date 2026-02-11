@@ -1,0 +1,13 @@
+model,rule,eligible_pairs,flip_pairs,flip_rate_pct,original_ci,variant_ci,expected_relation
+gemma-3-4b-it,negation,229,56,24.45,data/original_CI_4B.csv,data/negation_CI_4B.csv,inversion
+gemma-3-4b-it,opposite,226,61,26.99,data/original_CI_4B.csv,data/opposite_CI_4B.csv,inversion
+gemma-3-4b-it,active-passive,186,23,12.37,data/original_CI_4B.csv,data/active_passive_CI_4B.csv,invariance
+gemma-3-4b-it,it-clefts,221,34,15.38,data/original_CI_4B.csv,data/it-clefts_CI_4B.csv,invariance
+gemma-3-4b-it,wh-clefts,225,30,13.33,data/original_CI_4B.csv,data/wh-clefts_CI_4B.csv,invariance
+gemma-3-4b-it,SVC,116,4,3.45,data/original_CI_4B.csv,data/SVC_CI_4B.csv,invariance
+gemma-3-12b-it,negation,79,15,18.99,data/original_CI_12B.csv,data/negation_CI_12B.csv,inversion
+gemma-3-12b-it,opposite,86,16,18.6,data/original_CI_12B.csv,data/opposite_CI_12B.csv,inversion
+gemma-3-12b-it,active-passive,112,0,0.0,data/original_CI_12B.csv,data/active_passive_CI_12B.csv,invariance
+gemma-3-12b-it,it-clefts,123,2,1.63,data/original_CI_12B.csv,data/it-clefts_CI_12B.csv,invariance
+gemma-3-12b-it,wh-clefts,131,2,1.53,data/original_CI_12B.csv,data/wh-clefts_CI_12B.csv,invariance
+gemma-3-12b-it,SVC,72,0,0.0,data/original_CI_12B.csv,data/SVC_CI_12B.csv,invariance

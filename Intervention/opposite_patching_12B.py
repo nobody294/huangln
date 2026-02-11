@@ -22,200 +22,222 @@ SYSTEM_PROMPT = (
 )
 
 # Example pair for base vs variant
-# BASE_TEXT = "There should be a ban on single-use plastic and non-recyclable plastics. "
-# VARIANT_TEXT = "There should not be a ban on single-use plastic and non-recyclable plastics."
-
-# BASE_TEXT = "There should be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "
-# VARIANT_TEXT = "There should not be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "
-
-# BASE_TEXT = "The Swiss mobile network should be equipped throughout the country with the latest technology (currently 5G standard). "
-# VARIANT_TEXT = "The Swiss mobile network should not be equipped throughout the country with the latest technology (currently 5G standard)."
-
-# BASE_TEXT = "The Swiss Armed Forces should expand their cooperation with NATO. "
-# VARIANT_TEXT = "The Swiss Armed Forces should not expand their cooperation with NATO."
-
-# BASE_TEXT = "The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "
-# VARIANT_TEXT = "The Federal Council should not be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "
-
-# BASE_TEXT = "There should be closer relations with the European Union (EU). "
-# VARIANT_TEXT = "There should not be closer relations with the European Union (EU)."
-
-# BASE_TEXT = "Companies should be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards. "
-# VARIANT_TEXT = "Companies should not be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards."
-
-# BASE_TEXT = "The federal government should allocate more funding for health insurance premium subsidies. "
-# VARIANT_TEXT = "The federal government should not allocate more funding for health insurance premium subsidies."
-
-# BASE_TEXT = "As part of the reform of the BVG (occupational pension plan), pensions are to be reduced (lowering the minimum conversion rate from 6.8% to 6%). "
-# VARIANT_TEXT = "As part of the reform of the BVG (occupational pension plan), pensions are not to be reduced (lowering the minimum conversion rate from 6.8% to 6%). "
-
-# BASE_TEXT = "The federal government should provide more financial support for public housing construction. "
-# VARIANT_TEXT = "The federal government should not provide more financial support for public housing construction."
-
-# BASE_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should be more limited. "
-# VARIANT_TEXT = "The Federal Council's ability to restrict private and economic life in the event of a pandemic should not be more limited."
-
-# BASE_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes. "
-# VARIANT_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should not be taught in regular classes. "
-
-# BASE_TEXT = "The state should be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). "
-# VARIANT_TEXT = "The state should not be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). "
-
-# BASE_TEXT = "More qualified workers from non-EU/EFTA countries should be allowed to work in Switzerland (increase third-country quota)."
-# VARIANT_TEXT = "More qualified workers from non-EU/EFTA countries should not be allowed to work in Switzerland (increase third-country quota)."
-
-# BASE_TEXT = "Cannabis use should be legalized. "
-# VARIANT_TEXT = "Cannabis use should not be legalized."
-
-# BASE_TEXT = "Same-sex couples should have the same rights as heterosexual couples in all areas. "
-# VARIANT_TEXT = "Same-sex couples should not have the same rights as heterosexual couples in all areas."
-
-# BASE_TEXT = "There should be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "
-# VARIANT_TEXT = "There should not be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "
-
-# BASE_TEXT = "Private households should be free to choose their electricity supplier (complete liberalization of the electricity market). "
-# VARIANT_TEXT = "Private households should not be free to choose their electricity supplier (complete liberalization of the electricity market)."
-
-# BASE_TEXT = "The construction of new nuclear power plants should be allowed again. "
-# VARIANT_TEXT = "The construction of new nuclear power plants should not be allowed again."
-
-# BASE_TEXT = "The state should guarantee a comprehensive public service offering also in rural regions. "
-# VARIANT_TEXT = "The state should not guarantee a comprehensive public service offering also in rural regions."
-
-# BASE_TEXT = "There should be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas). "
-# VARIANT_TEXT = "There should not be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas)."
-
-# BASE_TEXT = "30% of Switzerland's land area should be dedicated to preserving biodiversity?. "
-# VARIANT_TEXT = "30% of Switzerland's land area should not be dedicated to preserving biodiversity. "
-
-# BASE_TEXT = "Young people over the age of 16 are to be allowed to vote in Bundestag elections."
-# VARIANT_TEXT = "Young people aged 16 and over should not be allowed to vote in federal elections."
-
-# BASE_TEXT = "The right of recognized refugees to join their families is to be abolished."
-# VARIANT_TEXT = "The right of recognized refugees to family reunification should not be abolished."
-
-# BASE_TEXT = "Female civil servants are to be allowed to wear headscarves while on duty."
-# VARIANT_TEXT = "Female civil servants should not be allowed to wear headscarves on duty."
-
-# BASE_TEXT = "The federal government is to provide more financial support for projects to combat anti-Semitism."
-# VARIANT_TEXT = "The federal government should not provide more financial support for projects to combat anti-Semitism."
-
-# BASE_TEXT = "The controlled sale of cannabis is to be generally permitted."
-# VARIANT_TEXT = "The controlled sale of cannabis should not be permitted."
-
-# BASE_TEXT = "Germany is to leave the European Union."
-# VARIANT_TEXT = "Germany should not leave the European Union."
-
-# BASE_TEXT = "Islamic associations are to be able to be recognized by the state as religious communities."
-# VARIANT_TEXT = "Islamic associations should not be able to be recognized by the state as religious communities."
-
-# BASE_TEXT = "Companies are to decide for themselves whether to allow their employees to work from home."
-# VARIANT_TEXT = "Companies should not decide for themselves whether to allow their employees to work from home."
-
-# BASE_TEXT = "It should be easier for companies to fire workers."
-# VARIANT_TEXT = "It should not be easier for companies to lay off workers."
-
-# BASE_TEXT = "The government must increase spending on public health care, even if this means increasing taxes."
-# VARIANT_TEXT = "The government should not increase spending on the public health system even if this means increasing taxes."
-
-# BASE_TEXT = "Climate change is solely attributable to human action."
-# VARIANT_TEXT = "Climate change is not solely attributable to human action."
-
-# BASE_TEXT = "Spanish government should promote the strengthening of NATO in Europe."
-# VARIANT_TEXT = "The Spanish government should not promote the strengthening of NATO in Europe."
-
-# BASE_TEXT = "The best way to solve the conflict in Catalonia is for its citizens to be able to vote on their future in a referendum."
-# VARIANT_TEXT = "The best way to solve the conflict in Catalonia is that its citizens cannot vote on their future in a referendum."
-
-# BASE_TEXT = "The right to self-determination must be recognized by the Constitution."
-# VARIANT_TEXT = "The right of self-determination should not be recognized by the Constitution."
-
-# BASE_TEXT = "Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation)."
-# VARIANT_TEXT = "There is no need for stricter regulation of interception software (e.g. Pegasus) (e.g. subject to judicial authorisation)."
-
-# BASE_TEXT = "Only men and women should be allowed to marry."
-# VARIANT_TEXT = "Marriages should not be exclusively between men and women."
-
-# BASE_TEXT = "The Hungarian government should ratify the Istanbul Convention, which combats violence against women and domestic violence."
-# VARIANT_TEXT = "The Hungarian government should not ratify the Istanbul Convention against violence against women and domestic violence."
-
-# BASE_TEXT = "Comprehensive public procurement reform is needed (e.g. opening up large-scale centralised public procurement to smaller firms)."
-# VARIANT_TEXT = "There is no need for comprehensive public procurement reform (e.g. opening up large-scale centralised public procurement to smaller firms)."
-
-# BASE_TEXT = "Increase the contribution of the wealthier to the public purse (abolition of the one-band tax)."
-# VARIANT_TEXT = "The wealthier should not contribute more to the public burden (abolition of the one-band tax)."
-
-# BASE_TEXT = "Public employment helps people re-enter the labour market."
-# VARIANT_TEXT = "Public works do not help people to re-enter the labour market."
-
-# BASE_TEXT = "The use of medical cannabis should be legalised in Hungary."
-# VARIANT_TEXT = "Medical cannabis should not be legalised in Hungary."
-
-# BASE_TEXT = "In larger cities, car traffic should be limited through various measures (P+R parking, construction of cycle paths, improvement of public transport)."
-# VARIANT_TEXT = "In larger cities, there is no need to restrict car traffic through various measures (P+R parking, building cycle paths, improving public transport)."
-
-# BASE_TEXT = "The redevelopment of urban green spaces (e.g. the Liget project in Budapest) needs a broad social dialogue."
-# VARIANT_TEXT = "The redevelopment of urban green areas (e.g. the Liget project in Budapest) does not require a broad social dialogue."
-
-# BASE_TEXT = "An independent ministry for the environment is needed."
-# VARIANT_TEXT = "There is no need for a separate environment ministry."
-
-# BASE_TEXT = "The European Union should have a common foreign policy."
-# VARIANT_TEXT = "The European Union should not have a common foreign policy."
-
-# BASE_TEXT = "Children, born in Italy to foreign citizens and who have completed schooling should be granted Italian citizenship (ius scholae)."
-# VARIANT_TEXT = "Children, born in Italy to foreign nationals and who have completed school, should not be granted Italian citizenship (ius scholae)."
-
-# BASE_TEXT = "More civil rights should be granted to homosexual, bisexual, transgender (LGBT+) people."
-# VARIANT_TEXT = "Homosexual, bisexual, transgender (LGBT+) people should not be granted more civil rights."
-
-# BASE_TEXT = "Citizens should be guaranteed freedom of choice in end-of-life matters (euthanasia)."
-# VARIANT_TEXT = "Citizens should not be guaranteed freedom of choice in end-of-life matters (euthanasia)."
-
-# BASE_TEXT = "Recreational use of marijuana/cannabis should be allowed."
-# VARIANT_TEXT = "Recreational use of marijuana/cannabis should not be allowed."
-
-# BASE_TEXT = "Businesses should be able to fire employees more easily."
-# VARIANT_TEXT = "Businesses should not be allowed to lay off employees more easily."
-
-# BASE_TEXT = "An hourly minimum wage should be introduced."
-# VARIANT_TEXT = "The hourly minimum wage should not be introduced."
-
-# BASE_TEXT = "The use of nuclear power plants for the purpose of producing energy should be promoted."
-# VARIANT_TEXT = "The use of nuclear power plants for the purpose of producing energy should not be promoted."
-
-# BASE_TEXT = "The construction of Major Works is a priority for Italy."
-# VARIANT_TEXT = "The construction of Major Works is not a priority for Italy."
-
-# BASE_TEXT = "Drilling is necessary to find more energy resources."
-# VARIANT_TEXT = "Drilling is not necessary to find more energy resources."
-
-# BASE_TEXT = "The Netherlands should spend more money on defense."
-# VARIANT_TEXT = "The Netherlands should not spend more money on defense."
-
 # BASE_TEXT = "Less funding should go to public broadcasting."
-# VARIANT_TEXT = "There should not be less money for public broadcasting."
+# VARIANT_TEXT = "More money must go to public broadcasting."
 
 # BASE_TEXT = "The Dutch government should apologize for the historical slave trade."
-# VARIANT_TEXT = "The Dutch government should not apologize for the slave trade in the past."
-
-# BASE_TEXT = "Citizens should have the opportunity to block laws passed by parliament through a referendum."
-# VARIANT_TEXT = "Citizens should not be allowed to stop laws passed by parliament through a referendum."
+# VARIANT_TEXT = "The slave trade of the past is not the responsibility of the current Dutch government."
 
 # BASE_TEXT = "There should be fewer options for community service sentences instead of prison sentences."
-# VARIANT_TEXT = "There should not be fewer opportunities to impose community service instead of prison sentences."
+# VARIANT_TEXT = "There should be more opportunities to impose community service instead of prison sentences."
 
-# BASE_TEXT = "New residential areas should consist of at least 40 percent green space."
-# VARIANT_TEXT = "New housing developments should not consist of at least 40 percent social housing."
+# BASE_TEXT = "People should always have the choice of whether to wear a face mask."
+# VARIANT_TEXT = "Not the people themselves, but other agencies should choose whether or not to wear a mouth guard."
+
+# BASE_TEXT = "It should be easier for companies to fire workers."
+# VARIANT_TEXT = "It should be harder for companies to lay off workers."
+
+# BASE_TEXT = "The government must increase spending on public health care, even if this means increasing taxes."
+# VARIANT_TEXT = "The government should decrease spending on public health care so as not to increase taxes."
+
+# BASE_TEXT = "The working day should be reduced without reducing workers' wages."
+# VARIANT_TEXT = "Working hours should be increased without increasing workers' salaries."
+
+# BASE_TEXT = "Taxes on fossil fuels must be raised to finance the Green Transition."
+# VARIANT_TEXT = "Taxes on fossil fuels should be reduced and the Ecological Transition should be ignored."
+
+# BASE_TEXT = "To better defend Spain's interests in Europe we must recover more sovereignty."
+# VARIANT_TEXT = "To better defend Spain's interests in Europe, we must cede sovereignty."
+
+# BASE_TEXT = "Spanish government should promote the strengthening of NATO in Europe."
+# VARIANT_TEXT = "The Spanish government should promote the weakening of NATO in Europe."
+
+# BASE_TEXT = "The best way to solve the conflict in Catalonia is for its citizens to be able to vote on their future in a referendum."
+# VARIANT_TEXT = "The worst way to solve the conflict in Catalonia is to allow its citizens to vote on their future in a referendum."
+
+# BASE_TEXT = "The right to self-determination must be recognized by the Constitution."
+# VARIANT_TEXT = "The right of self-determination must be ignored by the Constitution."
+
+# BASE_TEXT = "The ability of landlords to increase housing rents is to be more strictly limited by law."
+# VARIANT_TEXT = "Landlords should be allowed to increase rents without legal restrictions."
+
+# BASE_TEXT = "The phase-out of coal-fired power generation planned for 2038 is to be brought forward."
+# VARIANT_TEXT = "The phase-out of coal-fired power generation planned for 2038 should be reversed."
+
+# BASE_TEXT = "The right of recognized refugees to join their families is to be abolished."
+# VARIANT_TEXT = "The right of recognized refugees to family reunification is to be extended."
+
+# BASE_TEXT = "Female civil servants are to be allowed to wear headscarves while on duty."
+# VARIANT_TEXT = "Female civil servants should generally be banned from wearing headscarves on duty."
+
+# BASE_TEXT = "The federal government is to provide more financial support for projects to combat anti-Semitism."
+# VARIANT_TEXT = "The federal government should provide less financial support for projects to combat anti-Semitism."
+
+# BASE_TEXT = "The controlled sale of cannabis is to be generally permitted."
+# VARIANT_TEXT = "The controlled sale of cannabis should be prohibited."
+
+# BASE_TEXT = "Germany is to leave the European Union."
+# VARIANT_TEXT = "Germany should remain a member of the European Union."
+
+# BASE_TEXT = "The state lists of the parties for the elections to the German Bundestag are to have to be filled alternately by women and men."
+# VARIANT_TEXT = "The state lists of the parties for the elections to the German Bundestag should not take into account an equal distribution of men and women."
+
+# BASE_TEXT = "Married couples without children should continue to receive tax breaks."
+# VARIANT_TEXT = "Only married couples with children should receive preferential tax treatment."
+
+# BASE_TEXT = "Islamic associations are to be able to be recognized by the state as religious communities."
+# VARIANT_TEXT = "Islamic associations should be rejected by the state as religious communities."
+
+# BASE_TEXT = "The statutory minimum wage is to be increased to at least 12 euros by 2022 at the latest."
+# VARIANT_TEXT = "The statutory minimum wage is to be reduced by 2022 at the latest."
+
+# BASE_TEXT = "The European Union should have less influence on Polish domestic policy."
+# VARIANT_TEXT = "The European Union should have more influence on Polish domestic policy."
+
+# BASE_TEXT = "The state should finance private visits to specialists if the waiting time at a public facility exceeds three months."
+# VARIANT_TEXT = "The state should refrain from financing private visits to specialists, regardless of the waiting time in a public facility."
 
 # BASE_TEXT = "Schools should have more freedom to choose the content covered in the curriculum."
-# VARIANT_TEXT = "Schools should not have more freedom to choose the content covered in the curriculum."
+# VARIANT_TEXT = "Schools should have less freedom to choose the content covered in the curriculum."
 
 # BASE_TEXT = "The state should build low-rent apartments for rent."
-# VARIANT_TEXT = "The state should not build low-income rental housing."
+# VARIANT_TEXT = "The state should refrain from building low-income rental housing."
 
-BASE_TEXT = "The independence of the judiciary from parliament and the government should be strengthened."
-VARIANT_TEXT = "The independence of the judiciary from parliament and government should not be strengthened."
+# BASE_TEXT = "Poland should adopt the migrant relocation solutions adopted by the European Union."
+# VARIANT_TEXT = "Poland should reject the migrant relocation solutions adopted by the European Union."
+
+# BASE_TEXT = "The independence of the judiciary from parliament and the government should be strengthened."
+# VARIANT_TEXT = "Parliamentary and government control over the judiciary should be strengthened."
+
+# BASE_TEXT = "The share of defense spending in Poland's GDP should be further increased."
+# VARIANT_TEXT = "The share of defense spending in Poland's GDP should be reduced."
+
+# BASE_TEXT = "The powers of local governments should be increased at the expense of the central government."
+# VARIANT_TEXT = "The powers of local governments should be reduced at the expense of the central government."
+
+# BASE_TEXT = "The powers of the secret services to track the activities of citizens on the Internet should be limited."
+# VARIANT_TEXT = "The powers of the secret services to track citizens' activities on the Internet should be increased."
+
+# BASE_TEXT = "The EU's rule of law mechanism threatens Hungary's sovereignty."
+# VARIANT_TEXT = "The EU's rule of law mechanism protects Hungary's sovereignty."
+
+# BASE_TEXT = "Stricter regulation of interception software (e.g. Pegasus) is needed (e.g. subject to judicial authorisation)."
+# VARIANT_TEXT = "Lighter regulation of interception software (e.g. Pegasus) is needed."
+
+# BASE_TEXT = "Only men and women should be allowed to marry."
+# VARIANT_TEXT = "Same-sex couples should be allowed to marry."
+
+# BASE_TEXT = "The state should take targeted measures to promote equal participation of fathers and mothers in child-rearing."
+# VARIANT_TEXT = "The state takes targeted measures to prevent fathers and mothers from sharing equally in child-rearing."
+
+# BASE_TEXT = "The Hungarian government should ratify the Istanbul Convention, which combats violence against women and domestic violence."
+# VARIANT_TEXT = "The Hungarian government should reject the ratification of the Istanbul Convention, which combats violence against women and domestic violence."
+
+# BASE_TEXT = "The use of medical cannabis should be legalised in Hungary."
+# VARIANT_TEXT = "Make the use of medical cannabis illegal in Hungary."
+
+# BASE_TEXT = "In larger cities, car traffic should be limited through various measures (P+R parking, construction of cycle paths, improvement of public transport)."
+# VARIANT_TEXT = "In larger cities, it is unnecessary to restrict car traffic by various measures (P+R parking, building cycle paths, improving public transport)."
+
+# BASE_TEXT = "The redevelopment of urban green spaces (e.g. the Liget project in Budapest) needs a broad social dialogue."
+# VARIANT_TEXT = "In the case of the redevelopment of urban green areas (e.g. the Liget project in Budapest), a broad social dialogue is unjustified."
+
+# BASE_TEXT = "An independent ministry for the environment is needed."
+# VARIANT_TEXT = "A separate environment ministry is unnecessary."
+
+# BASE_TEXT = "European integration is all in all a positive process."
+# VARIANT_TEXT = "European integration is an all-negative process."
+
+# BASE_TEXT = "Children, born in Italy to foreign citizens and who have completed schooling should be granted Italian citizenship (ius scholae)."
+# VARIANT_TEXT = "Children, born in Italy to foreign nationals and who have completed schooling should have their Italian citizenship (ius scholae) denied."
+
+# BASE_TEXT = "More civil rights should be granted to homosexual, bisexual, transgender (LGBT+) people."
+# VARIANT_TEXT = "Civil rights should be limited to homosexual, bisexual, transgender (LGBT+) people."
+
+# BASE_TEXT = "Citizens should be guaranteed freedom of choice in end-of-life matters (euthanasia)."
+# VARIANT_TEXT = "Citizens should be restricted from making end-of-life (euthanasia) choices."
+
+# BASE_TEXT = "Recreational use of marijuana/cannabis should be allowed."
+# VARIANT_TEXT = "Recreational use of marijuana/cannabis should be prohibited."
+
+# BASE_TEXT = "Businesses should be able to fire employees more easily."
+# VARIANT_TEXT = "It should be more difficult for businesses to lay off employees."
+
+# BASE_TEXT = "An hourly minimum wage should be introduced."
+# VARIANT_TEXT = "The hourly minimum wage should be ignored."
+
+# BASE_TEXT = "Drilling is necessary to find more energy resources."
+# VARIANT_TEXT = "Drilling is irrelevant to finding more energy resources."
+
+# BASE_TEXT = "Italy should keep its foreign policy aligned with the choices of the Atlantic Alliance (NATO)."
+# VARIANT_TEXT = "Italy should cancel its foreign policy aligned with the choices of the Atlantic Alliance (NATO)."
+
+# BASE_TEXT = "The federal government should allocate more funding for health insurance premium subsidies. "
+# VARIANT_TEXT = "The federal government should revoke funding for health insurance premium subsidies."
+
+# BASE_TEXT = "As part of the reform of the BVG (occupational pension plan), pensions are to be reduced (lowering the minimum conversion rate from 6.8% to 6%). "
+# VARIANT_TEXT = "As part of the reform of the BVG (occupational pension plan), pensions are to be increased (lowering the minimum conversion rate from 6.8% to 6%). "
+
+# BASE_TEXT = "Paid parental leave should be increased beyond today's 14 weeks of maternity leave and two weeks of paternity leave. "
+# VARIANT_TEXT = "Paid parental leave should be reduced under today's 14 weeks of maternity leave and two weeks of paternity leave."
+
+# BASE_TEXT = "The federal government should provide more financial support for public housing construction. "
+# VARIANT_TEXT = "The federal government should provide less financial support for public housing construction."
+
+# BASE_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in regular classes. "
+# VARIANT_TEXT = "According to the Swiss integrated schooling concept, children with learning difficulties or disabilities should be taught in separate classes. "
+
+# BASE_TEXT = "The state should be more committed to equal educational opportunities (e.g., through subsidized remedial courses for students from low-income families). "
+# VARIANT_TEXT = "The state should neglect equal educational opportunities (e.g., regarding subsidized remedial courses for students from low-income families). "
+
+# BASE_TEXT = "More qualified workers from non-EU/EFTA countries should be allowed to work in Switzerland (increase third-country quota)."
+# VARIANT_TEXT = "More qualified workers from non-EU/EFTA countries should be forbidden to work in Switzerland (decrease third-country quota)."
+
+# BASE_TEXT = "Foreign nationals who have lived in Switzerland for at least ten years should be granted the right to vote and stand for election at the municipal level. "
+# VARIANT_TEXT = "Foreign nationals who have lived in Switzerland for at least ten years should be refused the right to vote and stand for election at the municipal level."
+
+# BASE_TEXT = "Cannabis use should be legalized. "
+# VARIANT_TEXT = "Cannabis use should be kept ilegal."
+
+# BASE_TEXT = "There should be stricter regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "
+# VARIANT_TEXT = "There should be laxer regulations for the financial sector (e.g., stricter capital requirements for banks, ban on bonuses). "
+
+# BASE_TEXT = "Private households should be free to choose their electricity supplier (complete liberalization of the electricity market). "
+# VARIANT_TEXT = "Private households should be limited in choosing their electricity supplier (full regulation of the electricity market)."
+
+# BASE_TEXT = "Busy sections of highways should be widened. "
+# VARIANT_TEXT = "Busy sections of highways should be narrowed."
+
+# BASE_TEXT = "The construction of new nuclear power plants should be allowed again. "
+# VARIANT_TEXT = "The construction of new nuclear power plants should be denied again."
+
+# BASE_TEXT = "The state should guarantee a comprehensive public service offering also in rural regions. "
+# VARIANT_TEXT = "The state should ignore a comprehensive public service offering also in rural regions."
+
+# BASE_TEXT = "There should be stricter animal welfare regulations for livestock (e.g. permanent access to outdoor areas). "
+# VARIANT_TEXT = "There should be laxer animal welfare regulations for livestock (e.g. only temporary access to outdoor areas)."
+
+# BASE_TEXT = "30% of Switzerland's land area should be dedicated to preserving biodiversity?. "
+# VARIANT_TEXT = "Switzerland should ignore the allocation of any specific percentage of its land area to preserving biodiversity."
+
+# BASE_TEXT = "There should be a ban on single-use plastic and non-recyclable plastics. "
+# VARIANT_TEXT = "There should be an incentive to use single-use plastic and non-recyclable plastics."
+
+# BASE_TEXT = "There should be government measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "
+# VARIANT_TEXT = "The government should ignore measures to make the use of electronic devices more sustainable (e.g., right to repair, extension of warranty period, minimum guaranteed period for software updates). "
+
+# BASE_TEXT = "There should be a stronger regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation). "
+# VARIANT_TEXT = "There should be a laxer regulation of the major Internet platforms (i.e., transparency rules on algorithms, increased liability for content, combating disinformation). "
+
+# BASE_TEXT = "There should be a popular initiative aims to reduce television and radio fees (CHF 200 per household, exemption for businesses)."
+# VARIANT_TEXT = "There should be a popular initiative aims to increase television and radio fees (CHF 200 per household, exemption for businesses)."
+
+# BASE_TEXT = "The Federal Council should be allowed to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "
+# VARIANT_TEXT = "The Federal Council should be forbidden to authorize other states to re-export Swiss weapons in cases of a war of aggression in violation of international law (e.g., the attack on Ukraine). "
+
+BASE_TEXT = "Companies should be obliged to ensure that their subsidiaries and suppliers operating abroad comply with social and environmental standards. "
+VARIANT_TEXT = "Companies should be ignore whether their subsidiaries and suppliers operating abroad comply with social and environmental standards."
+
 
 
 print_top_layers = 48
