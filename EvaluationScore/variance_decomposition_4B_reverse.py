@@ -21,7 +21,6 @@ def extract_base_id(id: str) -> str:
         print(f"[warn] {id} caused an error when extracting base id")
 
 def mirror_likert_1_to_7(x: float) -> float:
-    # 1<->7, 2<->6, 3<->5, 4 stays 4  ==>  x' = 8 - x
     return 8 - x
 
 def load_one(variant: str, path: str) -> pd.DataFrame:
@@ -40,7 +39,6 @@ def load_one(variant: str, path: str) -> pd.DataFrame:
     return df[["ID", "base_id", "variant", "score"]]
 
 def load_all(files: Dict[str, str]) -> pd.DataFrame:
-    """Load all variants and concat into one dataframe."""
     frames = []
     for v, p in files.items():
         if not os.path.exists(p):
@@ -52,20 +50,12 @@ def load_all(files: Dict[str, str]) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 def compute_mu_per_variant(df_all: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute one MU scalar per variant:
-      1) group by (variant, ID): var(score over repeated samples)
-      2) average those variances over IDs to get MU(variant)
-    Returns a dataframe with columns: variant, MU, n_prompts
-    """
-    # within-prompt variance (over repeated samples)
     mu_prompt = (
         df_all.groupby(["variant", "ID"], sort=False)["score"]
         .agg(MU_prompt=lambda x: float(x.var(ddof=1)) if x.size > 1 else 0.0)
         .reset_index()
     )
 
-    # aggregate to one scalar per variant
     mu_variant = (
         mu_prompt.groupby("variant", sort=False)["MU_prompt"]
         .agg(MU="mean", n_prompts="size")
@@ -74,22 +64,12 @@ def compute_mu_per_variant(df_all: pd.DataFrame) -> pd.DataFrame:
     return mu_variant
 
 def compute_pairwise_as_ps(df_all: pd.DataFrame, base_variant: str = "original") -> pd.DataFrame:
-    """
-    For each rule variant r != base_variant, compute:
-      - AS(r): mean_s Var_over_variants( ybar_{s,base}, ybar_{s,r} )
-              with 2 variants => (diff^2)/2 averaged over statements
-      - PS(base+r): Var_s( ybar_s ), where ybar_s is the mean over the two variants
-                   i.e., ybar_s = (ybar_{s,base} + ybar_{s,r})/2
-    We restrict to statements that have BOTH variants (base + rule).
-    Returns a dataframe with columns: rule, AS, PS, n_statements
-    """
     variants = [v for v in df_all["variant"].dropna().unique().tolist() if v != base_variant]
     rows = []
 
     for rule in variants:
         df_sub = df_all[df_all["variant"].isin([base_variant, rule])].copy()
 
-        # mean across samples r for each (s, v): ybar_{s,v}
         g_sv = (
             df_sub.groupby(["base_id", "variant"], sort=False)["score"]
             .mean()
@@ -97,10 +77,8 @@ def compute_pairwise_as_ps(df_all: pd.DataFrame, base_variant: str = "original")
             .reset_index()
         )
 
-        # wide table: each statement s has columns [base_variant, rule]
         wide = g_sv.pivot(index="base_id", columns="variant", values="ybar_sv")
 
-        # Require both columns to exist
         if base_variant not in wide.columns or rule not in wide.columns:
             rows.append({"rule": rule, "AS": float("nan"), "PS": float("nan"), "n_statements": 0})
             continue
@@ -111,13 +89,9 @@ def compute_pairwise_as_ps(df_all: pd.DataFrame, base_variant: str = "original")
             rows.append({"rule": rule, "AS": float("nan"), "PS": float("nan"), "n_statements": 0})
             continue
 
-        # --- AS(rule) ---
-        # With 2 variants, sample variance over the two means equals (diff^2)/2
         diff = pair[base_variant] - pair[rule]
         as_rule = float(((diff * diff) / 2.0).mean())
 
-        # --- PS(base + rule) ---
-        # ybar_s = mean over variants (two variants here)
         ybar_s = pair.mean(axis=1)
         ps_pair = float(ybar_s.var(ddof=1)) if n_statements > 1 else 0.0
 
@@ -128,15 +102,11 @@ def compute_pairwise_as_ps(df_all: pd.DataFrame, base_variant: str = "original")
 if __name__ == "__main__":
     df_all = load_all(files)
 
-    # 1) MU per wording rule (per variant)
     mu_variant = compute_mu_per_variant(df_all)
     print("=== MU per variant (one scalar per wording rule / variant) ===")
     for _, r in mu_variant.iterrows():
         print(f"MU({r['variant']}): {float(r['MU']):.6f}  (n_prompts={int(r['n_prompts'])})")
 
-    print()
-
-    # 2) Pairwise AS and PS for each rule vs original
     pair_metrics = compute_pairwise_as_ps(df_all, base_variant="original")
     print("=== Pairwise metrics vs original (per rule) ===")
     for _, r in pair_metrics.iterrows():

@@ -163,18 +163,12 @@ def chat_complete(model, tokenizer, system_prompt, user_prompt,
     return content.strip()
 
 def add_prefix_column(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
-    """
-    根据你的 ID 规则：两个小写字母_一/两位数字_七位数字
-    我们把“前两段”作为 prefix，即 id.rsplit('_', 1)[0]
-    例如：ab_3_0000001 -> prefix = 'ab_3'
-    """
     if list(df.columns[:2]) != ["ID", "statement"]:
         raise ValueError(f"{source_name}: first two columns must be ID and statement")
 
     df = df[["ID", "statement"]].copy()
     df["prefix"] = df["ID"].astype(str).str.rsplit("_", n=1).str[0]
 
-    # 如果一个文件中同一个 prefix 出现多次，这里给个警告（默认保留第一条）
     dup_mask = df["prefix"].duplicated(keep=False)
     if dup_mask.any():
         dup_prefixes = sorted(df.loc[dup_mask, "prefix"].unique())
@@ -186,16 +180,11 @@ def add_prefix_column(df: pd.DataFrame, source_name: str) -> pd.DataFrame:
     return df
 
 def make_combine_id(prefix: str) -> str:
-    """
-    输出 ID：相同 ID 前缀 + '_0110000'
-    例如 prefix = 'ab_3' -> 'ab_3_0110000'
-    """
     return f"{prefix}_0110000"
 
 def run():
     fewshots_text = render_fewshots_block(BUILTIN_FEWSHOTS)
 
-    # === 读取三份 csv，并抽取 prefix ===
     df_base = pd.read_csv(base_csv_path)
     df_wh  = pd.read_csv(wh_clefts_csv_path)
     df_actpas  = pd.read_csv(active_passive_csv_path)
@@ -204,12 +193,10 @@ def run():
     df_wh  = add_prefix_column(df_wh,  "wh-clefts")
     df_actpas  = add_prefix_column(df_actpas,  "active/passive")
 
-    # 只保留我们需要的列，并改名方便后面使用
     base_small = df_base[["prefix", "statement"]].rename(columns={"statement": "base_stmt"})
     wh_small  = df_wh[["prefix", "statement"]].rename(columns={"statement": "wh_stmt"})
     actpas_small  = df_actpas[["prefix", "statement"]].rename(columns={"statement": "actpas_stmt"})
 
-    # === 在 prefix 上 inner join：只保留三份文件里都出现的前缀（即完整句子组） ===
     merged = (
         base_small
         .merge(wh_small, on="prefix", how="inner")
@@ -223,7 +210,6 @@ def run():
     total_groups = len(merged)
     print(f"[info] Found {total_groups} sentence groups with matching ID prefixes.")
 
-    # === 加载模型 ===
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name, torch_dtype="auto", device_map="auto"
@@ -232,7 +218,6 @@ def run():
     out_rows = []
     success_count = 0
 
-    # === 对每一个前缀句子组调用一次大模型 ===
     for i, row in merged.iterrows():
         prefix   = str(row["prefix"])
         base_str = str(row["base_stmt"])
@@ -245,7 +230,6 @@ def run():
         variant = pick_variant_text(obj)
 
         if not variant:
-            # 如果 JSON 或 combine_variant 抽取失败，给出警告，并把 statement 设为 None
             print(raw)
             print(f"[warn] Group {i} (prefix={prefix}) JSON/combine_variant failed, setting statement=None.",
                   file=sys.stderr)
@@ -258,7 +242,6 @@ def run():
         new_id = make_combine_id(prefix)
         out_rows.append({"ID": new_id, "statement": variant})
 
-    # === 写出结果 ===
     pd.DataFrame(out_rows, columns=["ID", "statement"]).to_csv(
         output_csv_path, index=False, encoding="utf-8"
     )

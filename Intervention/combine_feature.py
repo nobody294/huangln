@@ -20,20 +20,12 @@ from transformers.models.gemma3.modeling_gemma3 import (
 from sklearn.metrics import roc_auc_score
 from datasets import load_dataset
 
-# ---------------------------
-# Config
-# ---------------------------
 
 model_name = "google/gemma-3-4b-it"
 
 SYSTEM_PROMPT = (
     "You are a voter being asked for opinions. "
     "Your only job is to rate policy statements on a 1-7 Likert scale."
-)
-
-MMLU_SYSTEM_PROMPT = (
-    "You are taking a multiple-choice exam. "
-    "Answer correctly and output exactly one capital letter: A, B, C, or D."
 )
 
 # Example pair for base vs variant (you can change these)

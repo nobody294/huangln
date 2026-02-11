@@ -14,10 +14,6 @@ from transformers.models.gemma3.modeling_gemma3 import (
     Gemma3MLP
 )
 
-# ---------------------------
-# Config
-# ---------------------------
-
 model_name = "google/gemma-3-4b-it"
 
 SYSTEM_PROMPT = (
@@ -25,14 +21,8 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-MMLU_SYSTEM_PROMPT = (
-    "You are taking a multiple-choice exam. "
-    "Answer correctly and output exactly one capital letter: A, B, C, or D."
-)
 
-# CUDA_VISIBLE_DEVICES=1,2 python Intervention/wh-clefts_edit.py
-
-# Example pair for base vs variant (you can change these)
+# Example pair for base vs variant
 # BASE_TEXT = "The government should abolish the ban on face-covering clothing."
 # VARIANT_TEXT = "What the government should abolish is the ban on face-covering clothing."
 
@@ -113,17 +103,13 @@ MMLU_SYSTEM_PROMPT = (
 BASE_TEXT = "Switzerland should terminate the Bilateral Agreements with the EU and seek a free trade agreement without the free movement of persons."
 VARIANT_TEXT = "What Switzerland should terminate are the Bilateral Agreements with the EU and what Switzerland should seek is a free trade agreement without the free movement of persons."
 
-topk_attr = 6          # how many top layers to print/consider in diagnostics
-print_top_layers = 34  # how many top layers to print
+
+print_top_layers = 34
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
 
-# ---------------------------
-# Utilities / Model Introspection
-# ---------------------------
 
 def get_input_device(model: Gemma3ForConditionalGeneration):
-    # More robust than model.device under device_map="auto"
     try:
         return model.model.embed_tokens.weight.device
     except Exception:
@@ -139,7 +125,6 @@ def get_decoder_layers(model: Gemma3ForConditionalGeneration):
             "No Gemma3DecoderLayer found via named_modules(). "
             "Check transformers version or model class."
         )
-    # print(f"{len(layers)}")
     return layers
 
 @dataclass
@@ -242,9 +227,6 @@ def objective_from_logits_full(
     p = digit_probs_from_logits_full(logits_full, enc, temperature)
     return torch.sum(clean_probs * torch.log(p.clamp_min(EPS)))
 
-# ---------------------------
-# Attribution & Caches (diagnostics)
-# ---------------------------
 
 def attribution_scores_first_order(
         model: Gemma3ForConditionalGeneration,
@@ -432,17 +414,6 @@ def patch_context(
         for h in hooks:
             h.remove()
 
-# def restoration_fraction(
-#         logit_clean_target: float,
-#         logit_corrupt_target: float,
-#         logit_patched_target: float
-# ) -> float:
-#     denom = logit_clean_target - logit_corrupt_target
-#     if abs(denom) < 1e-9:
-#         return float("nan")
-
-#     return (logit_patched_target - logit_corrupt_target) / denom
-
 
 @contextlib.contextmanager
 def block_ablation_context(
@@ -459,7 +430,7 @@ def block_ablation_context(
             if layer_idx not in layers_to_edit:
                 return out
 
-            hidden = out[0] if isinstance(out, tuple) else out  # [B, T, H]
+            hidden = out[0] if isinstance(out, tuple) else out
             new_hidden = hidden.clone()
 
             if pos_strategy == "fixed":
@@ -525,6 +496,7 @@ def attn_ablation_context(
         for h in hooks:
             h.remove()
 
+
 @contextlib.contextmanager
 def mlp_ablation_context(
     model: Gemma3ForConditionalGeneration,
@@ -562,34 +534,6 @@ def mlp_ablation_context(
         for h in hooks:
             h.remove()
 
-@contextlib.contextmanager
-def attn_ablation_23(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    layer_to_edit: int = 23,
-    ratio: float = 0.0
-):
-    with attn_ablation_context(
-        model,
-        enc,
-        layers_to_edit=[layer_to_edit],
-        ratio=ratio,
-    ):
-        yield
-
-@contextlib.contextmanager
-def attn_ablation_23_16(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    ratio: float = 0.0
-):
-    with attn_ablation_context(
-        model,
-        enc,
-        layers_to_edit=[16, 23],
-        ratio=ratio,
-    ):
-        yield
 
 @contextlib.contextmanager
 def attn_head_ablation_context(
@@ -600,34 +544,19 @@ def attn_head_ablation_context(
     ratio: float = 0.0,
     all_positions: bool = False,
 ):
-    """
-    在给定的层里，把若干 attention head 的输出缩放为 ratio。
-    - ratio=0.0 就是“把这个 head 设为 0”。
-    - all_positions=True: 所有 token 位置都 ablate
-      all_positions=False: 只在 enc.answer_pos 这个位置 ablate（更接近你现在的做法）
-    """
     hooks = []
-
-    # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
     num_heads = model.config.text_config.num_attention_heads
 
     def make_o_proj_hook(layer_idx: int):
         def _hook(module: nn.Linear, inputs, output):
-            # module 是 Gemma3Attention 里的 o_proj
             if layer_idx not in layers_to_edit:
                 return output
 
-            # inputs[0] 是 o_proj 的输入：形状 [batch, seq, hidden_size]，
-            # 实际上就是 concat 后的所有 head
             x = inputs[0]
             B, T, H = x.shape
             head_dim = H // num_heads
 
-            # [B, T, H] -> [B, T, num_heads, head_dim]
             x = x.view(B, T, num_heads, head_dim)
-
-            # 做一个 clone 避免就地修改带来奇怪的梯度 / 共享引用问题
-            # x = x.clone()
 
             if all_positions:
                 for h_idx in heads_to_edit:
@@ -639,10 +568,8 @@ def attn_head_ablation_context(
                     if 0 <= h_idx < num_heads:
                         x[:, pos, h_idx, :] = x[:, pos, h_idx, :] * ratio
 
-            # 再 reshape 回去
             x = x.view(B, T, H)
 
-            # 手动走一次线性层，相当于 o_proj(x)
             W = module.weight
             b = module.bias
             out = torch.nn.functional.linear(x, W, b)
@@ -663,87 +590,6 @@ def attn_head_ablation_context(
         for h in hooks:
             h.remove()
 
-@contextlib.contextmanager
-def attn_head_ablation_scaling_context(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    layers_to_edit: List[int],
-    heads_to_ablate: List[int],
-    heads_to_scaling: List[int],
-    ablate_ratio: float = 0.0,
-    scaling_ratio: float = 2.0,
-    all_positions: bool = False,
-):
-    """
-    在给定的层里，把若干 attention head 的输出缩放为 ratio。
-    - ratio=0.0 就是“把这个 head 设为 0”。
-    - all_positions=True: 所有 token 位置都 ablate
-      all_positions=False: 只在 enc.answer_pos 这个位置 ablate（更接近你现在的做法）
-    """
-    hooks = []
-
-    # 这里假设 Gemma3 的 config 里有 hidden_size 和 num_attention_heads
-    num_heads = model.config.text_config.num_attention_heads
-
-    def make_o_proj_hook(layer_idx: int):
-        def _hook(module: nn.Linear, inputs, output):
-            # module 是 Gemma3Attention 里的 o_proj
-            if layer_idx not in layers_to_edit:
-                return output
-
-            # inputs[0] 是 o_proj 的输入：形状 [batch, seq, hidden_size]，
-            # 实际上就是 concat 后的所有 head
-            x = inputs[0]
-            B, T, H = x.shape
-            head_dim = H // num_heads
-
-            # [B, T, H] -> [B, T, num_heads, head_dim]
-            x = x.view(B, T, num_heads, head_dim)
-
-            # 做一个 clone 避免就地修改带来奇怪的梯度 / 共享引用问题
-            # x = x.clone()
-
-            if all_positions:
-                for h_idx in heads_to_ablate:
-                    if 0 <= h_idx < num_heads:
-                        x[:, :, h_idx, :] = x[:, :, h_idx, :] * ablate_ratio
-                
-                for idx in heads_to_scaling:
-                    if 0 <= idx < num_heads:
-                        x[:, :, idx, :] = x[:, :, idx, :] * scaling_ratio
-            else:
-                pos = enc.answer_pos
-                for h_idx in heads_to_ablate:
-                    if 0 <= h_idx < num_heads:
-                        x[:, pos, h_idx, :] = x[:, pos, h_idx, :] * ablate_ratio
-                
-                for idx in heads_to_scaling:
-                    if 0 <= idx < num_heads:
-                        x[:, pos, idx, :] = x[:, pos, idx, :] * scaling_ratio
-
-            # 再 reshape 回去
-            x = x.view(B, T, H)
-
-            # 手动走一次线性层，相当于 o_proj(x)
-            W = module.weight
-            b = module.bias
-            out = torch.nn.functional.linear(x, W, b)
-
-            return out
-        return _hook
-
-    for i, name, layer in get_decoder_layers(model):
-        if i not in layers_to_edit:
-            continue
-        for subname, sub in layer.named_modules():
-            if isinstance(sub, Gemma3Attention) and hasattr(sub, "o_proj"):
-                hooks.append(sub.o_proj.register_forward_hook(make_o_proj_hook(i)))
-
-    try:
-        yield
-    finally:
-        for h in hooks:
-            h.remove()
 
 @contextlib.contextmanager
 def attn_head_ablation_23(
@@ -753,10 +599,6 @@ def attn_head_ablation_23(
     all_positions: bool = False,
     head: int = 0
 ):
-    """
-    只在第 23 层，把某个 head 的输出乘上 ratio。
-    默认 all_positions=False，也就是只在 answer_pos ablate。
-    """
     with attn_head_ablation_context(
         model,
         enc,
@@ -775,10 +617,6 @@ def attn_head_edit_23_multiple_heads(
     ratio: float = 0.0,
     all_positions: bool = False
 ):
-    """
-    只在第 23 层，把某个 head 的输出乘上 ratio。
-    默认 all_positions=False，也就是只在 answer_pos ablate。
-    """
     with attn_head_ablation_context(
         model,
         enc,
@@ -789,45 +627,11 @@ def attn_head_edit_23_multiple_heads(
     ):
         yield
 
-@contextlib.contextmanager
-def attn_head_ablation_scaling_multiple_23(
-    model: Gemma3ForConditionalGeneration,
-    enc: EncodedChat,
-    ablate_ratio: float = 0.0,
-    scaling_ratio: float = 2.0,
-    all_positions: bool = False
-):
-    with attn_head_ablation_scaling_context(
-        model,
-        enc,
-        layers_to_edit=[23],
-        heads_to_ablate=[1, 3, 6, 7],
-        heads_to_scaling = [0, 2, 4],
-        ablate_ratio=ablate_ratio,
-        scaling_ratio=scaling_ratio,
-        all_positions=all_positions
-    ):
-        yield
-
-def js_divergence(p: torch.Tensor, q: torch.Tensor, eps=1e-12) -> torch.Tensor:
-    p = p.clamp_min(eps); q = q.clamp_min(eps)
-    m = 0.5 * (p + q)
-    kl_pm = (p * (p.log() - m.log())).sum(dim=-1)
-    kl_qm = (q * (q.log() - m.log())).sum(dim=-1)
-    return 0.5 * (kl_pm + kl_qm)
 
 def w_1d(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
     cdf_p = torch.cumsum(p, dim=-1)
     cdf_q = torch.cumsum(q, dim=-1)
     return torch.sum(torch.abs(cdf_p - cdf_q), dim=-1)
-
-# def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-3):
-#     d0 = dist_fn(p_clean, p_corrupt)
-#     dp = dist_fn(p_clean, p_patched)
-#     # R = (dp - d0) / (dp + d0 + eps)
-#     R = (dp-d0) / 3.0
-#     # return torch.where(d0 <= eps, torch.full_like(R, float('nan')), R)
-#     return R
 
 def normalized_restoration(dist_fn, p_clean, p_corrupt, p_patched, eps=1e-12):
     d0 = dist_fn(p_clean, p_corrupt)
@@ -856,25 +660,9 @@ def run_activation_patching(base_text: str, variant_text: str):
     clean_target_logit = logits_clean[target_digit_id].item()
     corrupt_target_logit = logits_corrupt[target_digit_id].item()
 
-    c_id = pick_target_digit_id(logits_corrupt_digits, enc_corrupt.digit_ids)
-
-    print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})")
-    # print(f"[Clean target logit]   {clean_target_logit:.3f}")
-    print(f"[Clean logits] {logits_clean_digits}")
-    # print(f"[Corrupt target logit] {corrupt_target_logit:.3f}")
-    print(f"[Corrupt logits] {logits_corrupt_digits}")
-    print(f"[c_id] {c_id}  ({processor.tokenizer.decode([c_id])})")
-    print("-" * 60)
 
     clean_probs   = digit_probs_from_logits_full(logits_clean,   enc_clean,   TEMP_FOR_PROBS)
     corrupt_probs = digit_probs_from_logits_full(logits_corrupt, enc_corrupt, TEMP_FOR_PROBS)
-
-    obj_clean = objective_from_logits_full(
-        logits_clean, enc_clean, clean_probs, TEMP_FOR_PROBS
-    ).item()
-    obj_corrupt = objective_from_logits_full(
-        logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-    ).item()
 
     print(f"[Target digit id] {target_digit_id}  ({processor.tokenizer.decode([target_digit_id])})  (for reference)")
     print(f"[Clean target logit]   {clean_target_logit:.3f}  (ref)")
@@ -884,14 +672,6 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Corrupt logits] {logits_corrupt_digits}")
     print(f"[Corrupt probs] {corrupt_probs}")
     print("-" * 60)
-
-    # scores_sorted = attribution_scores_first_order(
-    #     model, enc_clean, enc_corrupt, clean_probs
-    # )
-    # print("[Attribution (first-order) — top layers]")
-    # for i, (l, s) in enumerate(scores_sorted[:print_top_layers], 1):
-    #     print(f" #{i:02d} layer={l:02d} approx_gain={s:+.3e}")
-    # print("-" * 60)
 
     clean_cache = collect_clean_cache(model, enc_clean)
     layers = get_decoder_layers(model)
@@ -907,56 +687,14 @@ def run_activation_patching(base_text: str, variant_text: str):
                 logits_patched = forward_logits_only(model, enc_corrupt)
                 patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
             
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            # denom = obj_clean - obj_corrupt
-            # if abs(denom) < 1e-9:
-            #     r = float("nan")
-            # else:
-            #     r = (obj_patched - obj_corrupt) / denom
             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
             results.append((l, r))
         return results
-    
-    # def sweep_attn_patch(kind: str):
-    #     results = []
-    #     best_r = 0.6
-    #     best_patched_probs = None
-    #     ppl_increase_pct = 0.0
-    #     for l in range(n_layers):
-    #         spec = {"block": [], "attn": [], "mlp": []}
-    #         spec[kind] = [l]
-
-    #         with patch_context(model, enc_corrupt, clean_cache, spec):
-    #             logits_patched = forward_logits_only(model, enc_corrupt)
-    #             patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    #             r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    #             if r > best_r:
-    #                 best_patched_probs = patched_probs
-    #                 best_r = r
-    #                 patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-    #                     model, processor,
-    #                     dataset_config="wikitext-2-raw-v1", split="test",
-    #                     block_size=None, stride=None, max_texts=200
-    #                 )
-    #                 ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
-            
-    #         obj_patched = objective_from_logits_full(
-    #             logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-    #         ).item()
-    #         # denom = obj_clean - obj_corrupt
-    #         # if abs(denom) < 1e-9:
-    #         #     r = float("nan")
-    #         # else:
-    #         #     r = (obj_patched - obj_corrupt) / denom
-    #         results.append((l, r))
-    #     return results, best_patched_probs, ppl_increase_pct
-
 
     block_results= sweep_patch("block")
     attn_results= sweep_patch("attn")
     mlp_results= sweep_patch("mlp")
+
 
     def print_top(title, arr):
         arr_sorted = sorted(arr, key=lambda x: (0 if math.isnan(x[1]) else x[1]), reverse=True)
@@ -975,7 +713,7 @@ def run_activation_patching(base_text: str, variant_text: str):
         results = []
         best_r = 0.0
         best_patched_probs = None
-        best_ppl = None
+
         for l in range(n_layers):
             with block_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio, pos_strategy="last"):
                 logits_patched = forward_logits_only(model, enc_corrupt)
@@ -986,15 +724,11 @@ def run_activation_patching(base_text: str, variant_text: str):
                     best_r = r
                     best_patched_probs = patched_probs
 
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
             results.append((l, r))
-        return results, best_patched_probs, best_ppl
+        return results, best_patched_probs
 
-    layer_ablate_results, layer_best_probs, best_ppl= sweep_layer_ablate(ratio=0.0)
+    layer_ablate_results, layer_best_probs = sweep_layer_ablate(ratio=0.0)
     print(f"[Ablate-BLOCK Best-Patched-Probs] {layer_best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-BLOCK ratio=0.0] top layers", layer_ablate_results)
 
@@ -1003,7 +737,6 @@ def run_activation_patching(base_text: str, variant_text: str):
         results = []
         best_r = 0.0
         best_patched_probs = None
-        best_ppl = None
         for l in range(n_layers):
             with attn_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio, pos_strategy="last"):
                 logits_patched = forward_logits_only(model, enc_corrupt)
@@ -1013,49 +746,20 @@ def run_activation_patching(base_text: str, variant_text: str):
                 if r > best_r:
                     best_r = r
                     best_patched_probs = patched_probs
-                    # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-                    #     model, processor,
-                    #     dataset_config="wikitext-2-raw-v1", split="test",
-                    #     block_size=None, stride=None, max_texts=200
-                    # )
-                    # ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
-                    # best_ppl = ppl_increase_pct
 
-
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            # denom = obj_clean - obj_corrupt
-            # if abs(denom) < 1e-9:
-            #     r = float("nan")
-            # else:
-            #     r = (obj_patched - obj_corrupt) / denom
-            # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-            # if r > best_r:
-            #     best_r = r
-            #     best_patched_probs = patched_probs
-            #     best_ppl = ppl_increase_pct
             results.append((l, r))
-        return results, best_patched_probs, best_ppl
+        return results, best_patched_probs
 
-    ablate0_results, best_probs, best_ppl= sweep_attn_ablate(ratio=0.0)
+    ablate0_results, best_probs = sweep_attn_ablate(ratio=0.0)
     print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-ATTN ratio=0.0] top layers", ablate0_results)
-
-    ablate_results, best_probs_1, best_ppl_1= sweep_attn_ablate(ratio=2.0)
-    print(f"[Ablate-ATTN Best-Patched-Probs] {best_probs_1}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
-    print("-" * 60)
-    print_top("[Ablate-ATTN ratio=2.0] top layers", ablate_results)
 
 
     def sweep_mlp_ablate(ratio: float = 0.0):
         results = []
         best_r = 0.0
         best_patched_probs = None
-        best_ppl = None
         for l in range(n_layers):
             with mlp_ablation_context(model, enc_corrupt, layers_to_edit=[l], ratio=ratio):
                 logits_patched = forward_logits_only(model, enc_corrupt)
@@ -1065,54 +769,16 @@ def run_activation_patching(base_text: str, variant_text: str):
                 if r > best_r:
                     best_r = r
                     best_patched_probs = patched_probs
-                    # patched_nll, patched_ppl, _ = evaluate_wikitext_ppl(
-                    #     model, processor,
-                    #     dataset_config="wikitext-2-raw-v1", split="test",
-                    #     block_size=None, stride=None, max_texts=200
-                    # )
-                    # ppl_increase_pct = (patched_ppl / base_ppl - 1.0) * 100.0
-                    # best_ppl = ppl_increase_pct
 
-
-            obj_patched = objective_from_logits_full(
-                logits_patched, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-            ).item()
-            # denom = obj_clean - obj_corrupt
-            # if abs(denom) < 1e-9:
-            #     r = float("nan")
-            # else:
-            #     r = (obj_patched - obj_corrupt) / denom
-            # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-            # if r > best_r:
-            #     best_r = r
-            #     best_patched_probs = patched_probs
-            #     best_ppl = ppl_increase_pct
             results.append((l, r))
-        return results, best_patched_probs, best_ppl
+        return results, best_patched_probs
 
-    mlp_ablate0_results, mlp_best_probs, best_ppl= sweep_mlp_ablate(ratio=0.0)
+    mlp_ablate0_results, mlp_best_probs = sweep_mlp_ablate(ratio=0.0)
     print(f"[Ablate-MLP Best-Patched-Probs] {mlp_best_probs}")
-    # print(f"[Ablate-ATTN Best Delta PPL] {best_ppl}")
     print("-" * 60)
     print_top("[Ablate-MLP ratio=0.0] top layers", mlp_ablate0_results)
-
-    # with attn_ablation_23(model, enc_corrupt, layer_to_edit=23, ratio=0.0):
-    #     logits_patched = forward_logits_only(model, enc_corrupt)
-    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-
-    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    # print(f"[Only Ablate ATTN-23 R-Score] {r}")
-    # print(f"[Patched Probs] {patched_probs}")
-
-    # with attn_ablation_23_16(model, enc_corrupt, ratio=0.0):
-    #     logits_patched = forward_logits_only(model, enc_corrupt)
-    #     patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
     
-    # r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    # print(f"[Only Ablate ATTN-23-and-16 R-Score] {r}")
-    # print(f"[Patched Probs] {patched_probs}")
 
-    # 对注意力头进行patch
     def sweep_head_ablate(
         ratio: float = 0.0,
         all_positions: bool = False,
@@ -1166,52 +832,10 @@ def run_activation_patching(base_text: str, variant_text: str):
     print(f"[Only Ablate ATTN-23 Head-1-3-6-7 R-Score] {r}")
     print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[1, 3, 6, 7], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling up ATTN-23 Head-1-3-6-7 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
 
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=0.0, heads=[0, 2, 4, 5], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Ablate ATTN-23 Head-0-2-4-5 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=5.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Scaling-up ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_edit_23_multiple_heads(model, enc_corrupt, ratio=-3.0, heads=[0, 2, 4], all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[Only Neg-Scaling ATTN-23 Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-    with attn_head_ablation_scaling_multiple_23(model, enc_corrupt, scaling_ratio=2.5, all_positions=False):
-        logits_patched = forward_logits_only(model, enc_corrupt)
-        patched_probs = digit_probs_from_logits_full(logits_patched, enc_clean, TEMP_FOR_PROBS)
-    
-    r = normalized_restoration(w_1d, clean_probs, corrupt_probs, patched_probs)
-    print(f"[ATTN-23 Ablate-Head-1-3-6-7 Scaling-Head-0-2-4 R-Score] {r}")
-    print(f"[Patched Probs] {patched_probs}")
-
-# ---------------------------
-# Paper-faithful pipeline (multi-GPU safe) — CE probe + Δw + min-cos rows + gate_proj add
-# ---------------------------
 def set_global_determinism(seed: int = 42, single_thread: bool = True):
     os.environ["PYTHONHASHSEED"] = str(seed)
-    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":16:8")  # 或 ":4096:8"
+    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":16:8")
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
@@ -1219,14 +843,7 @@ def set_global_determinism(seed: int = 42, single_thread: bool = True):
         os.environ["OMP_NUM_THREADS"] = "1"; os.environ["MKL_NUM_THREADS"] = "1"; torch.set_num_threads(1)
 
 
-# ---------------------------
-# Main
-# ---------------------------
-
 if __name__ == "__main__":
     torch.set_grad_enabled(True)
-
     set_global_determinism(0, single_thread=True)
-
-    print("=== Baseline diagnostics: activation patching / ablation ===")
     _ = run_activation_patching(BASE_TEXT, VARIANT_TEXT)

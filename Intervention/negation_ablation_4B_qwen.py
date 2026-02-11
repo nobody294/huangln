@@ -21,8 +21,6 @@ SYSTEM_PROMPT = (
     "Your only job is to rate policy statements on a 1-7 Likert scale."
 )
 
-# CUDA_VISIBLE_DEVICES=1,2 python Intervention/negation_edit_qwen_4B.py
-
 # Example pair for base vs variant (you can change these)
 # BASE_TEXT = "Instead of the tax on car ownership, there should be a tax per kilometer driven for motorists."
 # VARIANT_TEXT = "There should not be a tax per kilometer driven for motorists instead of the tax on car ownership."
@@ -99,18 +97,11 @@ BASE_TEXT = "Direct payments should only be granted to farmers with proof of eco
 VARIANT_TEXT = "Direct payments should not only be granted to farmers with proof of ecological performance."
 
 
-topk_attr = 6          # how many top layers to print/consider in diagnostics
-print_top_layers = 36  # Qwen3-4B has 36 layers; print top N
+print_top_layers = 36
 TEMP_FOR_PROBS = 1.0
 EPS = 1e-9
-
-# For Qwen3-4B (base): disable thinking to keep "next token is digit" probing consistent
 QWEN_ENABLE_THINKING = False
 
-
-# ---------------------------
-# Utilities / Model Introspection
-# ---------------------------
 
 def flip_probs_1_to_7(p: torch.Tensor) -> torch.Tensor:
     idx = torch.tensor([6, 5, 4, 3, 2, 1, 0], device=p.device)

@@ -47,27 +47,29 @@ def run(input_csv: str, output_csv: str, decimals: int = 2) -> None:
     print(f"Done. Wrote {len(out_df)} rows to: {output_csv}")
 
 if __name__ == "__main__":
-    # run(input_csv="data/original_responses_4B_2.csv", output_csv="data/significance/original_4B_not_significant_2.csv")
-    # run(input_csv="data/original_responses_12B.csv", output_csv="data/significance/original_12B_not_significant.csv")
-    # run(input_csv="data/original_responses_14B.csv", output_csv="data/significance/original_14B_not_significant.csv")
+    run(input_csv="data/original_responses_4B.csv", output_csv="data/significance/original_4B_not_significant.csv")
+    run(input_csv="data/original_responses_4B_qwen.csv", output_csv="data/significance/original_4B_not_significant_qwen.csv")
+    run(input_csv="data/original_responses_12B.csv", output_csv="data/significance/original_12B_not_significant.csv")
+    run(input_csv="data/original_responses_14B.csv", output_csv="data/significance/original_14B_not_significant.csv")
 
-    # run(input_csv="data/negation_responses_4B_1.csv", output_csv="data/significance/negation_4B_not_significant_1.csv")
-    # run(input_csv="data/negation_responses_12B.csv", output_csv="data/significance/negation_12B_not_significant.csv")
-    # run(input_csv="data/negation_responses_14B.csv", output_csv="data/significance/negation_14B_not_significant.csv")
+    run(input_csv="data/negation_responses_4B.csv", output_csv="data/significance/negation_4B_not_significant.csv")
+    run(input_csv="data/negation_responses_4B_qwen.csv", output_csv="data/significance/negation_4B_not_significant_qwen.csv")
+    run(input_csv="data/negation_responses_12B.csv", output_csv="data/significance/negation_12B_not_significant.csv")
+    run(input_csv="data/negation_responses_14B.csv", output_csv="data/significance/negation_14B_not_significant.csv")
 
-    # run(input_csv="data/opposite_responses_4B.csv", output_csv="data/significance/opposite_4B_not_significant.csv")
-    # run(input_csv="data/opposite_responses_12B.csv", output_csv="data/significance/opposite_12B_not_significant.csv")
+    run(input_csv="data/opposite_responses_4B.csv", output_csv="data/significance/opposite_4B_not_significant.csv")
+    run(input_csv="data/opposite_responses_12B.csv", output_csv="data/significance/opposite_12B_not_significant.csv")
     run(input_csv="data/opposite_responses_4B_qwen.csv", output_csv="data/significance/opposite_4B_not_significant_qwen.csv")
     run(input_csv="data/opposite_responses_14B.csv", output_csv="data/significance/opposite_14B_not_significant.csv")
 
-    # run(input_csv="data/active_passive_responses_4B.csv", output_csv="data/significance/active_passive_4B_not_significant.csv")
-    # run(input_csv="data/active_passive_responses_12B.csv", output_csv="data/significance/active_passive_12B_not_significant.csv")
+    run(input_csv="data/active_passive_responses_4B.csv", output_csv="data/significance/active_passive_4B_not_significant.csv")
+    run(input_csv="data/active_passive_responses_12B.csv", output_csv="data/significance/active_passive_12B_not_significant.csv")
 
-    # run(input_csv="data/it-clefts_responses_4B.csv", output_csv="data/significance/it-clefts_4B_not_significant.csv")
-    # run(input_csv="data/it-clefts_responses_12B.csv", output_csv="data/significance/it-clefts_12B_not_significant.csv")
+    run(input_csv="data/it-clefts_responses_4B.csv", output_csv="data/significance/it-clefts_4B_not_significant.csv")
+    run(input_csv="data/it-clefts_responses_12B.csv", output_csv="data/significance/it-clefts_12B_not_significant.csv")
 
-    # run(input_csv="data/wh-clefts_responses_4B.csv", output_csv="data/significance/wh-clefts_4B_not_significant.csv")
-    # run(input_csv="data/wh-clefts_responses_12B.csv", output_csv="data/significance/wh-clefts_12B_not_significant.csv")
+    run(input_csv="data/wh-clefts_responses_4B.csv", output_csv="data/significance/wh-clefts_4B_not_significant.csv")
+    run(input_csv="data/wh-clefts_responses_12B.csv", output_csv="data/significance/wh-clefts_12B_not_significant.csv")
 
-    # run(input_csv="data/SVC_responses_4B.csv", output_csv="data/significance/SVC_4B_not_significant.csv")
-    # run(input_csv="data/SVC_responses_12B.csv", output_csv="data/significance/SVC_12B_not_significant.csv")
+    run(input_csv="data/SVC_responses_4B.csv", output_csv="data/significance/SVC_4B_not_significant.csv")
+    run(input_csv="data/SVC_responses_12B.csv", output_csv="data/significance/SVC_12B_not_significant.csv")

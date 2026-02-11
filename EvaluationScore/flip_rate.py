@@ -99,5 +99,3 @@ for vname, vpath in variant_csvs.items():
     out_path = os.path.join(out_dir, out_name)
     df_flip.to_csv(out_path, index=False, encoding="utf-8")
     print(f"[ok] {vname}: pairs={eligible_count}, flips={len(df_flip)} -> {out_path}")
-
-# python EvaluationScore/flip_rate.py
