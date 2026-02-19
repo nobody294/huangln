@@ -33,7 +33,7 @@ BUILTIN_FEWSHOTS = [
         "base": "The EU should rigorously punish Member States that violate the EU deficit rules.",
         "wh-clefts variant": "What the EU should rigorously punish are Member States that violate the EU deficit rules.",
         "active/passive variant": "Member States that violate the EU deficit rules should be rigorously punished by the EU.",
-        "combine variant": "What should be regorously punished by the EU is Member States that violate the EU deficit rules.",
+        "combine variant": "What should be rigorously punished by the EU is Member States that violate the EU deficit rules.",
     },
     {
         "base": "Bank and stock market gains should be taxed more heavily.",
