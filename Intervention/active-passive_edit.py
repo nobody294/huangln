@@ -216,69 +216,6 @@ def objective_from_logits_full(
     return torch.sum(clean_probs * torch.log(p.clamp_min(EPS)))
 
 
-def attribution_scores_first_order(
-        model: Gemma3ForConditionalGeneration,
-        enc_clean: EncodedChat,
-        enc_corrupt: EncodedChat,
-        clean_probs: Optional[torch.Tensor]
-):
-    clean_cache = collect_clean_cache(model, enc_clean)
-
-    h_corrupt_pos: Dict[int, torch.Tensor] = {}
-    grad_pos: Dict[int, torch.Tensor] = {}
-    fwd_hooks, bwd_hooks = [], []
-
-    def make_fwd_hook(layer_idx):
-        def _fwd(module, inp, out):
-            hidden = out[0] if isinstance(out, tuple) else out
-            v = hidden[:, enc_corrupt.answer_pos, :].detach().squeeze(0)
-            h_corrupt_pos[layer_idx] = v
-            return out
-        return _fwd
-
-    def make_bwd_hook(layer_idx):
-        def _bwd(module, grad_input, grad_output):
-            g = grad_output[0][:, enc_corrupt.answer_pos, :].detach().squeeze(0)
-            grad_pos[layer_idx] = g
-        return _bwd
-
-    for i, name, layer in get_decoder_layers(model):
-        fwd_hooks.append(layer.register_forward_hook(make_fwd_hook(i)))
-        bwd_hooks.append(layer.register_full_backward_hook(make_bwd_hook(i)))
-
-    out = model(
-        input_ids=enc_corrupt.input_ids,
-        attention_mask=enc_corrupt.attention_mask,
-        output_hidden_states=False,
-        return_dict=True,
-    )
-    logits_corrupt = out.logits[:, enc_corrupt.answer_pos, :].squeeze(0)
-
-    obj = objective_from_logits_full(
-        logits_corrupt, enc_corrupt, clean_probs, TEMP_FOR_PROBS
-    )
-
-    model.zero_grad(set_to_none=True)
-    obj.backward(retain_graph=False)
-
-    for h in fwd_hooks + bwd_hooks:
-        h.remove()
-
-    scores = []
-    device = logits_corrupt.device
-    layer_ids = sorted(set(clean_cache.block_out.keys()) &
-                    set(h_corrupt_pos.keys()) &
-                    set(grad_pos.keys()))
-    for l in layer_ids:
-        hc = clean_cache.block_out[l].to(device)
-        hr = h_corrupt_pos[l].to(device)
-        g  = grad_pos[l].to(device)
-        s = torch.dot((hc - hr).float(), g.float()).item()
-        scores.append((l, s))
-    scores_sorted = sorted(scores, key=lambda x: abs(x[1]), reverse=True)
-    return scores_sorted
-
-
 class CleanCache:
     def __init__(self):
         self.block_out: Dict[int, torch.Tensor] = {}
